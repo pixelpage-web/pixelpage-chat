@@ -25,15 +25,24 @@ import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
-import type { Role, SubscriptionStatus } from "@/types/database";
+import { SystemNotifications } from "@/components/system-notifications";
+import { SupportButton } from "@/components/support-button";
+import type { Role, SubscriptionStatus, SystemNotificationRow } from "@/types/database";
 
 export interface ShellData {
   userName: string;
   userEmail: string;
   role: Role;
+  orgId: string | null;
   orgName: string;
   orgSuspended: boolean;
   impersonating: boolean;
+  /** alguma conexão QR Code caiu (status disconnected) */
+  whatsappDown: boolean;
+  /** uso de mensagens IA do mês vs limite do plano (limit 0 = ilimitado) */
+  aiUsage: { used: number; limit: number } | null;
+  /** notificações globais ativas (admin → clientes) */
+  notifications: SystemNotificationRow[];
   subscription: {
     status: SubscriptionStatus;
     trialEndsAt: string | null;
@@ -139,6 +148,57 @@ function TrialBanner({ data }: { data: ShellData }) {
   return null;
 }
 
+/** Banners de status operacional: conexão caída e limite de mensagens IA. */
+function StatusBanners({ data }: { data: ShellData }) {
+  const t = useT();
+  const sub = data.subscription;
+
+  // Trial expirando em ≤2 dias (laranja) — separado do TrialBanner informativo
+  let trialEnding = false;
+  if (sub?.status === "trial" && sub.trialEndsAt) {
+    const daysLeft = differenceInCalendarDays(new Date(sub.trialEndsAt), new Date());
+    trialEnding = daysLeft >= 0 && daysLeft <= 2;
+  }
+
+  const aiLimitReached =
+    !!data.aiUsage && data.aiUsage.limit > 0 && data.aiUsage.used >= data.aiUsage.limit;
+
+  return (
+    <>
+      {/* Conexão WhatsApp caiu */}
+      {data.whatsappDown && (
+        <div className="flex items-center justify-center gap-2 border-b border-amber/30 bg-amber-soft px-4 py-2 text-center text-xs text-amber">
+          <Smartphone className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          {t("Sua conexão WhatsApp caiu.")}{" "}
+          <Link href="/app/connections" className="font-semibold underline">
+            {t("Reconectar agora")}
+          </Link>
+        </div>
+      )}
+
+      {/* Trial expirando em ≤2 dias */}
+      {trialEnding && !data.orgSuspended && (
+        <div className="border-b border-amber/30 bg-amber-soft px-4 py-2 text-center text-xs text-amber">
+          {t("Seu trial está acabando.")}{" "}
+          <Link href="/app/billing" className="font-semibold underline">
+            {t("Fazer upgrade")}
+          </Link>
+        </div>
+      )}
+
+      {/* Limite de mensagens IA atingido */}
+      {aiLimitReached && (
+        <div className="border-b border-danger/30 bg-danger-soft px-4 py-2 text-center text-xs text-danger">
+          {t("Você atingiu o limite de mensagens de IA do seu plano.")}{" "}
+          <Link href="/app/billing" className="font-semibold underline">
+            {t("Fazer upgrade")}
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
+
 export function AppShell({
   data,
   children,
@@ -164,7 +224,10 @@ export function AppShell({
   return (
     <div className="flex h-dvh flex-col">
       {data.impersonating && <ImpersonationBanner orgName={data.orgName} />}
+      {/* Notificações globais do admin (manutenção, avisos, novidades) */}
+      <SystemNotifications initial={data.notifications} orgId={data.orgId} />
       <TrialBanner data={data} />
+      <StatusBanners data={data} />
       <div className="flex min-h-0 flex-1">
         {/* Sidebar com ícones + labels — desktop */}
         <aside className="hidden w-52 shrink-0 flex-col border-r border-line bg-surface py-4 md:flex">
@@ -249,6 +312,9 @@ export function AppShell({
           {t("Ajustes")}
         </Link>
       </nav>
+
+      {/* Botão de suporte flutuante — presente em todas as páginas */}
+      <SupportButton />
     </div>
   );
 }

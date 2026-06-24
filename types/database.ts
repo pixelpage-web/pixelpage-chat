@@ -342,6 +342,82 @@ export type MessageTemplateRow = {
   created_at: string;
 };
 
+// ----------------------------------------------------------------------------
+// v4 — notificações globais, pedidos de API Oficial, suporte e dicas
+// ----------------------------------------------------------------------------
+export type NotificationType = "maintenance" | "alert" | "info" | "feature";
+
+export type SystemNotificationRow = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  active: boolean;
+  dismissible: boolean;
+  target: string;
+  starts_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+};
+
+export type ApiOficialStatus =
+  | "pending"
+  | "contacted"
+  | "in_progress"
+  | "completed"
+  | "rejected";
+
+export type ApiOficialRequestRow = {
+  id: string;
+  org_id: string | null;
+  company_name: string | null;
+  document: string | null;
+  desired_phone: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_whatsapp: string | null;
+  status: ApiOficialStatus;
+  notes: string;
+  created_at: string;
+};
+
+export type SupportTicketStatus = "open" | "answered" | "closed";
+
+export type SupportTicketRow = {
+  id: string;
+  org_id: string | null;
+  author_id: string | null;
+  author_name: string;
+  author_email: string;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupportTicketMessageRow = {
+  id: string;
+  ticket_id: string;
+  author_id: string | null;
+  from_admin: boolean;
+  body: string;
+  created_at: string;
+};
+
+export type ClientTipRow = {
+  id: string;
+  emoji: string;
+  title: string;
+  body: string;
+  cta_label: string | null;
+  cta_href: string | null;
+  target: string;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -379,6 +455,11 @@ export type Database = {
       csat_responses: TableShape<CsatResponseRow>;
       automation_rules: TableShape<AutomationRuleRow>;
       scheduled_jobs: TableShape<ScheduledJobRow>;
+      system_notifications: TableShape<SystemNotificationRow>;
+      api_oficial_requests: TableShape<ApiOficialRequestRow>;
+      support_tickets: TableShape<SupportTicketRow>;
+      support_ticket_messages: TableShape<SupportTicketMessageRow>;
+      client_tips: TableShape<ClientTipRow>;
     };
     Views: Record<string, never>;
     Functions: {
