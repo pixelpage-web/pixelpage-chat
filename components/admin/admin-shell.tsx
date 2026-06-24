@@ -7,9 +7,13 @@ import {
   Building2,
   FileText,
   LayoutDashboard,
+  LifeBuoy,
   Lightbulb,
+  Megaphone,
   ScrollText,
   Settings2,
+  ShieldCheck,
+  Sparkles,
   Tags,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,11 +21,15 @@ import { Logo } from "@/components/logo";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/organizations", label: "Organizações", icon: Building2, exact: false },
+  { href: "/admin/organizations", label: "Clientes", icon: Building2, exact: false },
   { href: "/admin/plans", label: "Planos", icon: Tags, exact: false },
+  { href: "/admin/notifications", label: "Notificações", icon: Megaphone, exact: false },
+  { href: "/admin/support", label: "Suporte", icon: LifeBuoy, exact: false },
+  { href: "/admin/api-oficial", label: "API Oficial", icon: ShieldCheck, exact: false },
+  { href: "/admin/tips", label: "Dicas", icon: Sparkles, exact: false },
   { href: "/admin/templates", label: "Templates", icon: FileText, exact: false },
   { href: "/admin/suggestions", label: "Sugestões", icon: Lightbulb, exact: false },
-  { href: "/admin/settings", label: "Configurações", icon: Settings2, exact: false },
+  { href: "/admin/settings", label: "Integrações", icon: Settings2, exact: false },
   { href: "/admin/logs", label: "Logs", icon: ScrollText, exact: false },
 ];
 
@@ -80,8 +88,8 @@ export function AdminShell({
         <main className="min-w-0 flex-1 overflow-y-auto pb-16 md:pb-0">{children}</main>
       </div>
 
-      {/* Tabs mobile */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden">
+      {/* Tabs mobile — roláveis na horizontal (muitas seções) */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex overflow-x-auto border-t border-line bg-surface md:hidden">
         {navItems.map((item) => {
           const active = item.exact
             ? pathname === item.href
@@ -91,7 +99,7 @@ export function AdminShell({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px]",
+                "flex min-w-[4.5rem] shrink-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10px]",
                 active ? "text-lime" : "text-txt-dim"
               )}
             >

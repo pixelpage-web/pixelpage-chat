@@ -25,7 +25,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FeatureBadge } from "@/components/ui/feature-badge";
 import { EmbeddedSignupButton } from "@/components/whatsapp/embedded-signup-button";
 import { QrConnectModal } from "@/components/whatsapp/qr-connect-modal";
+import { QrConsentModal } from "./qr-consent-modal";
 import { CsatSettingsModal } from "./csat-settings-modal";
+import Link from "next/link";
 import type { ConnectionMode, WhatsappConnectionRow } from "@/types/database";
 
 const modes: {
@@ -71,6 +73,8 @@ export function ConnectionsView({
   const t = useT();
   const [connections, setConnections] = useState(initialConnections);
   const [qrOpen, setQrOpen] = useState(false);
+  // Modal de aceite obrigatório antes de abrir o QR Code (WhatsApp Web não oficial)
+  const [consentOpen, setConsentOpen] = useState(false);
   const [reconnectId, setReconnectId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [csatConnectionId, setCsatConnectionId] = useState<string | null>(null);
@@ -181,8 +185,9 @@ export function ConnectionsView({
               {qrEnabled ? (
                 <Button
                   onClick={() => {
+                    // Aceite obrigatório antes de iniciar a conexão QR
                     setReconnectId(null);
-                    setQrOpen(true);
+                    setConsentOpen(true);
                   }}
                   className="mt-4 w-full"
                 >
@@ -212,15 +217,40 @@ export function ConnectionsView({
                   </CardDescription>
                 </div>
               </div>
+              {/* Benefícios da API oficial */}
+              <ul className="mt-3 space-y-1 text-xs text-txt-mut">
+                <li>✅ {t("Número verificado com ✓ verde")}</li>
+                <li>✅ {t("Templates aprovados pela Meta")}</li>
+                <li>✅ {t("Campanhas oficiais e zero risco de ban")}</li>
+              </ul>
+
               {signupEnabled ? (
-                <div className="mt-4">
+                <div className="mt-4 space-y-2">
+                  {/* Sub-caminho 1: conectar número existente (Embedded Signup) */}
                   <EmbeddedSignupButton onConnected={() => router.refresh()} />
+                  {/* Sub-caminho 2: quero um número novo com API oficial */}
+                  <Link
+                    href="/app/connections/api-oficial"
+                    className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-ok/50 hover:text-ok"
+                  >
+                    {t("Quero um número novo com API oficial")}
+                  </Link>
                 </div>
               ) : (
-                <p className="mt-4 flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2.5 text-center text-xs text-txt-dim">
-                  <Clock className="h-3.5 w-3.5" aria-hidden />
-                  {t("Em análise na Meta — conecte via QR Code por enquanto.")}
-                </p>
+                <div className="mt-4 space-y-2">
+                  <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2.5 text-center text-xs text-txt-dim">
+                    <Clock className="h-3.5 w-3.5" aria-hidden />
+                    {t("Conexão do seu número em análise na Meta — use QR Code por enquanto.")}
+                  </p>
+                  {/* Venda de número novo com API oficial sempre disponível */}
+                  <Link
+                    href="/app/connections/api-oficial"
+                    className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok-soft px-3 py-2 text-xs font-medium text-ok transition-colors hover:bg-ok/20"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                    {t("Quero um número novo com API oficial")}
+                  </Link>
+                </div>
               )}
             </Card>
           </div>
@@ -383,6 +413,16 @@ export function ConnectionsView({
           </div>
         )}
       </div>
+
+      {/* Aceite obrigatório → só então abre o QR Code */}
+      <QrConsentModal
+        open={consentOpen}
+        onClose={() => setConsentOpen(false)}
+        onAccept={() => {
+          setConsentOpen(false);
+          setQrOpen(true);
+        }}
+      />
 
       {/* Modal de QR Code ao vivo (criar nova ou reconectar) */}
       <QrConnectModal

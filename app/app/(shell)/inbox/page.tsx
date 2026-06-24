@@ -5,6 +5,7 @@ import { isSubscriptionBlocked } from "@/lib/billing";
 import { hasFeatureAccess } from "@/lib/access";
 import { FeatureBadge } from "@/components/ui/feature-badge";
 import { OnboardingBanner } from "@/components/onboarding-banner";
+import { ClientTips } from "@/components/client-tips";
 import { InboxView } from "@/components/inbox/inbox-view";
 
 export const dynamic = "force-dynamic";
@@ -81,9 +82,18 @@ export default async function InboxPage() {
     published: (publishedFlowCount ?? 0) > 0 || (aiModeCount ?? 0) > 0,
   };
 
+  // Dicas do admin destinadas a esta organização (ou a todos)
+  const { data: tips } = await supabase
+    .from("client_tips")
+    .select("*")
+    .eq("active", true)
+    .order("sort_order", { ascending: true })
+    .limit(5);
+
   return (
     <div className="flex h-full flex-col">
       <OnboardingBanner steps={steps} />
+      <ClientTips tips={tips ?? []} />
       {access.isOverride && (
         <div className="border-b border-line bg-surface px-4 py-1.5">
           <FeatureBadge requiredPlan={access.requiredPlan} />
