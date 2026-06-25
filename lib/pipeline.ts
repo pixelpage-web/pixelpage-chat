@@ -14,7 +14,7 @@ import { isSubscriptionBlocked } from "@/lib/billing";
 import {
   buildReplyToken,
   deliverToWebhook,
-  type ZariWebhookPayload,
+  type PixelPageWebhookPayload,
 } from "@/lib/external-webhook";
 import { maybeCaptureCsatResponse } from "@/lib/csat";
 import { runInboundAutomations } from "@/lib/automations";
@@ -205,6 +205,7 @@ export async function handleInboundMessage(
         id: msg.externalId,
         text: msg.content,
         type: msg.messageType,
+        media_url: msg.mediaUrl ?? null,
         timestamp: msg.timestamp,
       },
     });
@@ -658,7 +659,13 @@ async function routeToExternalWebhook(params: {
   connectionId: string;
   conversationId: string;
   contact: { name: string | null; phone: string };
-  message: { id: string; text: string; type: string; timestamp: string };
+  message: {
+    id: string;
+    text: string;
+    type: string;
+    media_url?: string | null;
+    timestamp: string;
+  };
 }): Promise<void> {
   const admin = createAdminClient();
 
@@ -673,13 +680,18 @@ async function routeToExternalWebhook(params: {
     webhooks?.[0];
   if (!webhook) return;
 
-  const payload: ZariWebhookPayload = {
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    "https://app.pixelpagechat.com.br";
+
+  const payload: PixelPageWebhookPayload = {
     event: "message.received",
     organization_id: params.orgId,
     conversation_id: params.conversationId,
     contact: params.contact,
     message: params.message,
     reply_token: buildReplyToken(webhook.secret, params.conversationId),
+    app_url: appUrl,
   };
 
   await deliverToWebhook(admin, webhook, payload);

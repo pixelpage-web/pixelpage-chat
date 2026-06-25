@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Sparkles,
   Tags,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/admin/notifications", label: "Notificações", icon: Megaphone, exact: false },
   { href: "/admin/support", label: "Suporte", icon: LifeBuoy, exact: false },
   { href: "/admin/api-oficial", label: "API Oficial", icon: ShieldCheck, exact: false },
+  { href: "/admin/n8n", label: "n8n", icon: Workflow, exact: false },
   { href: "/admin/tips", label: "Dicas", icon: Sparkles, exact: false },
   { href: "/admin/templates", label: "Templates", icon: FileText, exact: false },
   { href: "/admin/suggestions", label: "Sugestões", icon: Lightbulb, exact: false },

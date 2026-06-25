@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
-import { authenticateApiKey } from "@/lib/api-keys";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { guardApiV1 } from "@/lib/api-guard";
+import { apiOk, apiError } from "@/lib/api-response";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * API pública — conversa individual.
  * GET   /api/v1/conversations/{id}  → detalhe (com contato)
- * PATCH /api/v1/conversations/{id}  → { status: "open" | "resolved" | "pending" }
+ * PATCH /api/v1/conversations/{id}  → { status?: "open"|"resolved"|"pending", bot_paused?: boolean }
  */
 
 async function loadConversation(orgId: string, id: string) {
@@ -42,89 +41,66 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = await authenticateApiKey(request);
-  if (!auth) {
-    return NextResponse.json({ error: "API key inválida ou ausente" }, { status: 401 });
-  }
-  const limit = checkRateLimit(auth.keyId);
-  if (!limit.allowed) {
-    return NextResponse.json(
-      { error: "Rate limit excedido (60 req/min)" },
-      { status: 429, headers: rateLimitHeaders(limit) }
-    );
-  }
+  const guard = await guardApiV1(request);
+  if (!guard.ok) return guard.response;
+  const { auth, headers } = guard;
 
   const { id } = await context.params;
   const conversation = await loadConversation(auth.orgId, id);
   if (!conversation) {
-    return NextResponse.json(
-      { error: "Conversa não encontrada" },
-      { status: 404, headers: rateLimitHeaders(limit) }
-    );
+    return apiError("Conversa não encontrada", { status: 404, headers });
   }
-  return NextResponse.json({ conversation }, { headers: rateLimitHeaders(limit) });
+  return apiOk({ conversation }, { headers });
 }
 
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = await authenticateApiKey(request);
-  if (!auth) {
-    return NextResponse.json({ error: "API key inválida ou ausente" }, { status: 401 });
-  }
-  const limit = checkRateLimit(auth.keyId);
-  if (!limit.allowed) {
-    return NextResponse.json(
-      { error: "Rate limit excedido (60 req/min)" },
-      { status: 429, headers: rateLimitHeaders(limit) }
-    );
-  }
+  const guard = await guardApiV1(request);
+  if (!guard.ok) return guard.response;
+  const { auth, headers } = guard;
 
   const { id } = await context.params;
 
-  let body: { status?: string };
+  let body: { status?: string; bot_paused?: boolean };
   try {
-    body = (await request.json()) as { status?: string };
+    body = (await request.json()) as { status?: string; bot_paused?: boolean };
   } catch {
-    return NextResponse.json(
-      { error: "JSON inválido" },
-      { status: 400, headers: rateLimitHeaders(limit) }
-    );
+    return apiError("JSON inválido", { status: 400, headers });
+  }
+
+  const hasStatus = body.status !== undefined;
+  const hasBotPaused = typeof body.bot_paused === "boolean";
+  if (!hasStatus && !hasBotPaused) {
+    return apiError("Informe 'status' e/ou 'bot_paused'.", { status: 400, headers });
   }
   if (
+    hasStatus &&
     body.status !== "open" &&
     body.status !== "resolved" &&
     body.status !== "pending"
   ) {
-    return NextResponse.json(
-      { error: "status deve ser open, resolved ou pending" },
-      { status: 400, headers: rateLimitHeaders(limit) }
-    );
+    return apiError("status deve ser open, resolved ou pending", {
+      status: 400,
+      headers,
+    });
   }
 
   const existing = await loadConversation(auth.orgId, id);
   if (!existing) {
-    return NextResponse.json(
-      { error: "Conversa não encontrada" },
-      { status: 404, headers: rateLimitHeaders(limit) }
-    );
+    return apiError("Conversa não encontrada", { status: 404, headers });
   }
+
+  const patch: { status?: "open" | "resolved" | "pending"; bot_paused?: boolean } = {};
+  if (hasStatus) patch.status = body.status as "open" | "resolved" | "pending";
+  if (hasBotPaused) patch.bot_paused = body.bot_paused;
 
   const admin = createAdminClient();
-  const { error } = await admin
-    .from("conversations")
-    .update({ status: body.status })
-    .eq("id", id);
+  const { error } = await admin.from("conversations").update(patch).eq("id", id);
   if (error) {
-    return NextResponse.json(
-      { error: "Falha ao atualizar a conversa" },
-      { status: 500, headers: rateLimitHeaders(limit) }
-    );
+    return apiError("Falha ao atualizar a conversa", { status: 500, headers });
   }
 
-  return NextResponse.json(
-    { conversation: { ...existing, status: body.status } },
-    { headers: rateLimitHeaders(limit) }
-  );
+  return apiOk({ conversation: { ...existing, ...patch } }, { headers });
 }

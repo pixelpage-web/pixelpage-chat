@@ -4,7 +4,8 @@ import type { Database, ExternalWebhookRow, Json } from "@/types/database";
 
 /**
  * Entrega de eventos ao webhook externo do cliente (n8n).
- * - Payload assinado com HMAC SHA-256 no header X-Zari-Signature
+ * - Payload assinado com HMAC SHA-256 nos headers X-PixelPage-Signature
+ *   (e X-Zari-Signature, mantido por compatibilidade com integrações antigas)
  * - Até 3 tentativas por entrega
  * - Cada tentativa é registrada em webhook_logs
  * - 3 falhas consecutivas de entrega → notificação no painel (audit_logs)
@@ -13,14 +14,34 @@ import type { Database, ExternalWebhookRow, Json } from "@/types/database";
 const DELIVERY_ATTEMPTS = 3;
 const TIMEOUT_MS = 8000;
 
-export interface ZariWebhookPayload {
+/**
+ * URL do workflow de atendimento hospedado pela própria plataforma (n8n cloud).
+ * Configurável por env (PLATFORM_N8N_WEBHOOK_URL); cai no padrão da PixelPage.
+ */
+export const PLATFORM_WORKFLOW_URL =
+  process.env.PLATFORM_N8N_WEBHOOK_URL?.trim() ||
+  "https://pixelpage.app.n8n.cloud/webhook/pixelpage-atendimento";
+
+export interface PixelPageWebhookPayload {
   event: string;
   organization_id: string;
   conversation_id: string;
   contact: { name: string | null; phone: string };
-  message: { id: string; text: string; type: string; timestamp: string };
+  message: {
+    id: string;
+    text: string;
+    type: string;
+    media_url?: string | null;
+    timestamp: string;
+  };
+  // Token verificável para responder via POST /api/v1/messages (reply_token)
   reply_token: string;
+  // URL pública da plataforma (para montar chamadas à API a partir do n8n)
+  app_url: string;
 }
+
+/** @deprecated use PixelPageWebhookPayload — alias por compatibilidade. */
+export type ZariWebhookPayload = PixelPageWebhookPayload;
 
 /** Assinatura HMAC SHA-256 do corpo (hex) — verificável pelo cliente. */
 export function signPayload(secret: string, rawBody: string): string {
@@ -63,7 +84,7 @@ export interface DeliveryResult {
 export async function deliverToWebhook(
   admin: SupabaseClient<Database>,
   webhook: Pick<ExternalWebhookRow, "id" | "org_id" | "url" | "secret" | "failures_count">,
-  payload: ZariWebhookPayload
+  payload: PixelPageWebhookPayload
 ): Promise<DeliveryResult> {
   const rawBody = JSON.stringify(payload);
   const signature = signPayload(webhook.secret, rawBody);
@@ -80,9 +101,12 @@ export async function deliverToWebhook(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          // Header atual da marca + alias antigo (compatibilidade)
+          "X-PixelPage-Signature": signature,
+          "X-PixelPage-Event": payload.event,
           "X-Zari-Signature": signature,
           "X-Zari-Event": payload.event,
-          "User-Agent": "ZariAPI-Webhook/1.0",
+          "User-Agent": "PixelPageChat-Webhook/1.0",
         },
         body: rawBody,
         signal: controller.signal,

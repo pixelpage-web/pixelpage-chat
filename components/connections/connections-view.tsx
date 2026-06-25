@@ -55,12 +55,20 @@ const statusMeta: Record<
   disconnected: { label: "Desconectado", tone: "danger" },
 };
 
+/** Status do webhook externo por conexão, calculado no servidor. */
+export interface WebhookInfo {
+  id: string;
+  status: "ok" | "warn" | "down" | "idle";
+  lastStatus: number | null;
+}
+
 export function ConnectionsView({
   initialConnections,
   connectionsLimit,
   signupEnabled,
   qrEnabled,
   limitOverride = false,
+  webhookInfo = {},
 }: {
   initialConnections: WhatsappConnectionRow[];
   connectionsLimit: number;
@@ -68,6 +76,8 @@ export function ConnectionsView({
   qrEnabled: boolean;
   /** Super Admin: ignora o limite de conexões do plano (exibe badge) */
   limitOverride?: boolean;
+  /** Status do webhook externo por connection_id (modo external_webhook) */
+  webhookInfo?: Record<string, WebhookInfo>;
 }) {
   const router = useRouter();
   const t = useT();
@@ -78,6 +88,28 @@ export function ConnectionsView({
   const [reconnectId, setReconnectId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [csatConnectionId, setCsatConnectionId] = useState<string | null>(null);
+  const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
+
+  // Teste rápido do webhook externo direto na listagem (Tarefa 4)
+  async function quickTestWebhook(webhookId: string) {
+    setTestingWebhookId(webhookId);
+    try {
+      const res = await fetch("/api/integrations/webhook-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_id: webhookId }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { error?: string; status_code?: number }
+        | null;
+      if (!res.ok) toast.error(json?.error ?? t("Falha no evento de teste."));
+      else toast.success(`${t("Evento de teste entregue")} (HTTP ${json?.status_code}).`);
+    } catch {
+      toast.error(t("Erro de conexão ao testar."));
+    } finally {
+      setTestingWebhookId(null);
+    }
+  }
 
   async function qrAction(
     connection: WhatsappConnectionRow,
@@ -407,6 +439,46 @@ export function ConnectionsView({
                       ))}
                     </div>
                   </div>
+
+                  {/* Status do webhook externo + configuração (modo Webhook) */}
+                  {conn.mode === "external_webhook" &&
+                    (() => {
+                      const info = webhookInfo[conn.id];
+                      const meta = {
+                        ok: { dot: "bg-ok", label: t("Ativo") },
+                        warn: { dot: "bg-amber", label: t("Com falhas") },
+                        down: { dot: "bg-danger", label: t("Offline") },
+                        idle: { dot: "bg-txt-dim", label: t("Aguardando configuração") },
+                      }[info?.status ?? "idle"];
+                      return (
+                        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+                          <span className="flex items-center gap-1.5 text-xs text-txt-mut">
+                            <span className={cn("h-2 w-2 rounded-full", meta.dot)} aria-hidden />
+                            {t("Webhook")}: {meta.label}
+                            {info?.lastStatus ? ` · HTTP ${info.lastStatus}` : ""}
+                          </span>
+                          <div className="ml-auto flex gap-2">
+                            {info?.id && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                loading={testingWebhookId === info.id}
+                                onClick={() => void quickTestWebhook(info.id)}
+                              >
+                                {t("Testar")}
+                              </Button>
+                            )}
+                            <Link
+                              href={`/app/connections/${conn.id}/webhook`}
+                              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                            >
+                              <Workflow className="h-3.5 w-3.5" aria-hidden />
+                              {t("Configurar webhook")}
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })()}
                 </Card>
               );
             })}

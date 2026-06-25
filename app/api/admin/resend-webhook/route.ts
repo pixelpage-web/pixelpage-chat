@@ -9,8 +9,9 @@ import { deliverToWebhook, type ZariWebhookPayload } from "@/lib/external-webhoo
  */
 export async function POST(request: Request) {
   const session = await getSessionProfile();
-  if (session?.profile?.role !== "admin") {
-    return NextResponse.json({ error: "Apenas admin" }, { status: 403 });
+  const role = session?.profile?.role;
+  if (role !== "admin" && role !== "superadmin") {
+    return NextResponse.json({ error: "Acesso restrito" }, { status: 403 });
   }
 
   let body: { log_id?: string };
