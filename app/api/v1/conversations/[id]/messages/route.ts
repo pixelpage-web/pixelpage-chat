@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-import { authenticateApiKey } from "@/lib/api-keys";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { guardApiV1 } from "@/lib/api-guard";
+import { apiOk, apiError } from "@/lib/api-response";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -8,31 +7,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * Histórico de mensagens de uma conversa (ordem cronológica).
  *
  * Query params:
- *   - limit: 1–200 (padrão 100)
+ *   - limit: 1–200 (padrão 20)
  *   - before: ISO 8601 — retorna mensagens anteriores a este instante
  */
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = await authenticateApiKey(request);
-  if (!auth) {
-    return NextResponse.json(
-      { error: "API key inválida ou ausente. Use Authorization: Bearer zari_..." },
-      { status: 401 }
-    );
-  }
-  const rl = checkRateLimit(auth.keyId);
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Rate limit excedido (60 req/min)" },
-      { status: 429, headers: rateLimitHeaders(rl) }
-    );
-  }
+  const guard = await guardApiV1(request);
+  if (!guard.ok) return guard.response;
+  const { auth, headers } = guard;
 
   const { id } = await context.params;
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 100, 1), 200);
+  const limit = Math.min(Math.max(Number(searchParams.get("limit")) || 20, 1), 200);
   const before = searchParams.get("before");
 
   const admin = createAdminClient();
@@ -44,12 +32,12 @@ export async function GET(
     .eq("id", id)
     .maybeSingle();
   if (!conversation || conversation.org_id !== auth.orgId) {
-    return NextResponse.json({ error: "Conversa não encontrada" }, { status: 404 });
+    return apiError("Conversa não encontrada", { status: 404, headers });
   }
 
   let query = admin
     .from("messages")
-    .select("id, direction, sender_type, content, message_type, created_at")
+    .select("id, direction, sender_type, content, message_type, media_url, created_at")
     .eq("conversation_id", id)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -63,18 +51,22 @@ export async function GET(
 
   const { data: messages, error } = await query;
   if (error) {
-    return NextResponse.json({ error: "Falha ao listar mensagens" }, { status: 500 });
+    return apiError("Falha ao listar mensagens", { status: 500, headers });
   }
 
-  return NextResponse.json({
-    conversation_id: id,
-    messages: (messages ?? []).reverse().map((m) => ({
-      id: m.id,
-      direction: m.direction,
-      sender_type: m.sender_type,
-      text: m.content,
-      type: m.message_type,
-      created_at: m.created_at,
-    })),
-  }, { headers: rateLimitHeaders(rl) });
+  return apiOk(
+    {
+      conversation_id: id,
+      messages: (messages ?? []).reverse().map((m) => ({
+        id: m.id,
+        direction: m.direction,
+        sender_type: m.sender_type,
+        text: m.content,
+        type: m.message_type,
+        media_url: m.media_url,
+        created_at: m.created_at,
+      })),
+    },
+    { headers }
+  );
 }

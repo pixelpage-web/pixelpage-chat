@@ -149,6 +149,11 @@ export type ExternalWebhookRow = {
   active: boolean;
   last_status: number | null;
   failures_count: number;
+  // n8n: usar o workflow pronto da plataforma em vez do n8n próprio do cliente
+  use_platform_workflow: boolean;
+  platform_workflow_id: string | null;
+  webhook_doc_accepted: boolean;
+  webhook_doc_accepted_at: string | null;
   created_at: string;
 };
 

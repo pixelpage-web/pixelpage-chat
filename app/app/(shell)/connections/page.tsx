@@ -41,6 +41,33 @@ export default async function ConnectionsPage() {
 
   const evolutionCfg = await getEvolutionConfig();
 
+  // Status do webhook externo por conexão (Tarefa 4): verde/âmbar/vermelho
+  const { data: webhooks } = await supabase
+    .from("external_webhooks")
+    .select("id, connection_id, active, last_status, failures_count")
+    .eq("org_id", orgId);
+
+  const webhookInfo: Record<
+    string,
+    { id: string; status: "ok" | "warn" | "down" | "idle"; lastStatus: number | null }
+  > = {};
+  for (const conn of connections ?? []) {
+    if (conn.mode !== "external_webhook") continue;
+    const w =
+      webhooks?.find((x) => x.connection_id === conn.id) ??
+      webhooks?.find((x) => x.connection_id === null);
+    if (!w) {
+      webhookInfo[conn.id] = { id: "", status: "idle", lastStatus: null };
+      continue;
+    }
+    let status: "ok" | "warn" | "down" | "idle" = "idle";
+    if (w.failures_count >= 3 || (w.last_status != null && w.last_status >= 500))
+      status = "down";
+    else if (w.failures_count > 0) status = "warn";
+    else if (w.last_status != null && w.last_status < 400) status = "ok";
+    webhookInfo[conn.id] = { id: w.id, status, lastStatus: w.last_status };
+  }
+
   return (
     <ConnectionsView
       initialConnections={connections ?? []}
@@ -48,6 +75,7 @@ export default async function ConnectionsPage() {
       signupEnabled={process.env.NEXT_PUBLIC_EMBEDDED_SIGNUP_ENABLED === "true"}
       qrEnabled={isEvolutionConfigured(evolutionCfg)}
       limitOverride={isSuperAdmin(session.user.email)}
+      webhookInfo={webhookInfo}
     />
   );
 }

@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildReplyToken,
   deliverToWebhook,
-  type ZariWebhookPayload,
+  type PixelPageWebhookPayload,
 } from "@/lib/external-webhook";
 
 /**
@@ -41,7 +41,10 @@ export async function POST(request: Request) {
   }
 
   const testConversationId = "00000000-0000-0000-0000-000000000000";
-  const payload: ZariWebhookPayload = {
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    "https://app.pixelpagechat.com.br";
+  const payload: PixelPageWebhookPayload = {
     event: "message.test",
     organization_id: orgId,
     conversation_id: testConversationId,
@@ -50,9 +53,11 @@ export async function POST(request: Request) {
       id: "test-message-id",
       text: "Este é um evento de teste da PixelPage Chat 🚀",
       type: "text",
+      media_url: null,
       timestamp: new Date().toISOString(),
     },
     reply_token: buildReplyToken(webhook.secret, testConversationId),
+    app_url: appUrl,
   };
 
   const result = await deliverToWebhook(admin, webhook, payload);

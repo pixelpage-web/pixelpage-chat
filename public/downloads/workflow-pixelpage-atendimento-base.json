@@ -1,0 +1,56 @@
+{
+  "name": "PixelPage Chat — Atendimento (base)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pixelpage-bot",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook (mensagem recebida)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "webhookId": "pixelpage-bot"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://app.pixelpagechat.com.br/api/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer SUA_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ reply_token: $json.body.reply_token, text: 'Olá! Recebemos sua mensagem e já vamos te ajudar. 😊' }) }}",
+        "options": {}
+      },
+      "id": "reply-node",
+      "name": "Responder (PixelPage API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (mensagem recebida)": {
+      "main": [
+        [
+          { "node": "Responder (PixelPage API)", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Workflow base de atendimento do PixelPage Chat. Substitua SUA_API_KEY pela API key da sua organização (Configurações > API Key). O nó Webhook recebe cada mensagem; o nó HTTP responde via /api/v1/messages usando o reply_token do evento."
+  }
+}

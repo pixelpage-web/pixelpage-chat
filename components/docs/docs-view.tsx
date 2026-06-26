@@ -3,16 +3,19 @@
 import {
   Bot,
   CreditCard,
+  Download,
   Inbox,
   Lightbulb,
   Plug2,
   Rocket,
   Smartphone,
   Users,
+  Workflow,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { useT } from "@/lib/i18n";
 import { SuggestionForm } from "@/components/suggestion-form";
+import { CodeBlock } from "@/components/integrations/code-block";
 
 /**
  * Central de documentação: explica o que cada opção do sistema faz.
@@ -246,10 +249,10 @@ const sections: DocSection[] = [
         },
       },
       {
-        term: { pt: "Secret de assinatura (X-Zari-Signature)", en: "Signing secret (X-Zari-Signature)" },
+        term: { pt: "Secret de assinatura (X-PixelPage-Signature)", en: "Signing secret (X-PixelPage-Signature)" },
         body: {
-          pt: "Um código secreto que prova que o aviso veio mesmo da PixelPage Chat (assinatura HMAC SHA-256 do corpo). Seu fluxo deve validar esse header antes de confiar nos dados.",
-          en: "A secret code proving the notification really came from PixelPage Chat (HMAC SHA-256 signature of the body). Your flow should validate this header before trusting the data.",
+          pt: "Um código secreto que prova que o aviso veio mesmo da PixelPage Chat (assinatura HMAC SHA-256 do corpo, no header X-PixelPage-Signature). Seu fluxo deve validar esse header antes de confiar nos dados.",
+          en: "A secret code proving the notification really came from PixelPage Chat (HMAC SHA-256 signature of the body, in the X-PixelPage-Signature header). Your flow should validate this header before trusting the data.",
         },
       },
       {
@@ -344,13 +347,40 @@ const sections: DocSection[] = [
 export function DocsView({
   orgId,
   authorName,
+  appUrl = "https://app.pixelpagechat.com.br",
 }: {
   orgId: string;
   authorName: string;
+  appUrl?: string;
 }) {
   const { lang } = useLang();
   const t = useT();
   const pick = (bi: Bi) => (lang === "en" ? bi.en : bi.pt);
+
+  // Guia prático de n8n (com código) — fora do modelo term/body das seções
+  const n8nPayload = `{
+  "event": "message.received",
+  "organization_id": "${orgId}",
+  "conversation_id": "uuid-da-conversa",
+  "contact": { "name": "Maria Silva", "phone": "5511999998888" },
+  "message": {
+    "id": "wamid.XXX",
+    "text": "Oi, qual o horário de vocês?",
+    "type": "text",
+    "media_url": null,
+    "timestamp": "2026-06-24T14:32:00.000Z"
+  },
+  "reply_token": "uuid-da-conversa.a1b2c3...",
+  "app_url": "${appUrl}"
+}`;
+  const n8nReply = `POST ${appUrl}/api/v1/messages
+Authorization: Bearer SUA_API_KEY
+Content-Type: application/json
+
+{
+  "conversation_id": "{{ $json.body.conversation_id }}",
+  "text": "Atendemos de seg a sex, das 9h às 18h!"
+}`;
 
   return (
     <div className="h-full overflow-y-auto">
@@ -400,6 +430,81 @@ export function DocsView({
             </dl>
           </details>
         ))}
+
+        {/* Guia prático: Conectar com n8n (com código + download) */}
+        <details className="group rounded-card border border-line bg-surface">
+          <summary className="focus-ring flex cursor-pointer select-none items-center gap-3 rounded-card px-5 py-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-soft">
+              <Workflow className="h-5 w-5 text-amber" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <p className="font-display text-sm font-semibold">
+                {t("Conectar com n8n (passo a passo)")}
+              </p>
+              <p className="text-xs text-txt-mut">
+                {t("Receba cada mensagem no seu n8n e responda pela API da PixelPage Chat.")}
+              </p>
+            </div>
+            <span
+              className="ml-auto text-txt-dim transition-transform group-open:rotate-90"
+              aria-hidden
+            >
+              ›
+            </span>
+          </summary>
+          <div className="space-y-4 border-t border-line px-5 py-4 text-sm text-txt-mut">
+            <div>
+              <p className="mb-1 font-semibold text-txt">{t("Pré-requisitos")}</p>
+              <ul className="list-inside list-disc space-y-0.5 leading-relaxed">
+                <li>{t("Conta no n8n (n8n.cloud ou self-hosted)")}</li>
+                <li>{t("API Key do PixelPage Chat (em Integrações → API Key)")}</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-txt">{t("1. Criar o workflow no n8n")}</p>
+              <ol className="list-inside list-decimal space-y-0.5 leading-relaxed">
+                <li>{t("No n8n, clique em “New Workflow”")}</li>
+                <li>{t("Adicione um nó Webhook (método POST, path: pixelpage-bot)")}</li>
+                <li>{t("Copie a URL de produção (Production URL)")}</li>
+              </ol>
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-txt">{t("2. Configurar na PixelPage Chat")}</p>
+              <ol className="list-inside list-decimal space-y-0.5 leading-relaxed">
+                <li>{t("Vá em Conexões → sua conexão → Configurar webhook")}</li>
+                <li>{t("Na aba “Meu n8n”, cole a URL do webhook e salve")}</li>
+                <li>{t("Clique em “Enviar evento de teste” e confirme no n8n")}</li>
+              </ol>
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-txt">{t("3. Payload recebido")}</p>
+              <CodeBlock code={n8nPayload} label={t("payload recebido")} />
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-txt">{t("4. Responder ao cliente")}</p>
+              <CodeBlock code={n8nReply} label={t("como responder")} />
+            </div>
+
+            <div>
+              <p className="mb-1 font-semibold text-txt">{t("Workflow de exemplo")}</p>
+              <p className="mb-2 text-xs leading-relaxed">
+                {t("Baixe nosso workflow pronto e importe no n8n (lembre de trocar SUA_API_KEY).")}
+              </p>
+              <a
+                href="/downloads/workflow-pixelpage-atendimento-base.json"
+                download
+                className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+              >
+                <Download className="h-3.5 w-3.5" aria-hidden />
+                {t("Baixar workflow base")}
+              </a>
+            </div>
+          </div>
+        </details>
 
         {/* Sugestões */}
         <div className="rounded-card border border-lime/25 bg-surface p-5">
