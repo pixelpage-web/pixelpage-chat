@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import {
   ArrowLeftRight,
   Building2,
+  CalendarClock,
   FileText,
+  Flag,
   LayoutDashboard,
   LifeBuoy,
   Lightbulb,
@@ -23,6 +25,8 @@ import { Logo } from "@/components/logo";
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/organizations", label: "Clientes", icon: Building2, exact: false },
+  { href: "/admin/trials", label: "Trials", icon: CalendarClock, exact: false },
+  { href: "/admin/feature-flags", label: "Feature Flags", icon: Flag, exact: false },
   { href: "/admin/plans", label: "Planos", icon: Tags, exact: false },
   { href: "/admin/notifications", label: "Notificações", icon: Megaphone, exact: false },
   { href: "/admin/support", label: "Suporte", icon: LifeBuoy, exact: false },

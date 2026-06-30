@@ -94,6 +94,7 @@ export type SubscriptionRow = {
   asaas_subscription_id: string | null;
   asaas_customer_id: string | null;
   trial_ends_at: string | null;
+  trial_extended_count: number;
   current_period_end: string | null;
   created_at: string;
 };
@@ -557,6 +558,42 @@ export type ConversationParticipantRow = {
   user_id: string;
 };
 
+// ----------------------------------------------------------------------------
+// 0013 — Super Admin: trial extensions, feature flags, admin audit log
+// ----------------------------------------------------------------------------
+
+export type TrialExtensionRow = {
+  id: string;
+  org_id: string;
+  extended_by: string | null;
+  days_added: number;
+  previous_end_at: string | null;
+  new_end_at: string | null;
+  reason: string | null;
+  created_at: string;
+};
+
+export type FeatureFlagRow = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  enabled_globally: boolean;
+  enabled_for_orgs: string[];
+  created_at: string;
+};
+
+export type AdminAuditLogRow = {
+  id: string;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  target_name: string | null;
+  details: Json;
+  ip_address: string | null;
+  created_at: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -614,6 +651,10 @@ export type Database = {
       help_articles: TableShape<HelpArticleRow>;
       dashboard_apps: TableShape<DashboardAppRow>;
       conversation_participants: TableShape<ConversationParticipantRow>;
+      // 0013
+      trial_extensions: TableShape<TrialExtensionRow>;
+      feature_flags: TableShape<FeatureFlagRow>;
+      admin_audit_logs: TableShape<AdminAuditLogRow>;
     };
     Views: Record<string, never>;
     Functions: {

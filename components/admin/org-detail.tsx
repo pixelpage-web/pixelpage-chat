@@ -7,8 +7,10 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Ban,
+  CalendarClock,
   CheckCircle2,
   Eye,
+  History,
   KeyRound,
   MessageSquare,
   Smartphone,
@@ -16,12 +18,12 @@ import {
   Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatCompact, formatFullDate, formatPhone, timeAgo } from "@/lib/utils";
+import { cn, formatCompact, formatFullDate, formatPhone, timeAgo } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
-import { Label } from "@/components/ui/input";
+import { Input, Label } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { CodeBlock } from "@/components/integrations/code-block";
 import type {
@@ -29,6 +31,7 @@ import type {
   PlanRow,
   ProfileRow,
   SubscriptionRow,
+  TrialExtensionRow,
   WhatsappConnectionRow,
 } from "@/types/database";
 
@@ -38,6 +41,8 @@ const modeLabels: Record<string, string> = {
   external_webhook: "Webhook (n8n)",
 };
 
+const QUICK_DAYS = [3, 7, 15, 30];
+
 export function OrgDetail({
   org,
   subscription,
@@ -46,6 +51,7 @@ export function OrgDetail({
   members,
   aiUsed,
   conversationCount,
+  trialExtensions = [],
 }: {
   org: OrganizationRow;
   subscription: SubscriptionRow | null;
@@ -54,12 +60,22 @@ export function OrgDetail({
   members: Pick<ProfileRow, "id" | "name" | "role" | "created_at">[];
   aiUsed: number;
   conversationCount: number;
+  trialExtensions?: Pick<TrialExtensionRow, "id" | "days_added" | "previous_end_at" | "new_end_at" | "reason" | "created_at">[];
 }) {
   const router = useRouter();
   const [suspended, setSuspended] = useState(org.suspended);
   const [planId, setPlanId] = useState(subscription?.plan_id ?? "");
   const [busy, setBusy] = useState(false);
   const [resetLink, setResetLink] = useState<string | null>(null);
+
+  // Trial extension state
+  const [trialModalOpen, setTrialModalOpen] = useState(false);
+  const [trialDays, setTrialDays] = useState(7);
+  const [trialCustomDays, setTrialCustomDays] = useState("");
+  const [trialReason, setTrialReason] = useState("");
+  const [extendingTrial, setExtendingTrial] = useState(false);
+  const [currentTrialEndsAt, setCurrentTrialEndsAt] = useState(subscription?.trial_ends_at ?? null);
+  const [extCount, setExtCount] = useState(subscription?.trial_extended_count ?? 0);
 
   async function resetPassword() {
     setBusy(true);
@@ -150,6 +166,48 @@ export function OrgDetail({
     }
   }
 
+  async function handleExtendTrial() {
+    const d = trialCustomDays ? parseInt(trialCustomDays) : trialDays;
+    if (!d || d < 1 || d > 90) {
+      toast.error("Informe entre 1 e 90 dias.");
+      return;
+    }
+    setExtendingTrial(true);
+    try {
+      const res = await fetch("/api/admin/extend-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ org_id: org.id, days: d, reason: trialReason }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        new_end_at?: string;
+        trial_extended_count?: number;
+        error?: string;
+      };
+      if (!res.ok) {
+        toast.error(json.error ?? "Não foi possível estender o trial.");
+        return;
+      }
+      setCurrentTrialEndsAt(json.new_end_at ?? null);
+      setExtCount(json.trial_extended_count ?? extCount + 1);
+      setTrialModalOpen(false);
+      setTrialReason("");
+      setTrialCustomDays("");
+      toast.success(`Trial estendido em ${d} dias.`);
+      router.refresh();
+    } catch {
+      toast.error("Erro de conexão.");
+    } finally {
+      setExtendingTrial(false);
+    }
+  }
+
+  const isTrial = subscription?.status === "trial";
+  const trialDaysLeft = currentTrialEndsAt
+    ? Math.ceil((new Date(currentTrialEndsAt).getTime() - Date.now()) / 86_400_000)
+    : null;
+
   return (
     <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
       <Link
@@ -234,7 +292,7 @@ export function OrgDetail({
         </Card>
       </div>
 
-      {/* Plano */}
+      {/* Assinatura */}
       <Card>
         <CardTitle>Assinatura</CardTitle>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -258,9 +316,9 @@ export function OrgDetail({
               ) : (
                 "—"
               )}
-              {subscription?.trial_ends_at && (
+              {currentTrialEndsAt && (
                 <span className="ml-2 text-xs text-txt-dim">
-                  trial até {formatFullDate(subscription.trial_ends_at)}
+                  trial até {formatFullDate(currentTrialEndsAt)}
                 </span>
               )}
             </p>
@@ -281,6 +339,66 @@ export function OrgDetail({
           </div>
         </div>
       </Card>
+
+      {/* Gestão de Trial */}
+      {isTrial && (
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-soft">
+                <CalendarClock className="h-5 w-5 text-amber" aria-hidden />
+              </div>
+              <div>
+                <CardTitle>Gestão de Trial</CardTitle>
+                <p className="mt-0.5 text-xs text-txt-dim">
+                  {currentTrialEndsAt ? (
+                    trialDaysLeft !== null && trialDaysLeft > 0 ? (
+                      <>Expira em <strong className="text-txt">{trialDaysLeft} {trialDaysLeft === 1 ? "dia" : "dias"}</strong> — {formatFullDate(currentTrialEndsAt)}</>
+                    ) : (
+                      <span className="text-danger">Trial expirado em {formatFullDate(currentTrialEndsAt)}</span>
+                    )
+                  ) : "Sem data de expiração definida"}
+                  {extCount > 0 && (
+                    <span className="ml-2 text-amber">· Estendido {extCount}× antes</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => {
+                setTrialDays(7);
+                setTrialCustomDays("");
+                setTrialReason("");
+                setTrialModalOpen(true);
+              }}
+            >
+              Estender trial
+            </Button>
+          </div>
+
+          {/* Histórico de extensões */}
+          {trialExtensions.length > 0 && (
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-txt-mut">
+                <History className="h-3.5 w-3.5" />
+                Histórico de extensões
+              </p>
+              <ul className="space-y-1.5">
+                {trialExtensions.map((ext) => (
+                  <li key={ext.id} className="flex items-start justify-between gap-2 text-xs">
+                    <span className="text-txt-mut">
+                      <span className="font-medium text-ok">+{ext.days_added}d</span>
+                      {ext.reason && <span className="ml-1 text-txt-dim">— {ext.reason}</span>}
+                    </span>
+                    <span className="shrink-0 text-txt-dim">{timeAgo(ext.created_at)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Conexões */}
       <Card>
@@ -339,6 +457,75 @@ export function OrgDetail({
         </p>
         <div className="mt-3">
           <CodeBlock code={resetLink ?? ""} label="link de recuperação" />
+        </div>
+      </Modal>
+
+      {/* Modal de extensão de trial */}
+      <Modal
+        open={trialModalOpen}
+        onClose={() => setTrialModalOpen(false)}
+        title="Estender trial"
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg border border-line bg-surface-raised p-3 text-sm">
+            <p className="text-txt-mut">
+              Expira em:{" "}
+              <span className="font-medium text-txt">
+                {currentTrialEndsAt ? formatFullDate(currentTrialEndsAt) : "—"}
+              </span>
+            </p>
+            {extCount > 0 && (
+              <p className="mt-0.5 text-xs text-amber">Já estendido {extCount}×</p>
+            )}
+          </div>
+
+          <div>
+            <Label>Dias a adicionar</Label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {QUICK_DAYS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => { setTrialDays(d); setTrialCustomDays(""); }}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
+                    trialDays === d && !trialCustomDays
+                      ? "border-lime bg-lime-soft text-lime"
+                      : "border-line text-txt-dim hover:border-line-strong hover:text-txt"
+                  )}
+                >
+                  +{d} dias
+                </button>
+              ))}
+            </div>
+            <div className="mt-2">
+              <Input
+                value={trialCustomDays}
+                onChange={(e) => setTrialCustomDays(e.target.value)}
+                placeholder="Personalizado (1–90)"
+                type="number"
+                min={1}
+                max={90}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="ext_reason">Motivo <span className="text-txt-dim">(opcional)</span></Label>
+            <Input
+              id="ext_reason"
+              value={trialReason}
+              onChange={(e) => setTrialReason(e.target.value)}
+              placeholder="ex: cliente pediu mais tempo para avaliar"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="secondary" onClick={() => setTrialModalOpen(false)}>Cancelar</Button>
+            <Button onClick={() => void handleExtendTrial()} loading={extendingTrial}>
+              Estender trial
+            </Button>
+          </div>
         </div>
       </Modal>
 

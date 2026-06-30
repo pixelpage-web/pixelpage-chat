@@ -31,6 +31,7 @@ export default async function AdminOrgDetailPage({
     { data: members },
     { data: usage },
     { count: conversationCount },
+    { data: trialExtensions },
   ] = await Promise.all([
     admin.from("subscriptions").select("*").eq("org_id", id).maybeSingle(),
     admin.from("plans").select("*").order("ai_messages_limit"),
@@ -46,6 +47,12 @@ export default async function AdminOrgDetailPage({
       .from("conversations")
       .select("id", { count: "exact", head: true })
       .eq("org_id", id),
+    admin
+      .from("trial_extensions")
+      .select("id, days_added, previous_end_at, new_end_at, reason, created_at")
+      .eq("org_id", id)
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   return (
@@ -57,6 +64,7 @@ export default async function AdminOrgDetailPage({
       members={members ?? []}
       aiUsed={usage?.ai_messages_used ?? 0}
       conversationCount={conversationCount ?? 0}
+      trialExtensions={trialExtensions ?? []}
     />
   );
 }
