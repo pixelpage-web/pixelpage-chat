@@ -7,6 +7,8 @@ import type { Config } from "tailwindcss";
  * Obs.: o token segue se chamando "lime" (nome técnico interno) — só os
  * VALORES mudaram para o laranja da marca; isso evita tocar centenas de
  * classes text-lime/bg-lime espalhadas pela UI.
+ *
+ * Tokens "panel" e "forest" são exclusivos do painel admin (/admin).
  */
 const config: Config = {
   content: [
@@ -64,6 +66,21 @@ const config: Config = {
           mut: "#94A3B8",
           dim: "#64748B",
         },
+
+        // ── Painel Admin (/admin) ─────────────────────────────────────
+        // Paleta exclusiva: preto profundo + verde elétrico
+        panel: {
+          DEFAULT: "#0F0F0F",   // bg principal
+          surface: "#131313",   // sidebar, topbar
+          card: "#1A1A1A",      // cards e rows
+          border: "#242424",    // bordas
+        },
+        forest: {
+          DEFAULT: "#5DD62C",               // verde elétrico
+          dim: "#337418",                   // verde escuro
+          soft: "rgba(93, 214, 44, 0.10)", // fundo sutil
+          glow: "rgba(93, 214, 44, 0.22)", // glow ring
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
@@ -76,6 +93,7 @@ const config: Config = {
       boxShadow: {
         pop: "0 8px 30px rgba(0, 0, 0, 0.45)",
         glow: "0 0 0 1px rgba(255, 92, 0, 0.35), 0 0 24px rgba(255, 92, 0, 0.08)",
+        "forest-glow": "0 0 0 1px rgba(93, 214, 44, 0.30), 0 0 20px rgba(93, 214, 44, 0.08)",
       },
       keyframes: {
         shimmer: {
