@@ -27,9 +27,12 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { SystemNotifications } from "@/components/system-notifications";
 import { SupportButton } from "@/components/support-button";
+import { InboxNotifications } from "@/components/inbox-notifications";
+import { GlobalSearch } from "@/components/global-search";
 import type { Role, SubscriptionStatus, SystemNotificationRow } from "@/types/database";
 
 export interface ShellData {
+  userId: string;
   userName: string;
   userEmail: string;
   role: Role;
@@ -223,6 +226,8 @@ export function AppShell({
 
   return (
     <div className="flex h-dvh flex-col">
+      {/* Busca global — Cmd+K */}
+      {data.orgId && <GlobalSearch orgId={data.orgId} />}
       {data.impersonating && <ImpersonationBanner orgName={data.orgName} />}
       {/* Notificações globais do admin (manutenção, avisos, novidades) */}
       <SystemNotifications initial={data.notifications} orgId={data.orgId} />
@@ -255,6 +260,13 @@ export function AppShell({
             })}
           </nav>
           <div className="space-y-0.5 px-2 pt-2">
+            {/* Notificações in-app */}
+            {data.orgId && (
+              <div className="flex items-center justify-between rounded-lg px-3 py-2">
+                <span className="text-xs text-txt-dim">{t("Notificações")}</span>
+                <InboxNotifications userId={data.userId} orgId={data.orgId} />
+              </div>
+            )}
             {(data.role === "admin" || data.role === "superadmin") && (
               <Link
                 href="/admin"

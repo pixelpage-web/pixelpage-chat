@@ -154,6 +154,7 @@ export type ExternalWebhookRow = {
   platform_workflow_id: string | null;
   webhook_doc_accepted: boolean;
   webhook_doc_accepted_at: string | null;
+  subscribed_events: string[];
   created_at: string;
 };
 
@@ -423,6 +424,139 @@ export type ClientTipRow = {
   created_at: string;
 };
 
+// ----------------------------------------------------------------------------
+// 0012 — Funcionalidades Chatwoot (respostas prontas, etiquetas, notas, etc.)
+// ----------------------------------------------------------------------------
+
+export type CannedResponseRow = {
+  id: string;
+  org_id: string;
+  short_code: string;
+  content: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type LabelRow = {
+  id: string;
+  org_id: string;
+  title: string;
+  description: string | null;
+  color: string;
+  show_on_sidebar: boolean;
+  created_at: string;
+};
+
+export type ConversationLabelRow = {
+  conversation_id: string;
+  label_id: string;
+};
+
+export type ContactNoteRow = {
+  id: string;
+  contact_id: string;
+  org_id: string;
+  content: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ConversationNoteRow = {
+  id: string;
+  conversation_id: string;
+  org_id: string;
+  content: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type MentionRow = {
+  id: string;
+  conversation_id: string;
+  note_id: string;
+  mentioned_user: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type InAppNotificationRow = {
+  id: string;
+  org_id: string;
+  user_id: string;
+  notification_type: string;
+  conversation_id: string | null;
+  actor_id: string | null;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type CustomFilterRow = {
+  id: string;
+  org_id: string;
+  created_by: string | null;
+  name: string;
+  filter_type: string;
+  query: Json;
+  created_at: string;
+};
+
+export type MacroRow = {
+  id: string;
+  org_id: string;
+  created_by: string | null;
+  name: string;
+  actions: Json;
+  visibility: "private" | "public";
+  created_at: string;
+};
+
+export type PortalRow = {
+  id: string;
+  org_id: string;
+  name: string;
+  slug: string;
+  color: string;
+  page_title: string | null;
+  homepage_link: string | null;
+  created_at: string;
+};
+
+export type HelpCategoryRow = {
+  id: string;
+  portal_id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  position: number;
+};
+
+export type HelpArticleRow = {
+  id: string;
+  portal_id: string;
+  category_id: string | null;
+  author_id: string | null;
+  title: string;
+  content: string;
+  status: "draft" | "published";
+  views: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DashboardAppRow = {
+  id: string;
+  org_id: string;
+  title: string;
+  content: Json;
+  created_at: string;
+};
+
+export type ConversationParticipantRow = {
+  conversation_id: string;
+  user_id: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -465,6 +599,21 @@ export type Database = {
       support_tickets: TableShape<SupportTicketRow>;
       support_ticket_messages: TableShape<SupportTicketMessageRow>;
       client_tips: TableShape<ClientTipRow>;
+      // 0012
+      canned_responses: TableShape<CannedResponseRow>;
+      labels: TableShape<LabelRow>;
+      conversation_labels: TableShape<ConversationLabelRow>;
+      contact_notes: TableShape<ContactNoteRow>;
+      conversation_notes: TableShape<ConversationNoteRow>;
+      mentions: TableShape<MentionRow>;
+      in_app_notifications: TableShape<InAppNotificationRow>;
+      custom_filters: TableShape<CustomFilterRow>;
+      macros: TableShape<MacroRow>;
+      portals: TableShape<PortalRow>;
+      help_categories: TableShape<HelpCategoryRow>;
+      help_articles: TableShape<HelpArticleRow>;
+      dashboard_apps: TableShape<DashboardAppRow>;
+      conversation_participants: TableShape<ConversationParticipantRow>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -478,6 +627,10 @@ export type Database = {
       };
       mark_conversation_read: {
         Args: { p_conversation_id: string };
+        Returns: undefined;
+      };
+      increment_article_views: {
+        Args: { p_article_id: string };
         Returns: undefined;
       };
       auth_org_id: { Args: Record<string, never>; Returns: string | null };

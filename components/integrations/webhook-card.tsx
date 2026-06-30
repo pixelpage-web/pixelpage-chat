@@ -46,12 +46,30 @@ export function WebhookCard({
   appUrl: string;
 }) {
   const t = useT();
+  const ALL_EVENTS = [
+    { value: "message.received", label: "Mensagem recebida" },
+    { value: "conversation.created", label: "Conversa criada" },
+    { value: "conversation.resolved", label: "Conversa resolvida" },
+    { value: "conversation.assigned", label: "Conversa atribuída" },
+    { value: "contact.created", label: "Contato criado" },
+    { value: "contact.updated", label: "Contato atualizado" },
+  ];
+
   const [webhook, setWebhook] = useState(initialWebhook);
   const [logs, setLogs] = useState(initialLogs);
   const [url, setUrl] = useState(initialWebhook?.url ?? "");
   const [showSecret, setShowSecret] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [subscribedEvents, setSubscribedEvents] = useState<string[]>(
+    initialWebhook?.subscribed_events ?? ["message.received"]
+  );
+
+  function toggleEvent(event: string) {
+    setSubscribedEvents((prev) =>
+      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]
+    );
+  }
 
   const replyExample = `// No seu fluxo n8n, responda chamando a API da PixelPage Chat:
 POST ${appUrl}/api/v1/messages
@@ -72,20 +90,21 @@ Content-Type: application/json
     setSaving(true);
     try {
       const supabase = createClient();
+      const events = subscribedEvents.length > 0 ? subscribedEvents : ["message.received"];
       if (webhook) {
         const { error } = await supabase
           .from("external_webhooks")
-          .update({ url: trimmed })
+          .update({ url: trimmed, subscribed_events: events })
           .eq("id", webhook.id);
         if (error) {
           toast.error(t("Não foi possível salvar o webhook."));
           return;
         }
-        setWebhook({ ...webhook, url: trimmed });
+        setWebhook({ ...webhook, url: trimmed, subscribed_events: events });
       } else {
         const { data, error } = await supabase
           .from("external_webhooks")
-          .insert({ org_id: orgId, url: trimmed, secret: randomSecret() })
+          .insert({ org_id: orgId, url: trimmed, secret: randomSecret(), subscribed_events: events })
           .select("*")
           .single();
         if (error || !data) {
@@ -233,6 +252,30 @@ Content-Type: application/json
             >
               {t("Salvar")}
             </Button>
+          </div>
+        </div>
+
+        {/* Eventos subscritos */}
+        <div>
+          <Label>{t("Eventos recebidos")}</Label>
+          <p className="mb-2 text-xs text-txt-dim">{t("Selecione quais eventos disparam o webhook.")}</p>
+          <div className="flex flex-wrap gap-2">
+            {ALL_EVENTS.map((ev) => (
+              <button
+                key={ev.value}
+                type="button"
+                onClick={() => toggleEvent(ev.value)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  subscribedEvents.includes(ev.value)
+                    ? "border-lime bg-lime-soft text-lime"
+                    : "border-line text-txt-dim hover:border-line-strong hover:text-txt"
+                )}
+              >
+                {subscribedEvents.includes(ev.value) && <span>✓</span>}
+                {t(ev.label)}
+              </button>
+            ))}
           </div>
         </div>
 

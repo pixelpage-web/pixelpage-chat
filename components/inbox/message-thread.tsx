@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   ArrowLeft,
   Bot,
@@ -14,20 +15,25 @@ import {
   Send,
   SlashSquare,
   Sparkles,
+  Tag,
+  Trash2,
   User,
   UserPlus,
   Workflow,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useT } from "@/lib/i18n";
+import { timeAgo } from "@/lib/utils";
 import { cn, formatMessageTime, formatPhone } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   ContactRow,
   ConversationRow,
+  LabelRow,
   MessageRow,
   QuickTemplate,
   TeamMember,
@@ -210,6 +216,10 @@ export function MessageThread({
   onTakeOver,
   onPauseFlow,
   onDismissSummary,
+  orgId,
+  orgLabels,
+  activeLabels,
+  onToggleLabel,
 }: {
   conversation: ConversationRow;
   contact: ContactRow;
@@ -236,14 +246,111 @@ export function MessageThread({
   /** Interrompe o fluxo ativo e passa para atendimento humano */
   onPauseFlow: () => void;
   onDismissSummary: () => void;
+  orgId: string;
+  orgLabels: LabelRow[];
+  activeLabels: string[];
+  onToggleLabel: (labelId: string) => void;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
+  const [noteMode, setNoteMode] = useState(false); // false = reply, true = internal note
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [notes, setNotes] = useState<Array<{ id: string; content: string; created_at: string }>>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionMatches, setMentionMatches] = useState<TeamMember[]>([]);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const supabase = useMemo(() => createClient(), []);
+
+  // Carregar notas internas da conversa
+  useEffect(() => {
+    void supabase
+      .from("conversation_notes")
+      .select("id, content, created_at")
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setNotes(data ?? []));
+  }, [conversation.id, supabase]);
+
+  // Detectar @mention no campo de nota
+  const handleNoteDraftChange = useCallback((value: string) => {
+    setNoteDraft(value);
+    const atIdx = value.lastIndexOf("@");
+    if (atIdx >= 0 && atIdx === value.length - 1 || (atIdx >= 0 && !value.slice(atIdx + 1).includes(" "))) {
+      const q = value.slice(atIdx + 1).toLowerCase();
+      setMentionQuery(q);
+      setMentionMatches(
+        team.filter((m) => m.name.toLowerCase().includes(q)).slice(0, 6)
+      );
+    } else {
+      setMentionQuery(null);
+      setMentionMatches([]);
+    }
+  }, [team]);
+
+  async function handleSaveNote() {
+    const text = noteDraft.trim();
+    if (!text || savingNote) return;
+    setSavingNote(true);
+    try {
+      const { data, error } = await supabase
+        .from("conversation_notes")
+        .insert({ conversation_id: conversation.id, org_id: orgId, content: text })
+        .select("id, content, created_at")
+        .single();
+      if (error) { toast.error(t("Não foi possível salvar a nota.")); return; }
+      setNotes((prev) => [data, ...prev]);
+      setNoteDraft("");
+      setMentionQuery(null);
+
+      // Processar @menções: extrair nomes e buscar IDs
+      const mentionedNames = [...text.matchAll(/@(\S+)/g)].map((m) => m[1].toLowerCase());
+      if (mentionedNames.length > 0 && data) {
+        const mentioned = team.filter((m) =>
+          mentionedNames.some((n) => m.name.toLowerCase().includes(n))
+        );
+        for (const m of mentioned) {
+          await supabase.from("mentions").insert({
+            conversation_id: conversation.id,
+            note_id: data.id,
+            mentioned_user: m.id,
+          });
+          // Criar notificação in-app para o agente mencionado
+          await supabase.from("in_app_notifications").insert({
+            org_id: orgId,
+            user_id: m.id,
+            notification_type: "conversation_mention",
+            conversation_id: conversation.id,
+            body: `Você foi mencionado numa nota`,
+          });
+        }
+      }
+      toast.success(t("Nota adicionada."));
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  function applyMention(member: TeamMember) {
+    const atIdx = noteDraft.lastIndexOf("@");
+    if (atIdx < 0) return;
+    setNoteDraft(noteDraft.slice(0, atIdx) + `@${member.name} `);
+    setMentionQuery(null);
+    setMentionMatches([]);
+    noteRef.current?.focus();
+  }
+
+  async function deleteNote(id: string) {
+    await supabase.from("conversation_notes").delete().eq("id", id);
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }
 
   // "/" no início abre os templates rápidos
   const slashQuery = draft.startsWith("/") ? draft.slice(1).toLowerCase() : null;
@@ -330,6 +437,53 @@ export function MessageThread({
               </>
             )}
           </button>
+
+          {/* Etiquetas */}
+          {orgLabels.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setLabelsOpen((v) => !v)}
+                title={t("Etiquetas")}
+                className={cn(
+                  "focus-ring flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors",
+                  activeLabels.length > 0
+                    ? "bg-surface-hover text-txt"
+                    : "text-txt-mut hover:bg-surface-hover hover:text-txt"
+                )}
+              >
+                <Tag className="h-3.5 w-3.5" aria-hidden />
+                {activeLabels.length > 0 && (
+                  <span className="flex gap-0.5">
+                    {activeLabels.slice(0, 2).map((lid) => {
+                      const l = orgLabels.find((x) => x.id === lid);
+                      return l ? (
+                        <span key={lid} className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
+                      ) : null;
+                    })}
+                  </span>
+                )}
+              </button>
+              {labelsOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setLabelsOpen(false)} aria-hidden />
+                  <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-line bg-surface-raised py-1 shadow-pop">
+                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-txt-dim">{t("Etiquetas")}</p>
+                    {orgLabels.map((lbl) => (
+                      <button
+                        key={lbl.id}
+                        onClick={() => { onToggleLabel(lbl.id); }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs hover:bg-surface-hover"
+                      >
+                        <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: lbl.color }} />
+                        <span className="flex-1">{lbl.title}</span>
+                        {activeLabels.includes(lbl.id) && <Check className="h-3.5 w-3.5 text-lime" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Atribuir */}
           <div className="relative">
@@ -468,6 +622,30 @@ export function MessageThread({
         )}
       </div>
 
+      {/* Notas internas — exibidas abaixo das mensagens antes do footer */}
+      {notes.length > 0 && (
+        <div className="border-t border-line/50 px-3 py-2 sm:px-5">
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-txt-dim">
+            {t("Notas internas")} ({notes.length})
+          </p>
+          <div className="space-y-1.5 max-h-36 overflow-y-auto">
+            {notes.map((note) => (
+              <div key={note.id} className="group flex items-start gap-2 rounded-lg border border-amber/20 bg-amber-soft/30 px-3 py-2">
+                <p className="flex-1 text-xs leading-relaxed text-txt">{note.content}</p>
+                <span className="shrink-0 text-[10px] text-txt-dim">{timeAgo(note.created_at)}</span>
+                <button
+                  onClick={() => void deleteNote(note.id)}
+                  className="focus-ring hidden rounded p-0.5 text-txt-dim hover:text-danger group-hover:flex"
+                  aria-label={t("Excluir nota")}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Campo de resposta */}
       <footer className="border-t border-line bg-surface p-3">
         {/* Indicador do modo atual do atendimento */}
@@ -516,6 +694,76 @@ export function MessageThread({
             {t("Seu plano expirou — o inbox está somente leitura. Faça upgrade para voltar a responder.")}
           </div>
         ) : (
+          <>
+            {/* Abas: Resposta / Nota interna */}
+            <div className="mb-2 flex gap-1 border-b border-line pb-2">
+              <button
+                onClick={() => setNoteMode(false)}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  !noteMode ? "bg-lime-soft text-lime" : "text-txt-dim hover:text-txt"
+                )}
+              >
+                {t("Resposta")}
+              </button>
+              <button
+                onClick={() => setNoteMode(true)}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  noteMode ? "bg-amber-soft text-amber" : "text-txt-dim hover:text-txt"
+                )}
+              >
+                🔒 {t("Nota interna")}
+              </button>
+            </div>
+
+            {noteMode ? (
+              /* Compositor de nota interna com @menções */
+              <div className="relative">
+                {mentionMatches.length > 0 && mentionQuery !== null && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => { setMentionQuery(null); setMentionMatches([]); }} aria-hidden />
+                    <div className="absolute bottom-full left-0 z-20 mb-2 w-48 rounded-lg border border-line bg-surface-raised py-1 shadow-pop">
+                      <p className="px-3 py-1 text-[10px] text-txt-dim">{t("Mencionar agente")}</p>
+                      {mentionMatches.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => applyMention(m)}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-xs hover:bg-surface-hover"
+                        >
+                          <span className="h-5 w-5 rounded-full bg-surface-hover text-center text-[10px] leading-5">{m.name[0]}</span>
+                          {m.name}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <div className="flex items-end gap-2">
+                  <textarea
+                    ref={noteRef}
+                    value={noteDraft}
+                    onChange={(e) => handleNoteDraftChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        void handleSaveNote();
+                      }
+                    }}
+                    rows={2}
+                    placeholder={t("Nota interna… (@ mencionar agente, Ctrl+Enter salva)")}
+                    className="focus-ring max-h-32 min-h-[42px] flex-1 resize-none rounded-lg border border-amber/30 bg-amber-soft/20 px-3 py-2.5 text-sm placeholder:text-txt-dim"
+                  />
+                  <button
+                    onClick={() => void handleSaveNote()}
+                    disabled={!noteDraft.trim() || savingNote}
+                    className="focus-ring flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-amber text-white transition-colors hover:bg-amber/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={t("Salvar nota")}
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
           <div className="relative">
             {/* Templates rápidos: digite "/" ou clique no ícone */}
             {(slashMatches.length > 0 || templatesOpen) && templates.length > 0 && (
@@ -603,6 +851,8 @@ export function MessageThread({
               </button>
             </div>
           </div>
+            )}
+          </>
         )}
       </footer>
     </div>

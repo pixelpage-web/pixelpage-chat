@@ -16,11 +16,28 @@ export interface ConnectionSummary {
   mode: string;
 }
 
-/** Template rápido do composer ("/"). */
+/** Template rápido do composer ("/") — inclui respostas prontas (org) e templates globais. */
 export interface QuickTemplate {
   id: string;
   name: string;
   content: string;
+  source?: "canned" | "template";
+}
+
+/** Resposta pronta por short_code. */
+export interface CannedResponse {
+  id: string;
+  short_code: string;
+  content: string;
+}
+
+/** Etiqueta colorida de conversa. */
+export interface LabelRow {
+  id: string;
+  title: string;
+  color: string;
+  description: string | null;
+  show_on_sidebar: boolean;
 }
 
 /** Prévia da última mensagem exibida na lista de conversas. */

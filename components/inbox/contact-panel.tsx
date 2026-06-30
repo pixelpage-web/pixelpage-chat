@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Ban, Download, Phone, Plus, Sparkles, Tag, X } from "lucide-react";
+import { Ban, Download, Phone, Plus, Tag, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn, formatFullDate, formatPhone, timeAgo } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ContactNotes } from "./contact-notes";
 import type { ContactRow, ConversationRow, TeamMember } from "./types";
 
 /** Histórico de CSAT do contato (média e nº de avaliações). */
@@ -22,6 +23,7 @@ export function ContactPanel({
   team,
   conversationCount,
   csatStats,
+  orgId,
   onUpdateContact,
   onToggleBlock,
   onExportHistory,
@@ -31,43 +33,18 @@ export function ContactPanel({
   team: TeamMember[];
   conversationCount: number;
   csatStats: ContactCsatStats | null;
+  orgId: string;
   onUpdateContact: (patch: Partial<ContactRow>) => void;
   onToggleBlock: () => void;
   onExportHistory: () => void;
 }) {
   const t = useT();
-  const [notes, setNotes] = useState(contact.notes);
   const [newTag, setNewTag] = useState("");
-  const [generatingNote, setGeneratingNote] = useState(false);
-
-  /** "✨ Gerar nota com IA": preenche o campo — o usuário edita antes de salvar. */
-  async function handleGenerateNote() {
-    setGeneratingNote(true);
-    try {
-      const res = await fetch("/api/inbox/ai-note", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversation_id: conversation.id }),
-      });
-      const json = (await res.json()) as { note?: string; error?: string };
-      if (!res.ok || !json.note) {
-        toast.error(json.error ?? t("Não foi possível gerar a nota."));
-        return;
-      }
-      setNotes(json.note);
-      toast.success(t("Nota gerada! Revise e clique em salvar."));
-    } catch {
-      toast.error(t("Erro de conexão ao gerar a nota."));
-    } finally {
-      setGeneratingNote(false);
-    }
-  }
 
   // Sincroniza ao trocar de contato
   useEffect(() => {
-    setNotes(contact.notes);
     setNewTag("");
-  }, [contact.id, contact.notes]);
+  }, [contact.id]);
 
   function addTag() {
     const tag = newTag.trim().toLowerCase();
@@ -223,40 +200,12 @@ export function ContactPanel({
         </div>
       </section>
 
-      {/* Notas */}
-      <section className="mt-6 flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-txt-dim">
-            {t("Notas internas")}
-          </h3>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-[11px] text-lime hover:bg-lime-soft"
-            loading={generatingNote}
-            onClick={() => void handleGenerateNote()}
-            title={t("A IA resume a conversa numa nota — você edita antes de salvar.")}
-          >
-            <Sparkles className="h-3 w-3" aria-hidden />
-            {t("Gerar nota com IA")}
-          </Button>
-        </div>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t("Anotações sobre este contato (só sua equipe vê)…")}
-          className="focus-ring mt-2 min-h-[96px] flex-1 resize-none rounded-lg border border-line bg-ink px-3 py-2.5 text-xs leading-relaxed placeholder:text-txt-dim"
-        />
-        {notes !== contact.notes && (
-          <Button
-            size="sm"
-            className="mt-2"
-            onClick={() => onUpdateContact({ notes })}
-          >
-            {t("Salvar notas")}
-          </Button>
-        )}
-      </section>
+      {/* Notas — lista timestamped de notas por contato */}
+      <ContactNotes
+        contactId={contact.id}
+        orgId={orgId}
+        conversationId={conversation.id}
+      />
     </div>
   );
 }

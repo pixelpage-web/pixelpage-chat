@@ -14,10 +14,12 @@ import { MessageThread } from "./message-thread";
 import { ContactPanel, type ContactCsatStats } from "./contact-panel";
 import type { Json } from "@/types/database";
 import type {
+  CannedResponse,
   ConnectionSummary,
   ContactRow,
   ConversationRow,
   InboxFilter,
+  LabelRow,
   MessagePreview,
   MessageRow,
   QuickTemplate,
@@ -52,10 +54,15 @@ export function InboxView({
   const [connections, setConnections] = useState<ConnectionSummary[]>([]);
   const [connectionFilter, setConnectionFilter] = useState<string | "all">("all");
   const [templates, setTemplates] = useState<QuickTemplate[]>([]);
+  const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [attaching, setAttaching] = useState(false);
   // Nome dos fluxos (indicador "Fluxo ativo") e CSAT por contato
   const [flowNames, setFlowNames] = useState<Record<string, string>>({});
   const [contactCsat, setContactCsat] = useState<Record<string, ContactCsatStats>>({});
+  // Etiquetas da org e mapa de etiquetas por conversa
+  const [orgLabels, setOrgLabels] = useState<LabelRow[]>([]);
+  const [convLabels, setConvLabels] = useState<Record<string, string[]>>({}); // conversationId → labelId[]
+  const [labelFilter, setLabelFilter] = useState<string | null>(null);
 
   // Ref para os handlers de realtime enxergarem a conversa aberta
   const selectedIdRef = useRef<string | null>(null);
@@ -67,7 +74,7 @@ export function InboxView({
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [convRes, contactRes, teamRes, connRes, tplRes, flowRes] = await Promise.all([
+      const [convRes, contactRes, teamRes, connRes, tplRes, flowRes, cannedRes, labelsRes] = await Promise.all([
         supabase
           .from("conversations")
           .select("*")
@@ -86,6 +93,16 @@ export function InboxView({
           .eq("active", true)
           .order("name"),
         supabase.from("flows").select("id, name").eq("org_id", orgId),
+        supabase
+          .from("canned_responses")
+          .select("id, short_code, content")
+          .eq("org_id", orgId)
+          .order("short_code"),
+        supabase
+          .from("labels")
+          .select("id, title, color, description, show_on_sidebar")
+          .eq("org_id", orgId)
+          .order("title"),
       ]);
 
       if (convRes.error || contactRes.error || teamRes.error) {
@@ -93,13 +110,44 @@ export function InboxView({
         return;
       }
       setConnections(connRes.data ?? []);
-      setTemplates(tplRes.data ?? []);
+      setCannedResponses(cannedRes.data ?? []);
+      setOrgLabels((labelsRes.data ?? []) as LabelRow[]);
+      // Mescla: canned responses (org) + templates globais como fallback
+      const canned: QuickTemplate[] = (cannedRes.data ?? []).map((c) => ({
+        id: c.id,
+        name: c.short_code,
+        content: c.content,
+        source: "canned" as const,
+      }));
+      const global: QuickTemplate[] = (tplRes.data ?? []).map((t) => ({
+        id: t.id,
+        name: t.name,
+        content: t.content,
+        source: "template" as const,
+      }));
+      setTemplates([...canned, ...global]);
       setFlowNames(
         Object.fromEntries((flowRes.data ?? []).map((f) => [f.id, f.name]))
       );
 
       const convs = convRes.data ?? [];
       setConversations(convs);
+
+      // Carregar etiquetas de todas as conversas carregadas
+      if (convs.length > 0) {
+        const { data: clData } = await supabase
+          .from("conversation_labels")
+          .select("conversation_id, label_id")
+          .in("conversation_id", convs.map((c) => c.id));
+        if (clData) {
+          const map: Record<string, string[]> = {};
+          for (const cl of clData) {
+            if (!map[cl.conversation_id]) map[cl.conversation_id] = [];
+            map[cl.conversation_id].push(cl.label_id);
+          }
+          setConvLabels(map);
+        }
+      }
       setContacts(
         Object.fromEntries((contactRes.data ?? []).map((c) => [c.id, c]))
       );
@@ -448,6 +496,32 @@ export function InboxView({
     URL.revokeObjectURL(url);
   }
 
+  /** Alterna uma etiqueta em uma conversa. */
+  async function handleToggleLabel(conversationId: string, labelId: string) {
+    const current = convLabels[conversationId] ?? [];
+    const has = current.includes(labelId);
+    setConvLabels((prev) => ({
+      ...prev,
+      [conversationId]: has ? current.filter((id) => id !== labelId) : [...current, labelId],
+    }));
+    try {
+      if (has) {
+        await supabase
+          .from("conversation_labels")
+          .delete()
+          .eq("conversation_id", conversationId)
+          .eq("label_id", labelId);
+      } else {
+        await supabase
+          .from("conversation_labels")
+          .insert({ conversation_id: conversationId, label_id: labelId });
+      }
+    } catch {
+      setConvLabels((prev) => ({ ...prev, [conversationId]: current }));
+      toast.error(t("Não foi possível atualizar a etiqueta."));
+    }
+  }
+
   /** "Assumir atendimento": pausa o bot e gera o resumo por IA em segundo plano. */
   async function handleTakeOver(conversation: ConversationRow) {
     await patchConversation(
@@ -553,6 +627,10 @@ export function InboxView({
           connections={connections}
           connectionFilter={connectionFilter}
           onConnectionFilterChange={setConnectionFilter}
+          orgLabels={orgLabels}
+          convLabels={convLabels}
+          labelFilter={labelFilter}
+          onLabelFilterChange={setLabelFilter}
           emptyAction={
             seedEnabled ? (
               <Button
@@ -583,6 +661,7 @@ export function InboxView({
               readOnly={readOnly}
               team={team}
               userId={userId}
+              orgId={orgId}
               onBack={() => setSelectedId(null)}
               onSend={(content) => void handleSend(content)}
               onToggleResolve={() =>
@@ -615,6 +694,9 @@ export function InboxView({
               onTakeOver={() => void handleTakeOver(selected)}
               onPauseFlow={() => void handlePauseFlow(selected)}
               onDismissSummary={() => void handleDismissSummary(selected)}
+              orgLabels={orgLabels}
+              activeLabels={convLabels[selected.id] ?? []}
+              onToggleLabel={(labelId) => void handleToggleLabel(selected.id, labelId)}
             />
           </section>
 
@@ -631,6 +713,7 @@ export function InboxView({
               team={team}
               conversationCount={selectedContactConversations}
               csatStats={selectedCsat}
+              orgId={orgId}
               onUpdateContact={(patch) =>
                 void handleUpdateContact(selectedContact.id, patch)
               }
@@ -647,6 +730,7 @@ export function InboxView({
               team={team}
               conversationCount={selectedContactConversations}
               csatStats={selectedCsat}
+              orgId={orgId}
               onUpdateContact={(patch) =>
                 void handleUpdateContact(selectedContact.id, patch)
               }

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Bot, Inbox as InboxIcon, Search, User, Workflow } from "lucide-react";
+import { KeyboardShortcutsButton } from "./keyboard-shortcuts";
 import { useT } from "@/lib/i18n";
 import { cn, formatConversationTime, formatPhone } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
@@ -12,6 +13,7 @@ import type {
   ContactRow,
   ConversationRow,
   InboxFilter,
+  LabelRow,
   MessagePreview,
 } from "./types";
 
@@ -62,6 +64,10 @@ export function ConversationList({
   connections,
   connectionFilter,
   onConnectionFilterChange,
+  orgLabels = [],
+  convLabels = {},
+  labelFilter,
+  onLabelFilterChange,
 }: {
   loading: boolean;
   conversations: ConversationRow[];
@@ -76,6 +82,10 @@ export function ConversationList({
   connections: ConnectionSummary[];
   connectionFilter: string | "all";
   onConnectionFilterChange: (id: string | "all") => void;
+  orgLabels?: LabelRow[];
+  convLabels?: Record<string, string[]>;
+  labelFilter?: string | null;
+  onLabelFilterChange?: (id: string | null) => void;
 }) {
   const t = useT();
   const [search, setSearch] = useState("");
@@ -89,6 +99,8 @@ export function ConversationList({
       if (filter === "mine" && c.assigned_to !== userId) return false;
       if (connectionFilter !== "all" && c.connection_id !== connectionFilter)
         return false;
+      if (labelFilter && !(convLabels[c.id] ?? []).includes(labelFilter))
+        return false;
       if (term) {
         const contact = contacts[c.contact_id];
         const name = contact?.name?.toLowerCase() ?? "";
@@ -97,7 +109,7 @@ export function ConversationList({
       }
       return true;
     });
-  }, [conversations, contacts, filter, search, userId, connectionFilter]);
+  }, [conversations, contacts, filter, search, userId, connectionFilter, labelFilter, convLabels]);
 
   const openCount = useMemo(
     () => conversations.filter((c) => c.status === "open" && c.unread_count > 0).length,
@@ -109,11 +121,14 @@ export function ConversationList({
       <header className="border-b border-line px-4 pb-3 pt-4">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-lg font-semibold">Inbox</h1>
-          {openCount > 0 && (
-            <span className="rounded-full bg-lime px-2 py-0.5 text-[11px] font-semibold text-white">
-              {openCount} {openCount > 1 ? t("não lidas") : t("não lida")}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {openCount > 0 && (
+              <span className="rounded-full bg-lime px-2 py-0.5 text-[11px] font-semibold text-white">
+                {openCount} {openCount > 1 ? t("não lidas") : t("não lida")}
+              </span>
+            )}
+            <KeyboardShortcutsButton />
+          </div>
         </div>
 
         <div className="relative mt-3">
@@ -145,6 +160,31 @@ export function ConversationList({
             </button>
           ))}
         </div>
+
+        {/* Filtro por etiqueta */}
+        {orgLabels.filter((l) => l.show_on_sidebar).length > 0 && onLabelFilterChange && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {orgLabels.filter((l) => l.show_on_sidebar).map((label) => (
+              <button
+                key={label.id}
+                onClick={() => onLabelFilterChange(labelFilter === label.id ? null : label.id)}
+                className={cn(
+                  "focus-ring flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors",
+                  labelFilter === label.id
+                    ? "border-transparent text-white"
+                    : "border-line bg-transparent text-txt-dim hover:text-txt"
+                )}
+                style={labelFilter === label.id ? { backgroundColor: label.color, borderColor: label.color } : undefined}
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: label.color }}
+                />
+                {label.title}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Filtro por conexão — aparece com múltiplos números */}
         {connections.length > 1 && (
@@ -230,6 +270,18 @@ export function ConversationList({
                           <span className="truncate">{previewText(preview, t)}</span>
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5">
+                          {/* Label dots */}
+                          {(convLabels[conv.id] ?? []).slice(0, 3).map((lid) => {
+                            const lbl = orgLabels.find((l) => l.id === lid);
+                            return lbl ? (
+                              <span
+                                key={lid}
+                                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                style={{ backgroundColor: lbl.color }}
+                                title={lbl.title}
+                              />
+                            ) : null;
+                          })}
                           {conv.status === "resolved" && (
                             <span className="rounded bg-surface-raised px-1.5 py-0.5 text-[10px] text-txt-dim">
                               {t("Resolvida")}

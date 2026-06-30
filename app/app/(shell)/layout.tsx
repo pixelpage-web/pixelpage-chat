@@ -72,6 +72,7 @@ export default async function ShellLayout({
   }
 
   const data: ShellData = {
+    userId: session.user.id,
     userName: session.profile.name,
     userEmail: session.user.email ?? "",
     role: session.profile.role,
