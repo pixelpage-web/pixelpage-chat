@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -22,13 +23,15 @@ interface AsaasWebhookBody {
 }
 
 export async function POST(request: Request) {
-  // Validação do token configurado no painel do Asaas
   const expected = process.env.ASAAS_WEBHOOK_TOKEN;
-  if (expected) {
-    const received = request.headers.get("asaas-access-token");
-    if (received !== expected) {
-      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
-    }
+  if (!expected) {
+    return NextResponse.json({ error: "Webhook não configurado" }, { status: 503 });
+  }
+  const received = request.headers.get("asaas-access-token") ?? "";
+  const expectedHash = createHash("sha256").update(expected).digest();
+  const receivedHash = createHash("sha256").update(received).digest();
+  if (!timingSafeEqual(expectedHash, receivedHash)) {
+    return NextResponse.json({ error: "Token inválido" }, { status: 401 });
   }
 
   let body: AsaasWebhookBody;

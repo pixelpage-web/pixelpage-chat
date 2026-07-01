@@ -28,14 +28,15 @@ interface JobPayload {
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const url = new URL(request.url);
-    const header = request.headers.get("authorization");
-    const ok =
-      header === `Bearer ${secret}` || url.searchParams.get("key") === secret;
-    if (!ok) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json({ error: "CRON_SECRET não configurado" }, { status: 503 });
+  }
+  const url = new URL(request.url);
+  const header = request.headers.get("authorization");
+  const ok =
+    header === `Bearer ${secret}` || url.searchParams.get("key") === secret;
+  if (!ok) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const admin = createAdminClient();
