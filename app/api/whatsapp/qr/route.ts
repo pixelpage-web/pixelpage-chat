@@ -24,8 +24,7 @@ import {
 
 function webhookUrl(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const token = process.env.EVOLUTION_WEBHOOK_TOKEN;
-  return `${base}/api/webhooks/evolution${token ? `?token=${token}` : ""}`;
+  return `${base}/api/webhooks/evolution`;
 }
 
 export async function POST(request: Request) {

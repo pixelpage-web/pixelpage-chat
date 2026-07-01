@@ -22,7 +22,7 @@ export function FeatureBadge({
         "inline-flex cursor-help items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-4",
         className
       )}
-      style={{ backgroundColor: "rgba(255, 92, 0, 0.15)", color: "#FF5C00" }}
+      style={{ backgroundColor: "rgba(93, 214, 44, 0.15)", color: "#5DD62C" }}
     >
       🔓 {t("Recurso do plano")} {requiredPlan} — {t("visível como Super Admin")}
     </span>

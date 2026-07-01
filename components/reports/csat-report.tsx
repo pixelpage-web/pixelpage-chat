@@ -238,7 +238,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
               <polyline
                 points={chart.points}
                 fill="none"
-                stroke="#FF5C00"
+                stroke="#5DD62C"
                 strokeWidth={2}
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -249,7 +249,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
                   cx={chart.xs(i)}
                   cy={chart.ys(p.avg)}
                   r={3}
-                  fill="#FF5C00"
+                  fill="#5DD62C"
                 >
                   <title>{`${p.day}: ${p.avg.toFixed(1)}`}</title>
                 </circle>

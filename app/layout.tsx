@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans, Exo_2 } from "next/font/google";
 import { Toaster } from "sonner";
 import { LanguageProvider } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/server";
 import "./globals.css";
 
-const inter = Inter({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
-const spaceGrotesk = Space_Grotesk({
+const exo2 = Exo_2({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
+  weight: ["500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +42,7 @@ export default async function RootLayout({
   return (
     <html
       lang={lang === "pt" ? "pt-BR" : "en"}
-      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      className={`${plusJakarta.variable} ${exo2.variable}`}
     >
       <body className="font-sans">
         <LanguageProvider initialLang={lang}>{children}</LanguageProvider>
@@ -49,9 +51,9 @@ export default async function RootLayout({
           position="top-right"
           toastOptions={{
             style: {
-              background: "#1A1E25",
-              border: "1px solid #252B34",
-              color: "#E8EAED",
+              background: "#1A1A1A",
+              border: "1px solid #2E2E2E",
+              color: "#F8F8F8",
             },
           }}
         />

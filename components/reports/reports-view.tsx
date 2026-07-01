@@ -241,7 +241,7 @@ export function ReportsView({ orgId }: { orgId: string }) {
   }
 
   const donutStyle = {
-    background: `conic-gradient(#FF5C00 0 ${(botCount / outTotal) * 360}deg, #F1F5F9 ${(botCount / outTotal) * 360}deg ${((botCount + humanCount) / outTotal) * 360}deg, #F59E0B ${((botCount + humanCount) / outTotal) * 360}deg 360deg)`,
+    background: `conic-gradient(#5DD62C 0 ${(botCount / outTotal) * 360}deg, #F8F8F8 ${(botCount / outTotal) * 360}deg ${((botCount + humanCount) / outTotal) * 360}deg, #F59E0B ${((botCount + humanCount) / outTotal) * 360}deg 360deg)`,
   };
 
   return (

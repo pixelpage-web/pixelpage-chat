@@ -20,7 +20,7 @@ export interface LabelRow {
 }
 
 const PRESET_COLORS = [
-  "#1F93FF", "#FF5C00", "#3DD68C", "#F0B429",
+  "#1F93FF", "#5DD62C", "#3DD68C", "#F0B429",
   "#EF4444", "#A855F7", "#EC4899", "#14B8A6",
   "#F97316", "#6366F1", "#84CC16", "#06B6D4",
 ];

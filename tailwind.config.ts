@@ -2,11 +2,10 @@ import type { Config } from "tailwindcss";
 
 /**
  * Design tokens da PixelPage Chat.
- * Identidade: fundo escuro profundo, superfícies elevadas discretas,
- * acento laranja (#FF5C00) em CTAs/estados ativos, âmbar para alertas.
- * Obs.: o token segue se chamando "lime" (nome técnico interno) — só os
- * VALORES mudaram para o laranja da marca; isso evita tocar centenas de
- * classes text-lime/bg-lime espalhadas pela UI.
+ * Identidade: fundo escuro profundo, superfícies elevadas neutras,
+ * acento verde elétrico (#5DD62C) em CTAs/estados ativos.
+ * Obs.: o token se chama "lime" (nome técnico interno) — os valores
+ * foram atualizados para o verde elétrico da nova identidade visual.
  *
  * Tokens "panel" e "forest" são exclusivos do painel admin (/admin).
  */
@@ -21,26 +20,26 @@ const config: Config = {
       colors: {
         // Fundo profundo
         ink: {
-          DEFAULT: "#0B0D10",
-          deep: "#07090B",
+          DEFAULT: "#0F0F0F",
+          deep: "#080808",
         },
         // Superfícies (cards, sidebars, inputs)
         surface: {
-          DEFAULT: "#13161B",
-          raised: "#191D24",
-          hover: "#1F242C",
+          DEFAULT: "#141414",
+          raised: "#1A1A1A",
+          hover: "#202020",
         },
         // Bordas e divisores
         line: {
-          DEFAULT: "#1E2228",
-          strong: "#2A3038",
+          DEFAULT: "#242424",
+          strong: "#2E2E2E",
         },
-        // Acento principal — laranja PixelPage (#FF5C00)
+        // Acento principal — verde elétrico PixelPage (#5DD62C)
         lime: {
-          DEFAULT: "#FF5C00",
-          bright: "#FF7A33",
-          dim: "#CC4A00",
-          soft: "rgba(255, 92, 0, 0.14)",
+          DEFAULT: "#5DD62C",
+          bright: "#79E84D",
+          dim: "#337418",
+          soft: "rgba(93, 214, 44, 0.14)",
         },
         // Alertas
         amber: {
@@ -62,24 +61,24 @@ const config: Config = {
         },
         // Texto
         txt: {
-          DEFAULT: "#F1F5F9",
-          mut: "#94A3B8",
-          dim: "#64748B",
+          DEFAULT: "#F8F8F8",
+          mut: "#8A9BB0",
+          dim: "#56677D",
         },
 
         // ── Painel Admin (/admin) ─────────────────────────────────────
         // Paleta exclusiva: preto profundo + verde elétrico
         panel: {
-          DEFAULT: "#0F0F0F",   // bg principal
-          surface: "#131313",   // sidebar, topbar
-          card: "#1A1A1A",      // cards e rows
-          border: "#242424",    // bordas
+          DEFAULT: "#0F0F0F",
+          surface: "#131313",
+          card: "#1A1A1A",
+          border: "#242424",
         },
         forest: {
-          DEFAULT: "#5DD62C",               // verde elétrico
-          dim: "#337418",                   // verde escuro
-          soft: "rgba(93, 214, 44, 0.10)", // fundo sutil
-          glow: "rgba(93, 214, 44, 0.22)", // glow ring
+          DEFAULT: "#5DD62C",
+          dim: "#337418",
+          soft: "rgba(93, 214, 44, 0.10)",
+          glow: "rgba(93, 214, 44, 0.22)",
         },
       },
       fontFamily: {
@@ -91,8 +90,8 @@ const config: Config = {
         card: "0.75rem",
       },
       boxShadow: {
-        pop: "0 8px 30px rgba(0, 0, 0, 0.45)",
-        glow: "0 0 0 1px rgba(255, 92, 0, 0.35), 0 0 24px rgba(255, 92, 0, 0.08)",
+        pop: "0 8px 30px rgba(0, 0, 0, 0.55)",
+        glow: "0 0 0 1px rgba(93, 214, 44, 0.35), 0 0 24px rgba(93, 214, 44, 0.08)",
         "forest-glow": "0 0 0 1px rgba(93, 214, 44, 0.30), 0 0 20px rgba(93, 214, 44, 0.08)",
       },
       keyframes: {

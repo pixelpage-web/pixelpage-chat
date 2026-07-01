@@ -137,10 +137,18 @@ export async function createEvolutionInstance(
 
   // Webhook: tenta o formato v2 ({webhook:{...}}), cai para o v1 (flat)
   const events = ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"];
+  const webhookToken = process.env.EVOLUTION_WEBHOOK_TOKEN;
+  const webhookHeaders = webhookToken ? { "x-webhook-token": webhookToken } : {};
   const v2 = await evoFetch(cfg, `/webhook/set/${instanceName}`, {
     method: "POST",
     body: JSON.stringify({
-      webhook: { enabled: true, url: webhookUrl, webhookByEvents: false, events },
+      webhook: {
+        enabled: true,
+        url: webhookUrl,
+        webhookByEvents: false,
+        events,
+        headers: webhookHeaders,
+      },
     }),
   });
   if (!v2.ok) {

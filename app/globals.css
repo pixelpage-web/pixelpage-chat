@@ -18,7 +18,7 @@
   /* Scrollbar discreta, estilo ferramenta profissional */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #323a46 transparent;
+    scrollbar-color: #2a2a2a transparent;
   }
 
   *::-webkit-scrollbar {
@@ -27,7 +27,7 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background: #323a46;
+    background: #2a2a2a;
     border-radius: 4px;
   }
 
@@ -42,9 +42,9 @@
     @apply animate-shimmer rounded-md bg-surface;
     background-image: linear-gradient(
       90deg,
-      #14171c 0px,
-      #1d222a 40px,
-      #14171c 80px
+      #141414 0px,
+      #1e1e1e 40px,
+      #141414 80px
     );
     background-size: 400px 100%;
   }
@@ -75,7 +75,7 @@
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #ff5c00;
+  stroke: #5DD62C;
 }
 
 .react-flow__attribution {

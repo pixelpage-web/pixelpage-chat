@@ -8,7 +8,7 @@ export default function AuthLayout({
     <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
       {/* Brilho sutil de fundo — identidade, sem gradiente genérico */}
       <div
-        className="pointer-events-none fixed inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top,rgba(255,92,0,0.07),transparent_60%)]"
+        className="pointer-events-none fixed inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top,rgba(93,214,44,0.07),transparent_60%)]"
         aria-hidden
       />
       <div className="fixed right-4 top-4">

@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "crypto";
 import { NextResponse, after } from "next/server";
 import {
   processEvolutionWebhook,
@@ -6,18 +7,20 @@ import {
 
 /**
  * Webhook da Evolution API (conexões via QR Code).
- * URL cadastrada na instância: {APP_URL}/api/webhooks/evolution?token=XXX
+ * Autenticado via header x-webhook-token (EVOLUTION_WEBHOOK_TOKEN).
  * Responde 200 imediatamente; processamento assíncrono via after().
  */
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  // Validação simples por token na query (configurado ao criar a instância)
   const expected = process.env.EVOLUTION_WEBHOOK_TOKEN;
   if (expected) {
-    const token = new URL(request.url).searchParams.get("token");
-    if (token !== expected) {
+    const received = request.headers.get("x-webhook-token") ?? "";
+    // Hash ambos para igualar o tamanho antes de timingSafeEqual (evita erro de buffer)
+    const expectedHash = createHash("sha256").update(expected).digest();
+    const receivedHash = createHash("sha256").update(received).digest();
+    if (!timingSafeEqual(expectedHash, receivedHash)) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
   }
