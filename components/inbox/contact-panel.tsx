@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Ban, Download, Phone, Plus, Tag, X } from "lucide-react";
+import { Ban, Check, Download, Pencil, Phone, Plus, Tag, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn, formatFullDate, formatPhone, timeAgo } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
@@ -40,11 +40,25 @@ export function ContactPanel({
 }) {
   const t = useT();
   const [newTag, setNewTag] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(contact.name ?? "");
 
   // Sincroniza ao trocar de contato
   useEffect(() => {
     setNewTag("");
-  }, [contact.id]);
+    setEditingName(false);
+    setNameInput(contact.name ?? "");
+  }, [contact.id, contact.name]);
+
+  function saveName() {
+    const trimmed = nameInput.trim();
+    if (!trimmed || trimmed === contact.name) {
+      setEditingName(false);
+      return;
+    }
+    onUpdateContact({ name: trimmed, name_manually_set: true });
+    setEditingName(false);
+  }
 
   function addTag() {
     const tag = newTag.trim().toLowerCase();
@@ -69,9 +83,51 @@ export function ContactPanel({
       {/* Identidade */}
       <div className="flex flex-col items-center text-center">
         <Avatar name={contact.name ?? contact.phone} size="lg" />
-        <p className="mt-3 font-display text-base font-semibold">
-          {contact.name || t("Sem nome")}
-        </p>
+        {editingName ? (
+          <div className="mt-3 flex items-center gap-1">
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveName();
+                if (e.key === "Escape") setEditingName(false);
+              }}
+              className="rounded border border-lime bg-ink px-2 py-0.5 text-sm font-semibold focus:outline-none"
+              placeholder={t("Nome do contato")}
+            />
+            <button
+              onClick={saveName}
+              className="focus-ring rounded p-0.5 text-lime hover:opacity-80"
+              aria-label={t("Salvar nome")}
+            >
+              <Check className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setEditingName(false)}
+              className="focus-ring rounded p-0.5 text-txt-dim hover:text-txt"
+              aria-label={t("Cancelar")}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center gap-1">
+            <p className="font-display text-base font-semibold">
+              {contact.name || t("Sem nome")}
+            </p>
+            <button
+              onClick={() => {
+                setNameInput(contact.name ?? "");
+                setEditingName(true);
+              }}
+              className="focus-ring rounded p-0.5 text-txt-dim hover:text-txt"
+              aria-label={t("Editar nome")}
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          </div>
+        )}
         <p className="mt-1 flex items-center gap-1.5 text-xs text-txt-mut">
           <Phone className="h-3 w-3" aria-hidden />
           {formatPhone(contact.phone)}

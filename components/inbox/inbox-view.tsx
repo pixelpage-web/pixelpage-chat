@@ -79,6 +79,7 @@ export function InboxView({
           .from("conversations")
           .select("*")
           .eq("org_id", orgId)
+          .eq("archived", false)
           .order("last_message_at", { ascending: false })
           .limit(200),
         supabase.from("contacts").select("*").eq("org_id", orgId),

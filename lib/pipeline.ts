@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendText, type SendableConnection } from "@/lib/send";
 import {
+  fetchEvolutionOwner,
+  fetchEvolutionMediaBase64,
+} from "@/lib/evolution";
+import {
   buildAgentSystemPrompt,
   generateAgentReply,
   matchesHandoffKeyword,
@@ -78,11 +82,14 @@ export async function handleInboundMessage(
       .select("*")
       .single();
     contact = created;
-  } else if (msg.contactName && !contact.name) {
+  } else if (msg.contactName && !contact.name_manually_set) {
+    // Atualiza sempre com o pushName mais recente, a menos que Patrick tenha
+    // editado o nome manualmente (name_manually_set = true).
     await admin
       .from("contacts")
       .update({ name: msg.contactName })
       .eq("id", contact.id);
+    contact = { ...contact, name: msg.contactName };
   }
   if (!contact) return;
 
@@ -351,21 +358,36 @@ interface EvolutionMessageData {
   };
 }
 
+/** Mapeia mimetype para extensão de arquivo no Supabase Storage. */
+function mimetypeToExt(mimetype: string): string {
+  if (mimetype.startsWith("image/jpeg")) return "jpg";
+  if (mimetype.startsWith("image/png")) return "png";
+  if (mimetype.startsWith("image/webp")) return "webp";
+  if (mimetype.startsWith("audio/ogg")) return "ogg";
+  if (mimetype.startsWith("audio/mpeg")) return "mp3";
+  if (mimetype.startsWith("video/mp4")) return "mp4";
+  if (mimetype.startsWith("application/pdf")) return "pdf";
+  return "bin";
+}
+
 /**
  * Extrai o número de telefone de um JID da Evolution API / Baileys.
  * Lida com:
- *   - JID normal: 5567999334922@s.whatsapp.net  → "5567999334922"
- *   - Multi-device: 5567999334922:3@s.whatsapp.net → "5567999334922" (strip :deviceId)
- *   - LID: 173744479826101@lid               → null (não é telefone)
- * Retorna null para LIDs ou qualquer string que não pareça um telefone válido.
+ *   - JID normal:    5567999334922@s.whatsapp.net   → "5567999334922"
+ *   - Multi-device:  5567999334922:3@s.whatsapp.net → "5567999334922" (strip :deviceId)
+ *   - LID explícito: 173744479826101@lid             → null
+ *   - LID disfarçado em @s.whatsapp.net:             → null (>13 dígitos)
+ *
+ * LIDs do WhatsApp são inteiros aleatórios de 14-15 dígitos. Telefones reais
+ * em E.164 para países que usam WhatsApp têm no máximo 13 dígitos (Brasil:
+ * 55+DD+9dígitos = 13). Números com >13 dígitos são tratados como LID.
  */
 function jidToPhone(jid: string | undefined): string | null {
   if (!jid) return null;
-  if (jid.endsWith("@lid")) return null; // LID — não é número de telefone
+  if (jid.endsWith("@lid")) return null; // LID com sufixo explícito
   const local = jid.replace(/@.*$/, "").replace(/:\d+$/, ""); // strip @domain e :deviceId
   const digits = local.replace(/\D/g, "");
-  // E.164: mínimo 7 dígitos, máximo 15; LIDs tendem a ter ≥ 14 dígitos sem prefixo de país conhecido
-  if (!digits || digits.length < 7 || digits.length > 15) return null;
+  if (!digits || digits.length < 7 || digits.length > 13) return null; // >13 → LID
   return digits;
 }
 
@@ -424,16 +446,34 @@ export async function processEvolutionWebhook(
   if (event === "connection.update") {
     const state = body.data?.state;
     if (state === "open") {
+      // P5: capturar o número real do WhatsApp conectado
+      const ownerInfo = await fetchEvolutionOwner(instanceName);
       await admin
         .from("whatsapp_connections")
-        .update({ status: "connected", connected_at: new Date().toISOString() })
+        .update({
+          status: "connected",
+          connected_at: new Date().toISOString(),
+          ...(ownerInfo.phone ? { phone_display: ownerInfo.phone } : {}),
+        })
         .eq("id", connection.id);
+
+      // P2.2: desarquivar conversas desta conexão ao reconectar
+      await admin
+        .from("conversations")
+        .update({ archived: false })
+        .eq("connection_id", connection.id);
     } else if (state === "close") {
       await admin
         .from("whatsapp_connections")
         .update({ status: "disconnected" })
         .eq("id", connection.id);
-      // Alerta no painel (cliente e admin)
+
+      // P2.2: arquivar conversas para não poluir o inbox durante desconexão
+      await admin
+        .from("conversations")
+        .update({ archived: true })
+        .eq("connection_id", connection.id);
+
       await admin.from("audit_logs").insert({
         org_id: connection.org_id,
         action: "connection.disconnected",
@@ -458,19 +498,50 @@ export async function processEvolutionWebhook(
     // Ignora grupos e broadcast — escopo é atendimento 1:1
     if (remoteJid.endsWith("@g.us") || remoteJid.startsWith("status@")) return;
 
-    // Evolution API v2 envia o JID real do remetente em data.sender quando remoteJid é um LID.
-    // jidToPhone() strip :deviceId (multi-device) e retorna null para @lid JIDs.
+    // Evolution API v2 coloca o JID real do remetente em data.sender quando
+    // remoteJid é um LID. jidToPhone() rejeita LIDs (>13 dígitos) e @lid.
+    // Se nenhum JID resolver como telefone válido, descartamos a mensagem.
     const senderJid = data?.sender ?? remoteJid;
-    const phone =
-      jidToPhone(senderJid) ??
-      jidToPhone(remoteJid) ??
-      remoteJid.replace(/@.*$/, "").replace(/:\d+$/, "").replace(/\D/g, "");
-    if (!phone) return;
+    const phone = jidToPhone(senderJid) ?? jidToPhone(remoteJid);
+    if (!phone) {
+      console.warn(`[evolution-webhook] JID não resolveu como telefone — descartado: ${remoteJid}`);
+      return;
+    }
 
     const { content, type } = extractEvolutionContent(data ?? {});
     const ts = data?.messageTimestamp
       ? new Date(Number(data.messageTimestamp) * 1000).toISOString()
       : new Date().toISOString();
+
+    // P4: baixar mídia da Evolution API e persistir no Supabase Storage
+    let mediaUrl: string | null = null;
+    if (type !== "text" && type !== "sticker") {
+      try {
+        const mediaResult = await fetchEvolutionMediaBase64(instanceName, {
+          key: data?.key,
+          message: data?.message,
+        });
+        if (mediaResult) {
+          const ext = mimetypeToExt(mediaResult.mimetype);
+          const storagePath = `${connection.org_id}/${messageId}.${ext}`;
+          const buffer = Buffer.from(mediaResult.base64, "base64");
+          const { error: uploadErr } = await admin.storage
+            .from("media")
+            .upload(storagePath, buffer, {
+              contentType: mediaResult.mimetype,
+              upsert: false,
+            });
+          if (!uploadErr) {
+            const { data: urlData } = admin.storage
+              .from("media")
+              .getPublicUrl(storagePath);
+            mediaUrl = urlData.publicUrl;
+          }
+        }
+      } catch (err) {
+        console.error("[evolution-webhook] falha ao baixar/subir mídia:", err);
+      }
+    }
 
     try {
       await handleInboundMessage(connection, {
@@ -479,7 +550,7 @@ export async function processEvolutionWebhook(
         contactName: data?.key?.fromMe ? null : (data?.pushName ?? null),
         content,
         messageType: type,
-        mediaUrl: null,
+        mediaUrl,
         timestamp: ts,
         fromMe: data?.key?.fromMe === true,
       });

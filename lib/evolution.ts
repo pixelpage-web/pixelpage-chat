@@ -288,6 +288,30 @@ export async function sendEvolutionMedia(
   };
 }
 
+/**
+ * Busca o base64 de uma mensagem de mídia (imagem, áudio, vídeo, documento).
+ * A Evolution API não inclui o base64 no payload do webhook por padrão.
+ */
+export async function fetchEvolutionMediaBase64(
+  instanceName: string,
+  messageEnvelope: { key?: unknown; message?: unknown }
+): Promise<{ base64: string; mimetype: string } | null> {
+  const cfg = await getEvolutionConfig();
+  const result = await evoFetch<{ base64?: string; mimetype?: string }>(
+    cfg,
+    `/chat/getBase64FromMediaMessage/${instanceName}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ message: messageEnvelope, convertToMp4: false }),
+    }
+  );
+  if (!result.ok || !result.data?.base64) return null;
+  return {
+    base64: result.data.base64,
+    mimetype: result.data.mimetype ?? "application/octet-stream",
+  };
+}
+
 /** Desconecta a sessão (gera novo QR ao reconectar). */
 export async function logoutEvolutionInstance(instanceName: string): Promise<boolean> {
   const cfg = await getEvolutionConfig();

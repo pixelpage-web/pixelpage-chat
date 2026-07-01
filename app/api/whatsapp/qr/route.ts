@@ -158,6 +158,13 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "delete") {
+    // Arquivar conversas antes de deletar: ON DELETE SET NULL anularia connection_id,
+    // mas já marcamos como archived para não aparecerem no inbox.
+    await supabase
+      .from("conversations")
+      .update({ archived: true })
+      .eq("connection_id", connection.id);
+
     await deleteEvolutionInstance(instance);
     const { error } = await supabase
       .from("whatsapp_connections")

@@ -175,6 +175,8 @@ export type ContactRow = {
   org_id: string;
   phone: string;
   name: string | null;
+  /** true quando Patrick editou o nome manualmente — nunca sobrescrever com pushName */
+  name_manually_set: boolean;
   notes: string;
   tags: string[];
   blocked: boolean;
@@ -188,6 +190,8 @@ export type ConversationRow = {
   contact_id: string;
   status: ConversationStatus;
   bot_paused: boolean;
+  /** true quando a conexão foi desconectada/removida — não aparece no inbox principal */
+  archived: boolean;
   assigned_to: string | null;
   current_flow_id: string | null;
   current_flow_node_id: string | null;
