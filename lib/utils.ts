@@ -17,6 +17,7 @@ export function formatBRL(cents: number): string {
 
 /** Formata telefone E.164 brasileiro para exibição. Ex.: 5511999998888 -> "+55 (11) 99999-8888" */
 export function formatPhone(phone: string): string {
+  if (phone.startsWith("lid_")) return "WhatsApp ID";
   const digits = phone.replace(/\D/g, "");
   if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
     const ddd = digits.slice(2, 4);

@@ -375,8 +375,8 @@ function mimetypeToExt(mimetype: string): string {
  * Lida com:
  *   - JID normal:    5567999334922@s.whatsapp.net   → "5567999334922"
  *   - Multi-device:  5567999334922:3@s.whatsapp.net → "5567999334922" (strip :deviceId)
- *   - LID explícito: 173744479826101@lid             → null
- *   - LID disfarçado em @s.whatsapp.net:             → null (>13 dígitos)
+ *   - LID explícito: 96521487913015@lid             → null  (use lidIdentifier)
+ *   - LID disfarçado em @s.whatsapp.net:            → null  (>13 dígitos)
  *
  * LIDs do WhatsApp são inteiros aleatórios de 14-15 dígitos. Telefones reais
  * em E.164 para países que usam WhatsApp têm no máximo 13 dígitos (Brasil:
@@ -389,6 +389,20 @@ function jidToPhone(jid: string | undefined): string | null {
   const digits = local.replace(/\D/g, "");
   if (!digits || digits.length < 7 || digits.length > 13) return null; // >13 → LID
   return digits;
+}
+
+/**
+ * Para JIDs que são LIDs (sem número de telefone real), gera um identificador
+ * único prefixado com "lid_" que pode ser armazenado no campo phone dos contatos.
+ * Formato: "lid_96521487913015"  →  envia para "96521487913015@lid"
+ * Retorna null se o JID não tiver formato reconhecível.
+ */
+function lidIdentifier(jid: string | undefined): string | null {
+  if (!jid) return null;
+  const local = jid.replace(/@.*$/, "").replace(/:\d+$/, "");
+  const digits = local.replace(/\D/g, "");
+  if (!digits || digits.length < 7) return null;
+  return `lid_${digits}`;
 }
 
 export interface EvolutionWebhookBody {
@@ -500,11 +514,11 @@ export async function processEvolutionWebhook(
 
     // Evolution API v2 coloca o JID real do remetente em data.sender quando
     // remoteJid é um LID. jidToPhone() rejeita LIDs (>13 dígitos) e @lid.
-    // Se nenhum JID resolver como telefone válido, descartamos a mensagem.
+    // Se não há telefone real, usamos o LID como identificador prefixado.
     const senderJid = data?.sender ?? remoteJid;
-    const phone = jidToPhone(senderJid) ?? jidToPhone(remoteJid);
+    const phone = jidToPhone(senderJid) ?? jidToPhone(remoteJid) ?? lidIdentifier(remoteJid);
     if (!phone) {
-      console.warn(`[evolution-webhook] JID não resolveu como telefone — descartado: ${remoteJid}`);
+      console.warn(`[evolution-webhook] JID não reconhecido — descartado: ${remoteJid}`);
       return;
     }
 

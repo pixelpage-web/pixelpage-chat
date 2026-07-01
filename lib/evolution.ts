@@ -233,11 +233,15 @@ export async function sendEvolutionText(
   text: string
 ): Promise<EvolutionSendResult> {
   const cfg = await getEvolutionConfig();
+  // Contatos LID são armazenados com prefixo "lid_" — converter para JID real
+  const recipient = number.startsWith("lid_")
+    ? `${number.slice(4)}@lid`
+    : number;
 
   let result = await evoFetch<{ key?: { id?: string } }>(
     cfg,
     `/message/sendText/${instanceName}`,
-    { method: "POST", body: JSON.stringify({ number, text }) }
+    { method: "POST", body: JSON.stringify({ number: recipient, text }) }
   );
   if (!result.ok && result.status === 400) {
     result = await evoFetch<{ key?: { id?: string } }>(
@@ -267,13 +271,14 @@ export async function sendEvolutionMedia(
   fileName?: string
 ): Promise<EvolutionSendResult> {
   const cfg = await getEvolutionConfig();
+  const recipient = number.startsWith("lid_") ? `${number.slice(4)}@lid` : number;
   const result = await evoFetch<{ key?: { id?: string } }>(
     cfg,
     `/message/sendMedia/${instanceName}`,
     {
       method: "POST",
       body: JSON.stringify({
-        number,
+        number: recipient,
         mediatype,
         media: mediaUrl,
         caption: caption ?? "",
