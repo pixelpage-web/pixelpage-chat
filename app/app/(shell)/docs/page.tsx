@@ -12,7 +12,7 @@ export default async function DocsPage() {
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "https://app.pixelpagechat.com.br";
+    "https://www.pixelpagechat.com.br";
 
   return (
     <DocsView

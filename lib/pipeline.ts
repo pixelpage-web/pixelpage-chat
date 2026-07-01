@@ -682,7 +682,7 @@ async function routeToExternalWebhook(params: {
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "https://app.pixelpagechat.com.br";
+    "https://www.pixelpagechat.com.br";
 
   const payload: PixelPageWebhookPayload = {
     event: "message.received",

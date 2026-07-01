@@ -54,7 +54,7 @@ export default async function ConnectionWebhookPage({
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "https://app.pixelpagechat.com.br";
+    "https://www.pixelpagechat.com.br";
 
   return (
     <WebhookConfig

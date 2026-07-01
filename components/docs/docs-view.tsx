@@ -347,7 +347,7 @@ const sections: DocSection[] = [
 export function DocsView({
   orgId,
   authorName,
-  appUrl = "https://app.pixelpagechat.com.br",
+  appUrl = "https://www.pixelpagechat.com.br",
 }: {
   orgId: string;
   authorName: string;

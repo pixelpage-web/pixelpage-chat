@@ -18,7 +18,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://app.pixelpagechat.com.br/api/v1/messages",
+        "url": "https://www.pixelpagechat.com.br/api/v1/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

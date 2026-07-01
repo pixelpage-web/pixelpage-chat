@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const testConversationId = "00000000-0000-0000-0000-000000000000";
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "https://app.pixelpagechat.com.br";
+    "https://www.pixelpagechat.com.br";
   const payload: PixelPageWebhookPayload = {
     event: "message.test",
     organization_id: orgId,
