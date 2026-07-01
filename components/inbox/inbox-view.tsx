@@ -343,7 +343,11 @@ export function InboxView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversation_id: selectedId, content }),
       });
-      const json = (await res.json()) as { message?: MessageRow; error?: string };
+      const json = (await res.json()) as {
+        message?: MessageRow;
+        error?: string;
+        bot_paused?: boolean;
+      };
       if (!res.ok || !json.message) {
         toast.error(json.error ?? t("Não foi possível enviar a mensagem."));
         return;
@@ -361,6 +365,12 @@ export function InboxView({
           created_at: msg.created_at,
         },
       }));
+      // Reflte a pausa automática do bot na UI imediatamente
+      if (json.bot_paused) {
+        setConversations((prev) =>
+          prev.map((c) => (c.id === selectedId ? { ...c, bot_paused: true } : c))
+        );
+      }
     } catch {
       toast.error(t("Erro de conexão ao enviar. Tente novamente."));
     }

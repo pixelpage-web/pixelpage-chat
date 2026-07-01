@@ -336,6 +336,8 @@ export async function processMetaWebhook(body: MetaWebhookBody): Promise<void> {
 
 interface EvolutionMessageData {
   key?: { remoteJid?: string; fromMe?: boolean; id?: string };
+  /** JID real do remetente — presente na Evolution API v2 quando remoteJid é um LID */
+  sender?: string;
   pushName?: string;
   messageTimestamp?: number | string;
   message?: {
@@ -347,6 +349,24 @@ interface EvolutionMessageData {
     stickerMessage?: Record<string, unknown>;
     documentMessage?: { fileName?: string; caption?: string };
   };
+}
+
+/**
+ * Extrai o número de telefone de um JID da Evolution API / Baileys.
+ * Lida com:
+ *   - JID normal: 5567999334922@s.whatsapp.net  → "5567999334922"
+ *   - Multi-device: 5567999334922:3@s.whatsapp.net → "5567999334922" (strip :deviceId)
+ *   - LID: 173744479826101@lid               → null (não é telefone)
+ * Retorna null para LIDs ou qualquer string que não pareça um telefone válido.
+ */
+function jidToPhone(jid: string | undefined): string | null {
+  if (!jid) return null;
+  if (jid.endsWith("@lid")) return null; // LID — não é número de telefone
+  const local = jid.replace(/@.*$/, "").replace(/:\d+$/, ""); // strip @domain e :deviceId
+  const digits = local.replace(/\D/g, "");
+  // E.164: mínimo 7 dígitos, máximo 15; LIDs tendem a ter ≥ 14 dígitos sem prefixo de país conhecido
+  if (!digits || digits.length < 7 || digits.length > 15) return null;
+  return digits;
 }
 
 export interface EvolutionWebhookBody {
@@ -438,7 +458,13 @@ export async function processEvolutionWebhook(
     // Ignora grupos e broadcast — escopo é atendimento 1:1
     if (remoteJid.endsWith("@g.us") || remoteJid.startsWith("status@")) return;
 
-    const phone = remoteJid.replace(/@.*$/, "").replace(/\D/g, "");
+    // Evolution API v2 envia o JID real do remetente em data.sender quando remoteJid é um LID.
+    // jidToPhone() strip :deviceId (multi-device) e retorna null para @lid JIDs.
+    const senderJid = data?.sender ?? remoteJid;
+    const phone =
+      jidToPhone(senderJid) ??
+      jidToPhone(remoteJid) ??
+      remoteJid.replace(/@.*$/, "").replace(/:\d+$/, "").replace(/\D/g, "");
     if (!phone) return;
 
     const { content, type } = extractEvolutionContent(data ?? {});

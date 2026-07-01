@@ -113,5 +113,22 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ message });
+  // Auto-pausa: sempre que um agente responde manualmente, pausa o bot para
+  // que o cliente continue sendo atendido por humano até reativação explícita.
+  const wasPaused = conversation.bot_paused;
+  if (!wasPaused) {
+    await supabase
+      .from("conversations")
+      .update({ bot_paused: true })
+      .eq("id", conversation.id);
+
+    await supabase.from("conversation_notes").insert({
+      conversation_id: conversation.id,
+      org_id: orgId,
+      content: "Bot pausado automaticamente após resposta manual.",
+      created_by: session.user.id,
+    });
+  }
+
+  return NextResponse.json({ message, bot_paused: !wasPaused ? true : undefined });
 }
