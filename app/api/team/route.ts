@@ -35,6 +35,25 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
   const supabase = await createServerSupabase();
 
+  // Verificar limite de funcionários do plano
+  const { data: sub } = await supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle();
+  if (sub?.plan_id) {
+    const { data: plan } = await supabase.from("plans").select("team_limit").eq("id", sub.plan_id).maybeSingle();
+    if (plan?.team_limit !== null && plan?.team_limit !== undefined) {
+      const { count: occupiedSlots } = await admin
+        .from("team_members")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .in("status", ["active", "invited"]);
+      if ((occupiedSlots ?? 0) >= plan.team_limit) {
+        const lim = plan.team_limit;
+        return NextResponse.json({
+          error: `Seu plano permite até ${lim} funcionário${lim !== 1 ? "s" : ""} — faça upgrade para adicionar mais.`,
+        }, { status: 403 });
+      }
+    }
+  }
+
   const { data: org } = await supabase.from("organizations").select("name").eq("id", orgId).maybeSingle();
 
   const { data: member, error: memberErr } = await admin

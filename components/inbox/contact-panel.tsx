@@ -13,6 +13,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  RefreshCw,
   Tag,
   User,
   X,
@@ -95,6 +96,9 @@ export function ContactPanel({
   // Arquivos
   const [media, setMedia] = useState<MediaMessage[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
+
+  // Foto
+  const [refreshingPhoto, setRefreshingPhoto] = useState(false);
 
   // Sincroniza ao trocar de contato
   useEffect(() => {
@@ -583,23 +587,69 @@ export function ContactPanel({
               <p className="text-xs text-txt-dim">
                 {t("Foto de perfil do WhatsApp")}
               </p>
-              <a
-                href={contact.avatar_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-lime hover:underline"
-              >
-                <Download className="h-3 w-3" />
-                {t("Abrir em tamanho original")}
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={contact.avatar_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-lime hover:underline"
+                >
+                  <Download className="h-3 w-3" />
+                  {t("Abrir em tamanho original")}
+                </a>
+                <button
+                  onClick={() => {
+                    setRefreshingPhoto(true);
+                    fetch(`/api/contacts/${contact.id}/refresh-photo`, { method: "POST" })
+                      .then((r) => r.json())
+                      .then((d: { ok?: boolean; avatar_url?: string | null; status?: string }) => {
+                        if (d.ok && d.avatar_url) onUpdateContact({ avatar_url: d.avatar_url, profile_photo_status: d.status as ContactRow["profile_photo_status"] });
+                        else if (d.ok) toast.info(d.status === "private" ? t("Foto privada — o contato restringiu o acesso.") : t("Foto não encontrada."));
+                      })
+                      .catch(() => toast.error(t("Não foi possível atualizar a foto.")))
+                      .finally(() => setRefreshingPhoto(false));
+                  }}
+                  disabled={refreshingPhoto}
+                  className="flex items-center gap-1 text-xs text-txt-dim hover:text-txt disabled:opacity-40"
+                >
+                  <RefreshCw className={cn("h-3 w-3", refreshingPhoto && "animate-spin")} />
+                  {t("Atualizar")}
+                </button>
+              </div>
             </>
           ) : (
-            <div className="flex flex-col items-center gap-3 py-10 text-txt-dim">
+            <div className="flex flex-col items-center gap-3 py-8 text-txt-dim">
               <User className="h-12 w-12 opacity-20" />
-              <p className="text-xs">{t("Foto de perfil não disponível.")}</p>
-              <p className="max-w-[180px] text-center text-[11px] text-txt-mut">
-                {t("A foto é buscada automaticamente ao receber a primeira mensagem do contato.")}
+              <p className="text-xs">
+                {contact.profile_photo_status === "private"
+                  ? t("Foto privada — o contato restringiu o acesso.")
+                  : t("Foto de perfil não disponível.")}
               </p>
+              {contact.profile_photo_status !== "private" && (
+                <button
+                  onClick={() => {
+                    setRefreshingPhoto(true);
+                    fetch(`/api/contacts/${contact.id}/refresh-photo`, { method: "POST" })
+                      .then((r) => r.json())
+                      .then((d: { ok?: boolean; avatar_url?: string | null; status?: string }) => {
+                        if (d.ok && d.avatar_url) {
+                          toast.success(t("Foto carregada!"));
+                          onUpdateContact({ avatar_url: d.avatar_url, profile_photo_status: d.status as ContactRow["profile_photo_status"] });
+                        } else if (d.ok) {
+                          toast.info(d.status === "private" ? t("Foto privada — o contato restringiu o acesso.") : t("Foto não encontrada."));
+                          onUpdateContact({ profile_photo_status: d.status as ContactRow["profile_photo_status"] });
+                        }
+                      })
+                      .catch(() => toast.error(t("Não foi possível buscar a foto.")))
+                      .finally(() => setRefreshingPhoto(false));
+                  }}
+                  disabled={refreshingPhoto}
+                  className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs hover:bg-surface-hover disabled:opacity-40"
+                >
+                  <RefreshCw className={cn("h-3 w-3", refreshingPhoto && "animate-spin")} />
+                  {refreshingPhoto ? t("Buscando…") : t("Buscar foto de perfil")}
+                </button>
+              )}
             </div>
           )}
         </div>

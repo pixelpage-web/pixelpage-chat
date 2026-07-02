@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOwnerEmail } from "@/lib/notify";
+import { orgHasMetaApi } from "@/lib/plan-features";
 
 /**
  * Pedido de número novo com API Oficial da Meta (produto interno).
@@ -13,6 +14,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   const orgId = session.profile.org_id;
+
+  // Gating: apenas orgs no Plano 3 (meta_api_enabled)
+  const hasMetaApi = await orgHasMetaApi(orgId);
+  if (!hasMetaApi) {
+    return NextResponse.json({ error: "Disponível apenas no Plano 3." }, { status: 403 });
+  }
 
   let body: Record<string, unknown>;
   try {

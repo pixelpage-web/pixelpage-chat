@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { orgHasMetaApi } from "@/lib/plan-features";
 import { ApiOficialView } from "@/components/connections/api-oficial-view";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +15,8 @@ export default async function ApiOficialPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: org }, { data: existing }] = await Promise.all([
+  const [{ data: org }, { data: existing }, hasPlan3] = await Promise.all([
     supabase.from("organizations").select("name").eq("id", orgId).maybeSingle(),
-    // Já existe pedido em aberto desta organização?
     supabase
       .from("api_oficial_requests")
       .select("id, status")
@@ -24,6 +24,7 @@ export default async function ApiOficialPage() {
       .in("status", ["pending", "contacted", "in_progress"])
       .limit(1)
       .maybeSingle(),
+    orgHasMetaApi(orgId),
   ]);
 
   return (
@@ -32,6 +33,7 @@ export default async function ApiOficialPage() {
       defaultEmail={session.user.email ?? ""}
       defaultCompany={org?.name ?? ""}
       alreadyRequested={!!existing}
+      hasPlan3={hasPlan3}
     />
   );
 }

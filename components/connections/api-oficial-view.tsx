@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   Headphones,
+  Lock,
   Plug,
   ShieldCheck,
 } from "lucide-react";
@@ -38,12 +39,13 @@ export function ApiOficialView({
   defaultEmail,
   defaultCompany,
   alreadyRequested,
+  hasPlan3,
 }: {
   defaultName: string;
   defaultEmail: string;
   defaultCompany: string;
-  /** já existe um pedido pendente/em andamento desta organização */
   alreadyRequested: boolean;
+  hasPlan3: boolean;
 }) {
   const t = useT();
   const [sent, setSent] = useState(false);
@@ -101,7 +103,31 @@ export function ApiOficialView({
           {t("Voltar para Conexões")}
         </Link>
 
-        {/* Oferta */}
+        {/* Estado bloqueado — org não tem Plano 3 */}
+        {!hasPlan3 && (
+          <Card className="border-line">
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-hover">
+                <Lock className="h-7 w-7 text-txt-dim" aria-hidden />
+              </div>
+              <div>
+                <CardTitle>{t("Disponível no Plano 3")}</CardTitle>
+                <CardDescription className="mt-1 max-w-sm">
+                  {t("A API Oficial da Meta está incluída no Plano 3 da PixelPage Chat — número verificado com selo ✓ verde, templates aprovados e sem risco de banimento.")}
+                </CardDescription>
+              </div>
+              <Link
+                href="/app/billing"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-lime px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
+              >
+                {t("Ver planos")}
+              </Link>
+            </div>
+          </Card>
+        )}
+
+        {/* Oferta — só visível para Plano 3 */}
+        {hasPlan3 && (
         <Card className="border-ok/30 bg-gradient-to-br from-ok-soft to-transparent">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ok-soft">
@@ -110,25 +136,11 @@ export function ApiOficialView({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle>🟢 {t("Número WhatsApp com API Oficial da Meta")}</CardTitle>
-                <Badge tone="ok">{t("Recomendado")}</Badge>
+                <Badge tone="ok">{t("Incluído no Plano 3")}</Badge>
               </div>
               <CardDescription>
                 {t("Número verificado, com selo ✓ verde, templates aprovados e zero risco de banimento por uso correto.")}
               </CardDescription>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-end gap-x-6 gap-y-2 rounded-lg border border-line bg-surface-raised p-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-txt-dim">{t("Setup (único)")}</p>
-              <p className="font-display text-2xl font-semibold text-txt">R$ 150</p>
-            </div>
-            <div className="h-8 w-px bg-line" />
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-txt-dim">{t("Mensalidade")}</p>
-              <p className="font-display text-2xl font-semibold text-ok">
-                R$ 49,90<span className="text-sm font-normal text-txt-mut">/{t("mês")}</span>
-              </p>
             </div>
           </div>
 
@@ -160,9 +172,11 @@ export function ApiOficialView({
             </ol>
           </div>
         </Card>
+        )}
 
+        {/* Formulário — só para Plano 3 */}
         {/* Estado: já enviado */}
-        {done ? (
+        {hasPlan3 && done ? (
           <Card className="border-ok/30">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-ok" aria-hidden />
@@ -178,7 +192,7 @@ export function ApiOficialView({
               </div>
             </div>
           </Card>
-        ) : (
+        ) : hasPlan3 ? (
           /* Formulário de interesse */
           <Card>
             <CardTitle>{t("Quero meu número com API Oficial")}</CardTitle>
@@ -270,7 +284,7 @@ export function ApiOficialView({
               </Button>
             </form>
           </Card>
-        )}
+        ) : null}
       </div>
     </div>
   );
