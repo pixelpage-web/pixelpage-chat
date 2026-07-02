@@ -101,18 +101,22 @@ export async function handleInboundMessage(
       .select("*")
       .single();
     contact = created;
-    // Bloco C: busca foto de perfil ao criar contato (não bloqueia em caso de falha)
-    if (contact && connection.evolution_instance_id) {
+    // Bloco C: busca foto de perfil ao criar contato (uma tentativa; status persiste para não retentar)
+    if (contact && connection.evolution_instance_id && !contact.profile_photo_status) {
+      let picUrl: string | null = null;
+      let photoStatus: 'available' | 'private' | 'unknown' = 'unknown';
       try {
-        const picUrl = await fetchEvolutionProfilePicture(
+        picUrl = await fetchEvolutionProfilePicture(
           connection.evolution_instance_id,
           msg.fromPhone
         );
-        if (picUrl) {
-          await admin.from("contacts").update({ avatar_url: picUrl }).eq("id", contact.id);
-          contact = { ...contact, avatar_url: picUrl };
-        }
-      } catch { /* foto não é essencial */ }
+        photoStatus = picUrl ? 'available' : 'private';
+      } catch { /* rede/API fora do ar — marcamos unknown para não retentar */ }
+      await admin.from("contacts").update({
+        profile_photo_status: photoStatus,
+        ...(picUrl ? { avatar_url: picUrl } : {}),
+      }).eq("id", contact.id);
+      contact = { ...contact, avatar_url: picUrl ?? contact.avatar_url, profile_photo_status: photoStatus };
     }
   } else if (msg.contactName && !contact.name_manually_set) {
     // Atualiza sempre com o pushName mais recente, a menos que Patrick tenha

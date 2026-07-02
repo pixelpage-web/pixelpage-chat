@@ -180,6 +180,7 @@ export type ContactRow = {
   email: string | null;
   birth_date: string | null;
   avatar_url: string | null;
+  profile_photo_status: 'available' | 'private' | 'unknown' | null;
   notes: string;
   tags: string[];
   blocked: boolean;
@@ -601,6 +602,66 @@ export type AdminAuditLogRow = {
   created_at: string;
 };
 
+// ----------------------------------------------------------------------------
+// 0016 — Sistema de Funcionários (equipe, convites, permissões granulares)
+// ----------------------------------------------------------------------------
+
+export type TeamMemberStatus = 'invited' | 'active' | 'disabled';
+export type TeamRoleTemplate = 'admin' | 'agent' | 'viewer' | 'custom';
+
+export type TeamMemberRow = {
+  id: string;
+  org_id: string;
+  user_id: string | null;
+  email: string;
+  name: string;
+  status: TeamMemberStatus;
+  role_template: TeamRoleTemplate;
+  created_by: string | null;
+  invited_at: string;
+  activated_at: string | null;
+  max_conversations: number | null;
+};
+
+export type TeamMemberPermissionsRow = {
+  team_member_id: string;
+  can_view_inbox: boolean;
+  can_view_contacts: boolean;
+  can_view_campaigns: boolean;
+  can_view_agent_ai: boolean;
+  can_view_flows: boolean;
+  can_view_automations: boolean;
+  can_view_connections: boolean;
+  can_view_integrations: boolean;
+  can_view_reports: boolean;
+  can_view_settings: boolean;
+  can_view_billing: boolean;
+  can_reply_messages: boolean;
+  can_pause_bot: boolean;
+  can_assign_conversation: boolean;
+  can_resolve_conversation: boolean;
+  can_archive_conversation: boolean;
+  can_add_remove_labels: boolean;
+  can_add_internal_notes: boolean;
+  can_view_others_notes: boolean;
+  can_export_conversation: boolean;
+  can_block_contact: boolean;
+  inbox_scope: 'all' | 'assigned_only';
+  can_edit_contacts: boolean;
+  can_delete_contacts: boolean;
+  can_import_contacts: boolean;
+  can_export_contacts: boolean;
+};
+
+export type TeamInviteRow = {
+  id: string;
+  team_member_id: string;
+  token: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -662,6 +723,10 @@ export type Database = {
       trial_extensions: TableShape<TrialExtensionRow>;
       feature_flags: TableShape<FeatureFlagRow>;
       admin_audit_logs: TableShape<AdminAuditLogRow>;
+      // 0016
+      team_members: TableShape<TeamMemberRow>;
+      team_member_permissions: TableShape<TeamMemberPermissionsRow>;
+      team_invites: TableShape<TeamInviteRow>;
     };
     Views: Record<string, never>;
     Functions: {

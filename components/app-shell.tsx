@@ -16,6 +16,7 @@ import {
   Settings,
   ShieldCheck,
   Smartphone,
+  UserCog,
   Users,
   Zap,
 } from "lucide-react";
@@ -29,7 +30,8 @@ import { SystemNotifications } from "@/components/system-notifications";
 import { SupportButton } from "@/components/support-button";
 import { InboxNotifications } from "@/components/inbox-notifications";
 import { GlobalSearch } from "@/components/global-search";
-import type { Role, SubscriptionStatus, SystemNotificationRow } from "@/types/database";
+import { NAV_PERMISSION_MAP } from "@/lib/permissions";
+import type { Role, SubscriptionStatus, SystemNotificationRow, TeamMemberPermissionsRow } from "@/types/database";
 
 export interface ShellData {
   userId: string;
@@ -46,6 +48,8 @@ export interface ShellData {
   aiUsage: { used: number; limit: number } | null;
   /** notificações globais ativas (admin → clientes) */
   notifications: SystemNotificationRow[];
+  /** permissões granulares para membros da equipe; null = acesso total (owner/admin) */
+  teamPermissions: TeamMemberPermissionsRow | null;
   subscription: {
     status: SubscriptionStatus;
     trialEndsAt: string | null;
@@ -93,7 +97,8 @@ const navItems = [
   { href: "/app/docs", label: "Documentação", icon: BookOpen },
   { href: "/app/help", label: "Central de Ajuda", icon: LifeBuoy },
   { href: "/app/settings", label: "Configurações", icon: Settings },
-];
+  { href: "/app/equipe", label: "Equipe", icon: UserCog, ownerOnly: true },
+] as const;
 
 function TrialBanner({ data }: { data: ShellData }) {
   const t = useT();
@@ -213,6 +218,17 @@ export function AppShell({
   const router = useRouter();
   const t = useT();
 
+  const isOwnerOrAdmin = data.role === "owner" || data.role === "admin" || data.role === "superadmin";
+
+  // Para members com permissões granulares, filtra o nav; owner/admin vêem tudo menos equipe
+  const visibleNavItems = navItems.filter((item) => {
+    if ("ownerOnly" in item && item.ownerOnly) return isOwnerOrAdmin;
+    if (!data.teamPermissions) return true; // acesso total
+    const permKey = NAV_PERMISSION_MAP[item.href];
+    if (!permKey) return true; // docs, ajuda — sempre visível
+    return data.teamPermissions[permKey as keyof TeamMemberPermissionsRow] === true;
+  });
+
   async function handleLogout() {
     try {
       const supabase = createClient();
@@ -240,7 +256,7 @@ export function AppShell({
             <Logo />
           </Link>
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const active = pathname.startsWith(item.href);
               return (
                 <Link
@@ -295,7 +311,7 @@ export function AppShell({
 
       {/* Navegação por abas — mobile */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden">
-        {navItems.slice(0, 5).map((item) => {
+        {visibleNavItems.slice(0, 5).map((item) => {
           const active = pathname.startsWith(item.href);
           return (
             <Link
