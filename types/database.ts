@@ -177,6 +177,9 @@ export type ContactRow = {
   name: string | null;
   /** true quando Patrick editou o nome manualmente — nunca sobrescrever com pushName */
   name_manually_set: boolean;
+  email: string | null;
+  birth_date: string | null;
+  avatar_url: string | null;
   notes: string;
   tags: string[];
   blocked: boolean;

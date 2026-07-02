@@ -19,6 +19,8 @@ export function formatBRL(cents: number): string {
 export function formatPhone(phone: string): string {
   if (phone.startsWith("lid_")) return "WhatsApp ID";
   const digits = phone.replace(/\D/g, "");
+  // Números com >13 dígitos são LIDs em formato antigo (armazenados antes do fix do P0)
+  if (digits.length > 13) return "WhatsApp ID";
   if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
     const ddd = digits.slice(2, 4);
     const rest = digits.slice(4);

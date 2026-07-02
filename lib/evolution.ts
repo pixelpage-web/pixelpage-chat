@@ -317,6 +317,23 @@ export async function fetchEvolutionMediaBase64(
   };
 }
 
+/** Foto de perfil do WhatsApp de um contato (URL pode expirar em ~24h). */
+export async function fetchEvolutionProfilePicture(
+  instanceName: string,
+  number: string
+): Promise<string | null> {
+  const cfg = await getEvolutionConfig();
+  const jid = number.startsWith("lid_")
+    ? `${number.slice(4)}@lid`
+    : `${number}@s.whatsapp.net`;
+  const result = await evoFetch<{ profilePictureUrl?: string; imgUrl?: string }>(
+    cfg,
+    `/chat/fetchProfilePictureUrl/${instanceName}`,
+    { method: "POST", body: JSON.stringify({ number: jid }) }
+  );
+  return result.data?.profilePictureUrl ?? result.data?.imgUrl ?? null;
+}
+
 /** Desconecta a sessão (gera novo QR ao reconectar). */
 export async function logoutEvolutionInstance(instanceName: string): Promise<boolean> {
   const cfg = await getEvolutionConfig();

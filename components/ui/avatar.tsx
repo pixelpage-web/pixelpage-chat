@@ -20,10 +20,12 @@ function paletteFor(seed: string): string {
 
 export function Avatar({
   name,
+  imageUrl,
   size = "md",
   className,
 }: {
   name: string | null | undefined;
+  imageUrl?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
@@ -32,6 +34,23 @@ export function Avatar({
     md: "h-10 w-10 text-xs",
     lg: "h-12 w-12 text-sm",
   };
+
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <div
+        className={cn(
+          "shrink-0 overflow-hidden rounded-full",
+          sizes[size],
+          className
+        )}
+        aria-hidden
+      >
+        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+
   const display = name?.trim() || "?";
   return (
     <div

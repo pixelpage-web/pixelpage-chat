@@ -3,6 +3,7 @@ import { sendText, type SendableConnection } from "@/lib/send";
 import {
   fetchEvolutionOwner,
   fetchEvolutionMediaBase64,
+  fetchEvolutionProfilePicture,
 } from "@/lib/evolution";
 import {
   buildAgentSystemPrompt,
@@ -67,14 +68,32 @@ export async function handleInboundMessage(
   if (!org || org.suspended) return;
 
   // 1. Contato (upsert por org+phone)
-  const { data: existingContact } = await admin
+  const { data: exactMatch } = await admin
     .from("contacts")
     .select("*")
     .eq("org_id", org.id)
     .eq("phone", msg.fromPhone)
     .maybeSingle();
 
-  let contact = existingContact;
+  let contact = exactMatch;
+
+  // B.3: LIDs armazenados no formato antigo (sem prefixo "lid_") antes do fix do P0
+  // Se não encontrou exato e o phone atual é "lid_XXX", tenta buscar "XXX" (dígitos brutos).
+  if (!contact && msg.fromPhone.startsWith("lid_")) {
+    const rawDigits = msg.fromPhone.slice(4);
+    const { data: legacy } = await admin
+      .from("contacts")
+      .select("*")
+      .eq("org_id", org.id)
+      .eq("phone", rawDigits)
+      .maybeSingle();
+    if (legacy) {
+      // Migra para o formato novo com prefixo
+      await admin.from("contacts").update({ phone: msg.fromPhone }).eq("id", legacy.id);
+      contact = { ...legacy, phone: msg.fromPhone };
+    }
+  }
+
   if (!contact) {
     const { data: created } = await admin
       .from("contacts")
@@ -82,6 +101,19 @@ export async function handleInboundMessage(
       .select("*")
       .single();
     contact = created;
+    // Bloco C: busca foto de perfil ao criar contato (não bloqueia em caso de falha)
+    if (contact && connection.evolution_instance_id) {
+      try {
+        const picUrl = await fetchEvolutionProfilePicture(
+          connection.evolution_instance_id,
+          msg.fromPhone
+        );
+        if (picUrl) {
+          await admin.from("contacts").update({ avatar_url: picUrl }).eq("id", contact.id);
+          contact = { ...contact, avatar_url: picUrl };
+        }
+      } catch { /* foto não é essencial */ }
+    }
   } else if (msg.contactName && !contact.name_manually_set) {
     // Atualiza sempre com o pushName mais recente, a menos que Patrick tenha
     // editado o nome manualmente (name_manually_set = true).
