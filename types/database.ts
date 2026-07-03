@@ -92,8 +92,6 @@ export type SubscriptionRow = {
   org_id: string;
   plan_id: string;
   status: SubscriptionStatus;
-  asaas_subscription_id: string | null;
-  asaas_customer_id: string | null;
   trial_ends_at: string | null;
   trial_extended_count: number;
   current_period_end: string | null;
