@@ -7,6 +7,7 @@ import {
   Bot,
   Clock,
   Inbox,
+  Lock,
   QrCode,
   RefreshCw,
   ShieldCheck,
@@ -67,6 +68,7 @@ export function ConnectionsView({
   connectionsLimit,
   signupEnabled,
   qrEnabled,
+  hasMetaApi,
   limitOverride = false,
   webhookInfo = {},
 }: {
@@ -74,6 +76,7 @@ export function ConnectionsView({
   connectionsLimit: number;
   signupEnabled: boolean;
   qrEnabled: boolean;
+  hasMetaApi: boolean;
   /** Super Admin: ignora o limite de conexões do plano (exibe badge) */
   limitOverride?: boolean;
   /** Status do webhook externo por connection_id (modo external_webhook) */
@@ -249,40 +252,63 @@ export function ConnectionsView({
                   </CardDescription>
                 </div>
               </div>
-              {/* Benefícios da API oficial */}
-              <ul className="mt-3 space-y-1 text-xs text-txt-mut">
-                <li>✅ {t("Número verificado com ✓ verde")}</li>
-                <li>✅ {t("Templates aprovados pela Meta")}</li>
-                <li>✅ {t("Campanhas oficiais e zero risco de ban")}</li>
-              </ul>
+              {!hasMetaApi && (
+                <div className="mt-4 flex flex-col items-center gap-3 py-2 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover">
+                    <Lock className="h-5 w-5 text-txt-dim" aria-hidden />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{t("Disponível no Plano 3")}</p>
+                    <p className="text-xs text-txt-mut">
+                      {t("Número verificado, templates e campanhas oficiais.")}
+                    </p>
+                  </div>
+                  <Link
+                    href="/app/billing"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-lime px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
+                  >
+                    {t("Ver planos")}
+                  </Link>
+                </div>
+              )}
+              {hasMetaApi && (
+                <>
+                  {/* Benefícios da API oficial */}
+                  <ul className="mt-3 space-y-1 text-xs text-txt-mut">
+                    <li>✅ {t("Número verificado com ✓ verde")}</li>
+                    <li>✅ {t("Templates aprovados pela Meta")}</li>
+                    <li>✅ {t("Campanhas oficiais e zero risco de ban")}</li>
+                  </ul>
 
-              {signupEnabled ? (
-                <div className="mt-4 space-y-2">
-                  {/* Sub-caminho 1: conectar número existente (Embedded Signup) */}
-                  <EmbeddedSignupButton onConnected={() => router.refresh()} />
-                  {/* Sub-caminho 2: quero um número novo com API oficial */}
-                  <Link
-                    href="/app/connections/api-oficial"
-                    className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-ok/50 hover:text-ok"
-                  >
-                    {t("Quero um número novo com API oficial")}
-                  </Link>
-                </div>
-              ) : (
-                <div className="mt-4 space-y-2">
-                  <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2.5 text-center text-xs text-txt-dim">
-                    <Clock className="h-3.5 w-3.5" aria-hidden />
-                    {t("Conexão do seu número em análise na Meta — use QR Code por enquanto.")}
-                  </p>
-                  {/* Venda de número novo com API oficial sempre disponível */}
-                  <Link
-                    href="/app/connections/api-oficial"
-                    className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok-soft px-3 py-2 text-xs font-medium text-ok transition-colors hover:bg-ok/20"
-                  >
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                    {t("Quero um número novo com API oficial")}
-                  </Link>
-                </div>
+                  {signupEnabled ? (
+                    <div className="mt-4 space-y-2">
+                      {/* Sub-caminho 1: conectar número existente (Embedded Signup) */}
+                      <EmbeddedSignupButton onConnected={() => router.refresh()} />
+                      {/* Sub-caminho 2: quero um número novo com API oficial */}
+                      <Link
+                        href="/app/connections/api-oficial"
+                        className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-ok/50 hover:text-ok"
+                      >
+                        {t("Quero um número novo com API oficial")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="mt-4 space-y-2">
+                      <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2.5 text-center text-xs text-txt-dim">
+                        <Clock className="h-3.5 w-3.5" aria-hidden />
+                        {t("Conexão do seu número em análise na Meta — use QR Code por enquanto.")}
+                      </p>
+                      {/* Venda de número novo com API oficial sempre disponível */}
+                      <Link
+                        href="/app/connections/api-oficial"
+                        className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok-soft px-3 py-2 text-xs font-medium text-ok transition-colors hover:bg-ok/20"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                        {t("Quero um número novo com API oficial")}
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </Card>
           </div>

@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getEvolutionConfig, isEvolutionConfigured } from "@/lib/evolution";
 import { isSuperAdmin } from "@/lib/access";
+import { orgHasMetaApi } from "@/lib/plan-features";
 import { ConnectionsView } from "@/components/connections/connections-view";
 
 export const dynamic = "force-dynamic";
@@ -16,18 +17,20 @@ export default async function ConnectionsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: connections }, { data: subscription }] = await Promise.all([
-    supabase
-      .from("whatsapp_connections")
-      .select("*")
-      .eq("org_id", orgId)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("subscriptions")
-      .select("plan_id")
-      .eq("org_id", orgId)
-      .maybeSingle(),
-  ]);
+  const [{ data: connections }, { data: subscription }, hasMetaApi] =
+    await Promise.all([
+      supabase
+        .from("whatsapp_connections")
+        .select("*")
+        .eq("org_id", orgId)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("subscriptions")
+        .select("plan_id")
+        .eq("org_id", orgId)
+        .maybeSingle(),
+      orgHasMetaApi(orgId),
+    ]);
 
   let connectionsLimit = 1;
   if (subscription?.plan_id) {
@@ -73,6 +76,7 @@ export default async function ConnectionsPage() {
       initialConnections={connections ?? []}
       connectionsLimit={connectionsLimit}
       signupEnabled={process.env.NEXT_PUBLIC_EMBEDDED_SIGNUP_ENABLED === "true"}
+      hasMetaApi={hasMetaApi}
       qrEnabled={isEvolutionConfigured(evolutionCfg)}
       limitOverride={isSuperAdmin(session.user.email)}
       webhookInfo={webhookInfo}
