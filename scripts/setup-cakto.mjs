@@ -69,7 +69,6 @@ step("1. Autenticação OAuth2 (client_credentials)");
 const authData = await caktoPost(
   "/public_api/token/",
   new URLSearchParams({
-    grant_type:    "client_credentials",
     client_id:     process.env.CAKTO_CLIENT_ID,
     client_secret: process.env.CAKTO_CLIENT_SECRET,
   })
@@ -179,7 +178,7 @@ const webhook = await caktoPost(
   token
 );
 const webhookId     = webhook.id ?? "(ver resposta acima)";
-const webhookSecret = webhook.secret ?? "(não retornado — verifique no dashboard da Cakto)";
+const webhookSecret = webhook.fields?.secret ?? webhook.secret ?? "(não retornado — verifique no dashboard da Cakto)";
 console.log(`   webhook_id: ${webhookId}`);
 console.log(`   secret:     [SALVE ESTE VALOR — veja resumo final]`);
 
