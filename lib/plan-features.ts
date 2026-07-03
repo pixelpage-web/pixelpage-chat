@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export interface PlanFeatures {
   meta_api_enabled: boolean;
   team_limit: number | null;
-  connections_limit: number;
+  connections_limit: number | null;
   price_pending: boolean;
 }
 
@@ -28,7 +28,7 @@ export async function getPlanFeatures(orgId: string): Promise<PlanFeatures | nul
   return {
     meta_api_enabled: f.meta_api_enabled === true,
     team_limit: plan.team_limit ?? null,
-    connections_limit: plan.connections_limit ?? 1,
+    connections_limit: plan.connections_limit,
     price_pending: f.price_pending === true,
   };
 }

@@ -64,16 +64,16 @@ export async function POST(request: Request) {
         .select("id", { count: "exact", head: true })
         .eq("org_id", orgId),
     ]);
-    let limit = 1;
+    let limit: number | null = 1; // null = ilimitado
     if (sub?.plan_id) {
       const { data: plan } = await supabase
         .from("plans")
         .select("connections_limit")
         .eq("id", sub.plan_id)
         .maybeSingle();
-      limit = plan?.connections_limit ?? 1;
+      if (plan !== null) limit = plan.connections_limit;
     }
-    if ((count ?? 0) >= limit) {
+    if (limit !== null && (count ?? 0) >= limit) {
       return NextResponse.json(
         { error: `Seu plano permite ${limit} conexão(ões). Faça upgrade para conectar mais números.` },
         { status: 403 }

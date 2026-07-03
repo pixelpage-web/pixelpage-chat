@@ -76,13 +76,14 @@ export type PlanRow = {
   name: string;
   price_cents: number;
   ai_messages_limit: number;
-  connections_limit: number;
+  connections_limit: number | null;
   team_limit: number | null;
   campaigns_limit: number | null;
   highlight: boolean;
   sort_order: number;
   features: Json;
   active: boolean;
+  cakto_checkout_url: string | null;
   created_at: string;
 };
 

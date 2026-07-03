@@ -32,7 +32,7 @@ export default async function BillingPage() {
       .from("plans")
       .select("*")
       .eq("active", true)
-      .order("ai_messages_limit", { ascending: true }),
+      .order("sort_order", { ascending: true }),
     supabase
       .from("usage_counters")
       .select("ai_messages_used")
