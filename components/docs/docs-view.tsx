@@ -304,8 +304,8 @@ const sections: DocSection[] = [
       {
         term: { pt: "Pagamento", en: "Payment" },
         body: {
-          pt: "Cobrança mensal via Pix, boleto ou cartão (gateway Asaas). A fatura abre numa página segura do Asaas; o plano ativa automaticamente quando o pagamento é confirmado.",
-          en: "Monthly billing via Pix, bank slip or card (Asaas gateway). The invoice opens on a secure Asaas page; the plan activates automatically once payment is confirmed.",
+          pt: "Cobrança mensal via Cakto (Pix/boleto/cartão). Ao clicar em Assinar, você é redirecionado para a página de checkout segura da Cakto; o plano ativa automaticamente após a confirmação.",
+          en: "Monthly billing via Cakto (Pix, bank slip or card). Clicking Subscribe redirects you to Cakto's secure checkout page; the plan activates automatically once payment is confirmed.",
         },
       },
     ],

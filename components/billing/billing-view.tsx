@@ -15,15 +15,6 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { PlanRow, SubscriptionRow } from "@/types/database";
 
-interface InvoiceItem {
-  id: string;
-  status: string;
-  value: number;
-  due_date: string;
-  url: string | null;
-  description: string | null;
-}
-
 const statusLabels: Record<
   SubscriptionRow["status"],
   { label: string; tone: "lime" | "amber" | "danger" | "ok" }
@@ -116,8 +107,6 @@ export function BillingView({
   aiUsed,
   connectionsCount,
   teamCount,
-  invoices,
-  asaasConfigured,
   isOwner,
 }: {
   subscription: SubscriptionRow | null;
@@ -126,8 +115,6 @@ export function BillingView({
   aiUsed: number;
   connectionsCount: number;
   teamCount: number;
-  invoices: InvoiceItem[];
-  asaasConfigured: boolean;
   isOwner: boolean;
 }) {
   const t = useT();
@@ -350,63 +337,6 @@ export function BillingView({
           </div>
         </section>
 
-        {/* Histórico de faturas (legado Asaas) */}
-        <Card>
-          <CardTitle>{t("Histórico de faturas")}</CardTitle>
-          {invoices.length === 0 ? (
-            <p className="mt-4 rounded-lg border border-dashed border-line p-4 text-center text-xs text-txt-dim">
-              {asaasConfigured
-                ? t("Nenhuma fatura ainda.")
-                : t("As faturas aparecem aqui quando a cobrança estiver ativa.")}
-            </p>
-          ) : (
-            <ul className="mt-4 divide-y divide-line overflow-hidden rounded-lg border border-line">
-              {invoices.map((inv) => (
-                <li
-                  key={inv.id}
-                  className="flex items-center justify-between gap-3 bg-ink px-3 py-2.5 text-xs"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Badge
-                      tone={
-                        inv.status === "CONFIRMED" || inv.status === "RECEIVED"
-                          ? "ok"
-                          : inv.status === "OVERDUE"
-                            ? "danger"
-                            : "amber"
-                      }
-                    >
-                      {inv.status === "CONFIRMED" || inv.status === "RECEIVED"
-                        ? t("Paga")
-                        : inv.status === "OVERDUE"
-                          ? t("Vencida")
-                          : t("Pendente")}
-                    </Badge>
-                    <span className="truncate text-txt-mut">
-                      {inv.description ?? t("Assinatura PixelPage Chat")}
-                    </span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-medium text-txt">
-                      {formatBRL(Math.round(inv.value * 100))}
-                    </span>
-                    <span className="text-txt-dim">{inv.due_date}</span>
-                    {inv.url && (
-                      <a
-                        href={inv.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-lime hover:underline"
-                      >
-                        {t("ver")}
-                      </a>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
       </div>
     </div>
   );

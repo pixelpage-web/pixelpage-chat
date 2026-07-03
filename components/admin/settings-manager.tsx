@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   Bot,
-  CreditCard,
   KeyRound,
   Lock,
   MessageSquare,
@@ -19,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { HelpTip } from "@/components/ui/help-tip";
-import { Select } from "@/components/ui/select";
 import { CodeBlock } from "@/components/integrations/code-block";
 import type { Json } from "@/types/database";
 
@@ -31,8 +29,6 @@ interface EnvFlags {
   meta_app_id: boolean;
   meta_verify_token: boolean;
   meta_system_token: boolean;
-  asaas_api_key: boolean;
-  asaas_env: boolean;
   evolution_url: boolean;
   evolution_key: boolean;
 }
@@ -46,7 +42,7 @@ interface AdminApiKey {
 }
 
 /** Botão "Testar conexão" dos blocos de integração. */
-function TestButton({ type }: { type: "claude" | "evolution" | "asaas" | "meta" }) {
+function TestButton({ type }: { type: "claude" | "evolution" | "meta" }) {
   const [testing, setTesting] = useState(false);
   async function run() {
     setTesting(true);
@@ -86,13 +82,11 @@ export function SettingsManager({
   initialSettings,
   envFlags,
   webhookUrl,
-  asaasWebhookUrl,
   apiKeys: initialApiKeys,
 }: {
   initialSettings: Record<string, Json>;
   envFlags: EnvFlags;
   webhookUrl: string;
-  asaasWebhookUrl: string;
   apiKeys: AdminApiKey[];
 }) {
   const claude = (initialSettings.claude ?? {}) as {
@@ -104,7 +98,6 @@ export function SettingsManager({
     app_id?: string;
     verify_token?: string;
   };
-  const asaas = (initialSettings.asaas ?? {}) as { env?: string };
   const evolution = (initialSettings.evolution ?? {}) as {
     url?: string;
     api_key?: string;
@@ -116,7 +109,6 @@ export function SettingsManager({
   const [temperature, setTemperature] = useState(String(claude.temperature ?? 0.7));
   const [metaAppId, setMetaAppId] = useState(meta.app_id ?? "");
   const [verifyToken, setVerifyToken] = useState(meta.verify_token ?? "");
-  const [asaasEnv, setAsaasEnv] = useState(asaas.env ?? "sandbox");
   const [evoUrl, setEvoUrl] = useState(evolution.url ?? "");
   const [evoKey, setEvoKey] = useState(evolution.api_key ?? "");
   const [n8nUrl, setN8nUrl] = useState(n8n.url ?? "");
@@ -390,58 +382,6 @@ export function SettingsManager({
             Salvar Meta
           </Button>
           <TestButton type="meta" />
-        </div>
-      </Card>
-
-      {/* Asaas */}
-      <Card>
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-soft">
-            <CreditCard className="h-5 w-5 text-amber" aria-hidden />
-          </div>
-          <div>
-            <CardTitle>Asaas</CardTitle>
-            <CardDescription>
-              Gateway de cobrança (Pix/boleto/cartão).
-              {!envFlags.asaas_api_key && (
-                <span className="mt-1 block">
-                  Sem ASAAS_API_KEY em env, a plataforma roda em modo
-                  demonstração — os botões de upgrade mostram &quot;Em breve&quot;.
-                </span>
-              )}
-            </CardDescription>
-          </div>
-        </div>
-        <div className="mt-5 max-w-xs">
-          <Label>
-            Ambiente
-            <EnvBadge set={envFlags.asaas_env} />
-          </Label>
-          <Select
-            value={asaasEnv}
-            onChange={(e) => setAsaasEnv(e.target.value)}
-            disabled={envFlags.asaas_env}
-          >
-            <option value="sandbox">Sandbox (testes)</option>
-            <option value="production">Produção</option>
-          </Select>
-        </div>
-        <div className="mt-4">
-          <p className="mb-2 text-xs font-medium text-txt-mut">
-            Webhook a cadastrar no painel do Asaas (eventos de cobrança):
-          </p>
-          <CodeBlock code={asaasWebhookUrl} label="webhook asaas" />
-        </div>
-        <div className="mt-4 flex gap-2">
-          <Button
-            onClick={() => void saveSetting("asaas", { env: asaasEnv })}
-            loading={saving === "asaas"}
-            variant="secondary"
-            size="sm"
-          >
-            Salvar Asaas
-          </Button>
-          <TestButton type="asaas" />
         </div>
       </Card>
 

@@ -36,8 +36,6 @@ export default async function AdminSettingsPage() {
     meta_app_id: !!process.env.META_APP_ID,
     meta_verify_token: !!process.env.META_VERIFY_TOKEN,
     meta_system_token: !!process.env.META_SYSTEM_USER_TOKEN,
-    asaas_api_key: !!process.env.ASAAS_API_KEY,
-    asaas_env: !!process.env.ASAAS_ENV,
     evolution_url: !!process.env.EVOLUTION_API_URL,
     evolution_key: !!process.env.EVOLUTION_API_KEY,
   };
@@ -54,7 +52,6 @@ export default async function AdminSettingsPage() {
         initialSettings={settings}
         envFlags={envFlags}
         webhookUrl={`${appUrl}/api/webhooks/meta`}
-        asaasWebhookUrl={`${appUrl}/api/webhooks/asaas`}
         apiKeys={(apiKeys ?? []).map((k) => ({
           id: k.id,
           label: k.label,

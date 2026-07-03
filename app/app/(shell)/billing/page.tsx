@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isAsaasConfigured, listCustomerPayments } from "@/lib/asaas";
 import { BillingView } from "@/components/billing/billing-view";
 
 export const dynamic = "force-dynamic";
@@ -52,12 +51,6 @@ export default async function BillingPage() {
   const currentPlan =
     plans?.find((p) => p.id === subscription?.plan_id) ?? null;
 
-  const asaasOn = isAsaasConfigured();
-  const invoices =
-    asaasOn && subscription?.asaas_customer_id
-      ? await listCustomerPayments(subscription.asaas_customer_id)
-      : [];
-
   return (
     <BillingView
       subscription={subscription ?? null}
@@ -66,15 +59,6 @@ export default async function BillingPage() {
       aiUsed={usage?.ai_messages_used ?? 0}
       connectionsCount={connectionsCount ?? 0}
       teamCount={teamCount ?? 0}
-      invoices={invoices.map((p) => ({
-        id: p.id,
-        status: p.status,
-        value: p.value,
-        due_date: p.dueDate,
-        url: p.invoiceUrl ?? p.bankSlipUrl ?? null,
-        description: p.description ?? null,
-      }))}
-      asaasConfigured={asaasOn}
       isOwner={session.profile.role === "owner" || session.profile.role === "admin"}
     />
   );

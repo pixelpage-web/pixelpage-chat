@@ -3,11 +3,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getSessionProfile } from "@/lib/auth";
 import { getClaudeConfig } from "@/lib/settings";
 import { testEvolutionConnection } from "@/lib/evolution";
-import { isAsaasConfigured } from "@/lib/asaas";
 
 /**
  * Botões "Testar conexão" do painel admin.
- * POST { type: "claude" | "evolution" | "asaas" | "meta" }
+ * POST { type: "claude" | "evolution" | "meta" }
  */
 
 export async function POST(request: Request) {
@@ -61,33 +60,6 @@ export async function POST(request: Request) {
         ? `Conectado · Evolution API v${result.version ?? "?"}`
         : (result.error ?? "Falha ao conectar"),
     });
-  }
-
-  // ------------------------------------------------------------------ Asaas
-  if (body.type === "asaas") {
-    if (!isAsaasConfigured()) {
-      return NextResponse.json({
-        ok: false,
-        detail: "ASAAS_API_KEY não configurada — modo demonstração ativo",
-      });
-    }
-    try {
-      const base =
-        process.env.ASAAS_ENV === "production"
-          ? "https://api.asaas.com/v3"
-          : "https://api-sandbox.asaas.com/v3";
-      const res = await fetch(`${base}/customers?limit=1`, {
-        headers: { access_token: process.env.ASAAS_API_KEY as string },
-      });
-      return NextResponse.json({
-        ok: res.ok,
-        detail: res.ok
-          ? `Conectado ao Asaas (${process.env.ASAAS_ENV ?? "sandbox"})`
-          : `Asaas respondeu ${res.status} — confira a chave e o ambiente`,
-      });
-    } catch {
-      return NextResponse.json({ ok: false, detail: "Falha de rede no Asaas" });
-    }
   }
 
   // ------------------------------------------------------------------- Meta
