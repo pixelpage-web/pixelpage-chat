@@ -1,22 +1,271 @@
+import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-// Diagnóstico — fase 1/2 da integração Cakto.
-// Não valida assinatura ainda: isso vem na próxima rodada,
-// depois de dispararmos o teste real e vermos o header nos logs da Vercel.
-// TODO fase 2: validar HMAC-SHA256 contra CAKTO_WEBHOOK_SECRET.
+// product_id Cakto → nome do plano no banco (configurado por setup-cakto.mjs)
+const CAKTO_PRODUCT_PLAN: Record<string, string> = {
+  "e503993d-daa9-41c4-b1c7-3583aa83819c": "Plano 2",
+  "b68d3268-7b43-41e4-aa88-0fa193725004": "Plano 3",
+};
+
+// Eventos que geram ação no banco; qualquer outro → 200 silencioso
+const HANDLED_EVENTS = new Set([
+  "subscription_created",
+  "subscription_renewed",
+  "subscription_canceled",
+  "subscription_renewal_refused",
+  "refund",
+  "chargeback",
+]);
+
+/**
+ * Comparação em tempo constante para o secret do corpo.
+ * `timingSafeEqual` exige buffers de mesmo tamanho: se os comprimentos
+ * diferem, faz uma comparação fictícia para queimar o mesmo tempo.
+ */
+function secretsMatch(received: string, expected: string): boolean {
+  const r = Buffer.from(received, "utf8");
+  const e = Buffer.from(expected, "utf8");
+  if (r.length !== e.length) {
+    timingSafeEqual(e, e); // dummy — evita vazamento de comprimento por timing
+    return false;
+  }
+  return timingSafeEqual(r, e);
+}
+
+/**
+ * Resolve org_id a partir do e-mail do cliente.
+ * Usa auth.admin.listUsers (service_role) — adequado para escala atual;
+ * migrar para RPC ou índice de e-mail se a base ultrapassar ~5 k usuários.
+ */
+async function orgIdByEmail(
+  email: string,
+  admin: ReturnType<typeof createAdminClient>
+): Promise<string | null> {
+  const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (error ?? !data) return null;
+  const authUser = data.users.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase()
+  );
+  if (!authUser) return null;
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("org_id")
+    .eq("id", authUser.id)
+    .maybeSingle();
+  return profile?.org_id ?? null;
+}
+
+/** Resolve plan_id a partir do product_id da Cakto. */
+async function planIdByProduct(
+  productId: string | undefined,
+  admin: ReturnType<typeof createAdminClient>
+): Promise<string | null> {
+  if (!productId) return null;
+  const planName = CAKTO_PRODUCT_PLAN[productId];
+  if (!planName) return null;
+  const { data } = await admin
+    .from("plans")
+    .select("id")
+    .eq("name", planName)
+    .eq("active", true)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+/**
+ * Determina o fim do período pago a partir do payload.
+ * Testa campos conhecidos; cai de volta em +30 dias se nenhum vier.
+ */
+function parsePeriodEnd(data: Record<string, unknown>): string {
+  for (const key of ["next_billing_date", "expires_at", "next_charge_date"]) {
+    const v = data[key];
+    if (typeof v === "string" && v) return new Date(v).toISOString();
+  }
+  return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function asObj(v: unknown): Record<string, unknown> {
+  return v && typeof v === "object" && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : {};
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  // Fail-closed: sem secret configurado → 503
+  const expectedSecret = process.env.CAKTO_WEBHOOK_SECRET;
+  if (!expectedSecret) {
+    console.error("[cakto-webhook] CAKTO_WEBHOOK_SECRET não configurada — fail-closed");
+    return NextResponse.json({ error: "Webhook não configurado" }, { status: 503 });
+  }
+
+  // Lê body bruto antes de parsear (padrão consistente com webhook Meta)
   const rawBody = await request.text();
 
-  const headers: Record<string, string> = {};
-  request.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
+  let body: { secret?: unknown; event?: unknown; data?: unknown };
+  try {
+    body = JSON.parse(rawBody) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
+  }
 
-  console.log("[cakto-webhook-diagnostic] headers:", JSON.stringify(headers, null, 2));
-  console.log("[cakto-webhook-diagnostic] body:", rawBody);
+  // Validação do secret em tempo constante
+  const receivedSecret = typeof body.secret === "string" ? body.secret : "";
+  if (!secretsMatch(receivedSecret, expectedSecret)) {
+    console.warn("[cakto-webhook] secret inválido — acesso negado");
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
 
-  // TODO fase 2: parsear evento e atualizar subscriptions no Supabase.
+  const event = typeof body.event === "string" ? body.event : "";
+  const data = asObj(body.data);
 
-  return NextResponse.json({ received: true }, { status: 200 });
+  console.log(`[cakto-webhook] evento=${event} data=${JSON.stringify(data)}`);
+
+  // purchase_approved é redundante com subscription_created — só loga
+  if (event === "purchase_approved") {
+    console.log("[cakto-webhook] purchase_approved — informativo, sem ação");
+    return NextResponse.json({ received: true });
+  }
+
+  // Evento desconhecido/futuro → 200 sem ação
+  if (!HANDLED_EVENTS.has(event)) {
+    console.log(`[cakto-webhook] evento não tratado: ${event}`);
+    return NextResponse.json({ received: true });
+  }
+
+  // ── Identificação da organização ──────────────────────────────────────────
+  const customer = asObj(data.customer);
+  const customerEmail = typeof customer.email === "string" ? customer.email : null;
+
+  if (!customerEmail) {
+    console.error(`[cakto-webhook] ${event} — customer.email ausente no payload; sem ação`);
+    return NextResponse.json({ received: true }); // 200 para Cakto não reenviar
+  }
+
+  const admin = createAdminClient();
+  const orgId = await orgIdByEmail(customerEmail, admin);
+
+  if (!orgId) {
+    console.error(
+      `[cakto-webhook] ${event} — e-mail "${customerEmail}" não encontrado em nenhuma org`
+    );
+    return NextResponse.json({ received: true }); // 200 — erro de associação, não de protocolo
+  }
+
+  // ── Lógica por evento ─────────────────────────────────────────────────────
+
+  if (event === "subscription_created") {
+    const product = asObj(data.product);
+    const productId = typeof product.id === "string" ? product.id : undefined;
+    const planId = await planIdByProduct(productId, admin);
+
+    if (!planId) {
+      console.error(
+        `[cakto-webhook] subscription_created — product_id "${productId ?? "n/d"}" sem mapeamento`
+      );
+      return NextResponse.json({ received: true });
+    }
+
+    const { error } = await admin
+      .from("subscriptions")
+      .update({
+        plan_id: planId,
+        status: "active",
+        trial_ends_at: null,
+        current_period_end: parsePeriodEnd(data),
+      })
+      .eq("org_id", orgId);
+
+    if (error) {
+      console.error(`[cakto-webhook] subscription_created DB error: ${error.message}`);
+      return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    }
+
+    await admin.from("audit_logs").insert({
+      org_id: orgId,
+      action: "billing.subscription_created",
+      metadata: { event, product_id: productId, plan_id: planId },
+    });
+
+    console.log(`[cakto-webhook] subscription_created ok — org=${orgId} plan=${planId}`);
+  }
+
+  if (event === "subscription_renewed") {
+    const { error } = await admin
+      .from("subscriptions")
+      .update({ status: "active", current_period_end: parsePeriodEnd(data) })
+      .eq("org_id", orgId);
+
+    if (error) {
+      console.error(`[cakto-webhook] subscription_renewed DB error: ${error.message}`);
+      return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    }
+
+    await admin.from("audit_logs").insert({
+      org_id: orgId,
+      action: "billing.subscription_renewed",
+      metadata: { event },
+    });
+
+    console.log(`[cakto-webhook] subscription_renewed ok — org=${orgId}`);
+  }
+
+  if (event === "subscription_canceled") {
+    // Acesso mantido até current_period_end — não revoga imediatamente.
+    // O cron de billing verifica status=canceled + period_end < now() para revogar.
+    const { error } = await admin
+      .from("subscriptions")
+      .update({ status: "canceled" })
+      .eq("org_id", orgId);
+
+    if (error) {
+      console.error(`[cakto-webhook] subscription_canceled DB error: ${error.message}`);
+      return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    }
+
+    await admin.from("audit_logs").insert({
+      org_id: orgId,
+      action: "billing.subscription_canceled",
+      metadata: { event },
+    });
+
+    console.log(`[cakto-webhook] subscription_canceled — org=${orgId} acesso até period_end`);
+  }
+
+  if (event === "subscription_renewal_refused") {
+    // Não cancela — dá chance da Cakto tentar novamente antes de revogar
+    const { error } = await admin
+      .from("subscriptions")
+      .update({ status: "past_due" })
+      .eq("org_id", orgId);
+
+    if (error) {
+      console.error(`[cakto-webhook] renewal_refused DB error: ${error.message}`);
+      return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    }
+
+    await admin.from("audit_logs").insert({
+      org_id: orgId,
+      action: "billing.renewal_refused",
+      metadata: { event },
+    });
+
+    console.log(`[cakto-webhook] subscription_renewal_refused — org=${orgId} status=past_due`);
+  }
+
+  if (event === "refund" || event === "chargeback") {
+    // Não desativa automaticamente — registra para revisão manual
+    await admin.from("audit_logs").insert({
+      org_id: orgId,
+      action: "billing.flagged_for_review",
+      metadata: { event, reason: event },
+    });
+
+    console.warn(`[cakto-webhook] ${event} — org=${orgId} marcada para revisão manual`);
+  }
+
+  return NextResponse.json({ received: true });
 }
