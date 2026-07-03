@@ -4,21 +4,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { WhatsappConnectionRow } from "@/types/database";
 
-/**
- * Botão do Embedded Signup da Meta (Tech Provider).
- * Fluxo: SDK do Facebook → FB.login com config_id → o popup da Meta devolve
- * um `code` e dispara um postMessage WA_EMBEDDED_SIGNUP com waba_id e
- * phone_number_id → enviamos tudo ao servidor para registrar a conexão.
- */
 export function EmbeddedSignupButton({
+  onConnecting,
   onConnected,
+  onError,
 }: {
-  onConnected?: () => void;
+  onConnecting?: () => void;
+  onConnected?: (connection: WhatsappConnectionRow) => void;
+  onError?: (message: string) => void;
 }) {
   const [sdkReady, setSdkReady] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  // Dados da sessão do Embedded Signup chegam via postMessage do facebook.com
   const sessionInfoRef = useRef<{ waba_id?: string; phone_number_id?: string }>({});
 
   const appId = process.env.NEXT_PUBLIC_META_APP_ID;
@@ -43,12 +41,11 @@ export function EmbeddedSignupButton({
           };
         }
       } catch {
-        // mensagens que não são JSON são de outros recursos do SDK — ignorar
+        // mensagens não-JSON do SDK — ignorar
       }
     }
     window.addEventListener("message", handleMessage);
 
-    // Carrega o SDK do Facebook uma única vez
     if (window.FB) {
       setSdkReady(true);
     } else {
@@ -87,11 +84,12 @@ export function EmbeddedSignupButton({
       (response) => {
         const code = response.authResponse?.code;
         if (!code) {
+          // Usuário fechou o popup sem concluir — volta para Estado 1 silenciosamente
           setConnecting(false);
-          toast.error("Conexão cancelada antes de concluir a autorização.");
           return;
         }
         const { waba_id, phone_number_id } = sessionInfoRef.current;
+        onConnecting?.();
 
         void (async () => {
           try {
@@ -100,15 +98,17 @@ export function EmbeddedSignupButton({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ code, waba_id, phone_number_id }),
             });
-            const json = (await res.json()) as { error?: string };
+            const json = (await res.json()) as {
+              error?: string;
+              connection?: WhatsappConnectionRow;
+            };
             if (!res.ok) {
-              toast.error(json.error ?? "Não foi possível registrar a conexão.");
+              onError?.(json.error ?? "Não foi possível registrar a conexão.");
               return;
             }
-            toast.success("WhatsApp conectado com sucesso!");
-            onConnected?.();
+            if (json.connection) onConnected?.(json.connection);
           } catch {
-            toast.error("Erro de conexão ao registrar o número. Tente novamente.");
+            onError?.("Erro de conexão ao registrar o número. Tente novamente.");
           } finally {
             setConnecting(false);
           }
@@ -121,7 +121,7 @@ export function EmbeddedSignupButton({
         extras: { setup: {}, sessionInfoVersion: "3" },
       }
     );
-  }, [configId, onConnected]);
+  }, [configId, onConnecting, onConnected, onError]);
 
   return (
     <Button

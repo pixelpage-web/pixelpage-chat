@@ -132,15 +132,42 @@ export async function sendWhatsappMedia(
  * Assina o app do Tech Provider nos webhooks da WABA do cliente
  * (necessário após o Embedded Signup para receber mensagens).
  */
-export async function subscribeAppToWaba(wabaId: string): Promise<boolean> {
+export async function subscribeAppToWaba(wabaId: string): Promise<{ ok: boolean; error: string | null }> {
   try {
     const res = await fetch(`${GRAPH_BASE}/${wabaId}/subscribed_apps`, {
       method: "POST",
       headers: { Authorization: `Bearer ${systemToken()}` },
     });
-    return res.ok;
-  } catch {
-    return false;
+    if (!res.ok) {
+      const json = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+      return { ok: false, error: json?.error?.message ?? `Meta respondeu ${res.status} em subscribed_apps` };
+    }
+    return { ok: true, error: null };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Falha de rede ao chamar subscribed_apps" };
+  }
+}
+
+export async function registerPhoneNumber(
+  phoneNumberId: string,
+  pin = "000000"
+): Promise<{ ok: boolean; error: string | null }> {
+  try {
+    const res = await fetch(`${GRAPH_BASE}/${phoneNumberId}/register`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${systemToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ messaging_product: "whatsapp", pin }),
+    });
+    if (!res.ok) {
+      const json = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+      return { ok: false, error: json?.error?.message ?? `Meta respondeu ${res.status} em register` };
+    }
+    return { ok: true, error: null };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Falha de rede ao registrar número" };
   }
 }
 

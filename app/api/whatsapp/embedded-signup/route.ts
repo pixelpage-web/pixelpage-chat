@@ -6,6 +6,7 @@ import {
   exchangeEmbeddedSignupCode,
   fetchPhoneDisplay,
   subscribeAppToWaba,
+  registerPhoneNumber,
 } from "@/lib/meta";
 
 interface SignupBody {
@@ -14,10 +15,6 @@ interface SignupBody {
   phone_number_id?: string;
 }
 
-/**
- * Registra a conexão WhatsApp após o Embedded Signup da Meta.
- * Recebe o code do popup + waba_id/phone_number_id do postMessage.
- */
 export async function POST(request: Request) {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) {
@@ -46,17 +43,9 @@ export async function POST(request: Request) {
 
   const supabase = await createServerSupabase();
 
-  // Limite de conexões do plano
   const [{ data: sub }, { count: connectionCount }] = await Promise.all([
-    supabase
-      .from("subscriptions")
-      .select("plan_id")
-      .eq("org_id", orgId)
-      .maybeSingle(),
-    supabase
-      .from("whatsapp_connections")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId),
+    supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle(),
+    supabase.from("whatsapp_connections").select("id", { count: "exact", head: true }).eq("org_id", orgId),
   ]);
 
   let limit = 1;
@@ -75,15 +64,14 @@ export async function POST(request: Request) {
     );
   }
 
-  // Confirma a autorização na Meta e assina o app nos webhooks da WABA.
-  // Falhas aqui não bloqueiam o registro (podem ser refeitas), mas são logadas.
-  const [exchanged, subscribed, phoneInfo] = await Promise.all([
+  // Troca o code e busca dados do número em paralelo (independentes entre si)
+  const [exchanged, phoneInfo] = await Promise.all([
     exchangeEmbeddedSignupCode(body.code),
-    subscribeAppToWaba(body.waba_id),
     fetchPhoneDisplay(body.phone_number_id),
   ]);
 
-  const { data: connection, error } = await supabase
+  // Insere com status 'pending' para obter o ID antes das chamadas à Meta
+  const { data: connection, error: insertError } = await supabase
     .from("whatsapp_connections")
     .insert({
       org_id: orgId,
@@ -91,18 +79,90 @@ export async function POST(request: Request) {
       waba_id: body.waba_id,
       phone_number_id: body.phone_number_id,
       phone_display: phoneInfo.display,
-      status: "connected",
-      connected_at: new Date().toISOString(),
+      status: "pending",
     })
     .select("*")
     .single();
 
-  if (error || !connection) {
+  if (insertError || !connection) {
     return NextResponse.json(
       { error: "Não foi possível salvar a conexão. Tente novamente." },
       { status: 500 }
     );
   }
+
+  // 1. Assinar webhooks na WABA (obrigatório para receber mensagens)
+  const subscribeResult = await subscribeAppToWaba(body.waba_id);
+  console.log(
+    `[embedded-signup] subscribed_apps waba=${body.waba_id} ok=${subscribeResult.ok} err=${subscribeResult.error ?? "-"}`
+  );
+
+  if (!subscribeResult.ok) {
+    const detail = `subscribed_apps: ${subscribeResult.error ?? "erro desconhecido"}`;
+    await supabase
+      .from("whatsapp_connections")
+      .update({ status: "error", error_detail: detail })
+      .eq("id", connection.id);
+    await supabase.from("audit_logs").insert({
+      org_id: orgId,
+      actor_id: session.user.id,
+      action: "whatsapp.connect_failed",
+      metadata: {
+        connection_id: connection.id,
+        step: "subscribed_apps",
+        error: subscribeResult.error,
+        code_exchanged: exchanged,
+      },
+    });
+    return NextResponse.json(
+      {
+        error: `Não foi possível assinar os webhooks na WABA. ${subscribeResult.error ?? ""}`.trim(),
+        status: "error",
+      },
+      { status: 502 }
+    );
+  }
+
+  // 2. Registrar o número para Cloud API
+  const registerResult = await registerPhoneNumber(body.phone_number_id);
+  console.log(
+    `[embedded-signup] register phone=${body.phone_number_id} ok=${registerResult.ok} err=${registerResult.error ?? "-"}`
+  );
+
+  if (!registerResult.ok) {
+    const detail = `register: ${registerResult.error ?? "erro desconhecido"}`;
+    await supabase
+      .from("whatsapp_connections")
+      .update({ status: "error", error_detail: detail })
+      .eq("id", connection.id);
+    await supabase.from("audit_logs").insert({
+      org_id: orgId,
+      actor_id: session.user.id,
+      action: "whatsapp.connect_failed",
+      metadata: {
+        connection_id: connection.id,
+        step: "register",
+        error: registerResult.error,
+        waba_subscribed: true,
+        code_exchanged: exchanged,
+      },
+    });
+    return NextResponse.json(
+      {
+        error: `Não foi possível registrar o número para Cloud API. ${registerResult.error ?? ""}`.trim(),
+        status: "error",
+      },
+      { status: 502 }
+    );
+  }
+
+  // Ambas as chamadas bem-sucedidas — marcar como conectado
+  const { data: ready } = await supabase
+    .from("whatsapp_connections")
+    .update({ status: "connected", connected_at: new Date().toISOString() })
+    .eq("id", connection.id)
+    .select("*")
+    .single();
 
   await supabase.from("audit_logs").insert({
     org_id: orgId,
@@ -113,9 +173,10 @@ export async function POST(request: Request) {
       waba_id: body.waba_id,
       phone_number_id: body.phone_number_id,
       code_exchanged: exchanged,
-      app_subscribed: subscribed,
+      waba_subscribed: true,
+      phone_registered: true,
     },
   });
 
-  return NextResponse.json({ connection });
+  return NextResponse.json({ connection: ready ?? connection });
 }

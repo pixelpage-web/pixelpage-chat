@@ -16,7 +16,7 @@ export type Json =
 export type Role = "superadmin" | "admin" | "owner" | "manager" | "agent";
 export type SubscriptionStatus = "trial" | "active" | "past_due" | "canceled";
 export type ConnectionMode = "manual" | "ai_bot" | "external_webhook";
-export type ConnectionStatus = "pending" | "connected" | "disconnected";
+export type ConnectionStatus = "pending" | "connected" | "disconnected" | "error";
 export type ConnectionType = "meta_api" | "qr_code";
 export type TonePreset = "vendedor" | "suporte" | "formal" | "casual";
 export type ConversationStatus = "open" | "resolved" | "pending";
@@ -115,6 +115,7 @@ export type WhatsappConnectionRow = {
   csat_message: string | null;
   csat_delay_minutes: number;
   connected_at: string | null;
+  error_detail: string | null;
   created_at: string;
 };
 
