@@ -75,14 +75,13 @@ async function planIdByProduct(
 }
 
 /**
- * Determina o fim do período pago a partir do payload.
- * Testa campos conhecidos; cai de volta em +30 dias se nenhum vier.
+ * Determina o fim do período pago a partir de data.subscription (sub-objeto).
+ * O campo real confirmado no payload é: data.subscription.next_payment_date.
+ * Cai de volta em +30 dias se o campo não vier.
  */
-function parsePeriodEnd(data: Record<string, unknown>): string {
-  for (const key of ["next_billing_date", "expires_at", "next_charge_date"]) {
-    const v = data[key];
-    if (typeof v === "string" && v) return new Date(v).toISOString();
-  }
+function periodEndFromSub(sub: Record<string, unknown>): string {
+  const v = sub.next_payment_date;
+  if (typeof v === "string" && v) return new Date(v).toISOString();
   return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 }
 
@@ -156,6 +155,14 @@ export async function POST(request: Request) {
   }
 
   // ── Lógica por evento ─────────────────────────────────────────────────────
+  // Nota: data.status = status do pagamento ("paid", "refused"…) — não confundir
+  // com data.subscription.status = estado da assinatura ("active", "canceled"…).
+  // Toda a lógica abaixo é orientada pelo campo `event`, não por esses status fields.
+
+  // Sub-objeto de assinatura presente em todos os eventos relevantes.
+  const subscription = asObj(data.subscription);
+  // ID único da assinatura na Cakto — rastreia renovações e cancelamentos (correção 2).
+  const caktoSubId = typeof subscription.id === "string" ? subscription.id : null;
 
   if (event === "subscription_created") {
     const product = asObj(data.product);
@@ -175,7 +182,8 @@ export async function POST(request: Request) {
         plan_id: planId,
         status: "active",
         trial_ends_at: null,
-        current_period_end: parsePeriodEnd(data),
+        current_period_end: periodEndFromSub(subscription),
+        cakto_subscription_id: caktoSubId,
       })
       .eq("org_id", orgId);
 
@@ -187,16 +195,16 @@ export async function POST(request: Request) {
     await admin.from("audit_logs").insert({
       org_id: orgId,
       action: "billing.subscription_created",
-      metadata: { event, product_id: productId, plan_id: planId },
+      metadata: { event, product_id: productId, plan_id: planId, cakto_subscription_id: caktoSubId },
     });
 
-    console.log(`[cakto-webhook] subscription_created ok — org=${orgId} plan=${planId}`);
+    console.log(`[cakto-webhook] subscription_created ok — org=${orgId} plan=${planId} sub=${caktoSubId ?? "n/d"}`);
   }
 
   if (event === "subscription_renewed") {
     const { error } = await admin
       .from("subscriptions")
-      .update({ status: "active", current_period_end: parsePeriodEnd(data) })
+      .update({ status: "active", current_period_end: periodEndFromSub(subscription) })
       .eq("org_id", orgId);
 
     if (error) {
@@ -214,11 +222,22 @@ export async function POST(request: Request) {
   }
 
   if (event === "subscription_canceled") {
-    // Acesso mantido até current_period_end — não revoga imediatamente.
-    // O cron de billing verifica status=canceled + period_end < now() para revogar.
+    // Usa data.subscription.next_payment_date para saber até quando o acesso é válido.
+    // Se a data já passou (ou não vier), sem grace period — acesso expira imediatamente.
+    const nextPayment = typeof subscription.next_payment_date === "string"
+      ? subscription.next_payment_date
+      : null;
+    const accessUntil =
+      nextPayment && new Date(nextPayment) > new Date()
+        ? new Date(nextPayment).toISOString()
+        : null;
+
     const { error } = await admin
       .from("subscriptions")
-      .update({ status: "canceled" })
+      .update({
+        status: "canceled",
+        ...(accessUntil ? { current_period_end: accessUntil } : {}),
+      })
       .eq("org_id", orgId);
 
     if (error) {
@@ -229,10 +248,16 @@ export async function POST(request: Request) {
     await admin.from("audit_logs").insert({
       org_id: orgId,
       action: "billing.subscription_canceled",
-      metadata: { event },
+      metadata: {
+        event,
+        canceled_at: typeof subscription.canceledAt === "string" ? subscription.canceledAt : null,
+        access_until: accessUntil,
+      },
     });
 
-    console.log(`[cakto-webhook] subscription_canceled — org=${orgId} acesso até period_end`);
+    console.log(
+      `[cakto-webhook] subscription_canceled — org=${orgId} acesso até ${accessUntil ?? "imediato"}`
+    );
   }
 
   if (event === "subscription_renewal_refused") {
