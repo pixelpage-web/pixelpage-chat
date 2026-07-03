@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { orgHasMetaApi } from "@/lib/plan-features";
 import {
   exchangeEmbeddedSignupCode,
   fetchPhoneDisplay,
@@ -23,6 +24,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
   const orgId = session.profile.org_id;
+
+  const hasMetaApi = await orgHasMetaApi(orgId);
+  if (!hasMetaApi) {
+    return NextResponse.json({ error: "Disponível apenas no Plano 3." }, { status: 403 });
+  }
 
   let body: SignupBody;
   try {

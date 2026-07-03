@@ -21,9 +21,13 @@ export async function GET(request: Request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  const verifyToken = process.env.META_VERIFY_TOKEN;
+  const verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN;
+  if (!verifyToken) {
+    console.error("[meta-webhook] META_WEBHOOK_VERIFY_TOKEN não configurado");
+    return new Response("Service Unavailable", { status: 503 });
+  }
 
-  if (mode === "subscribe" && verifyToken && token === verifyToken && challenge) {
+  if (mode === "subscribe" && token === verifyToken && challenge) {
     // A Meta espera o challenge em texto puro
     return new Response(challenge, { status: 200 });
   }
@@ -36,13 +40,9 @@ export async function GET(request: Request) {
 // ---------------------------------------------------------------------------
 
 /** Valida a assinatura X-Hub-Signature-256 (HMAC do corpo com o App Secret). */
-function isValidSignature(rawBody: string, signatureHeader: string | null): boolean {
+function isValidSignature(rawBody: string, signatureHeader: string | null): boolean | "missing_secret" {
   const appSecret = process.env.META_APP_SECRET;
-  if (!appSecret) {
-    // Sem App Secret configurado (dev) — aceita, mas avisa no log
-    console.warn("[meta-webhook] META_APP_SECRET ausente — assinatura não validada");
-    return true;
-  }
+  if (!appSecret) return "missing_secret";
   if (!signatureHeader?.startsWith("sha256=")) return false;
 
   const expected = createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
@@ -58,7 +58,12 @@ function isValidSignature(rawBody: string, signatureHeader: string | null): bool
 export async function POST(request: Request) {
   const rawBody = await request.text();
 
-  if (!isValidSignature(rawBody, request.headers.get("x-hub-signature-256"))) {
+  const sigResult = isValidSignature(rawBody, request.headers.get("x-hub-signature-256"));
+  if (sigResult === "missing_secret") {
+    console.error("[meta-webhook] META_APP_SECRET não configurado");
+    return new Response("Service Unavailable", { status: 503 });
+  }
+  if (!sigResult) {
     return new Response("Invalid signature", { status: 401 });
   }
 
