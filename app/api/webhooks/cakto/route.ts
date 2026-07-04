@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { activateReferralsForOrg } from "@/lib/referral";
 
 // product_id Cakto → nome do plano no banco (configurado por setup-cakto.mjs)
 const CAKTO_PRODUCT_PLAN: Record<string, string> = {
@@ -197,6 +198,11 @@ export async function POST(request: Request) {
       action: "billing.subscription_created",
       metadata: { event, product_id: productId, plan_id: planId, cakto_subscription_id: caktoSubId },
     });
+
+    // Ativa indicações pendentes (sem await — não bloqueia a resposta ao Cakto)
+    activateReferralsForOrg(orgId).catch((err) =>
+      console.error(`[referral] activateReferralsForOrg error: ${err}`)
+    );
 
     console.log(`[cakto-webhook] subscription_created ok — org=${orgId} plan=${planId} sub=${caktoSubId ?? "n/d"}`);
   }

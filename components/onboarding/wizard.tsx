@@ -125,6 +125,10 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
           .eq("id", orgId);
       }
       toast.success(t("Empresa criada! Seu teste de 7 dias começou."));
+
+      // Registra indicação caso o usuário tenha vindo via link de referral
+      fetch("/api/referral/register", { method: "POST" }).catch(() => {});
+
       setStep(1);
     } catch {
       toast.error(t("Erro de conexão. Verifique sua internet e tente novamente."));

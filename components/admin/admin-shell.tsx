@@ -8,6 +8,7 @@ import {
   CalendarClock,
   FileText,
   Flag,
+  Gift,
   LayoutDashboard,
   LifeBuoy,
   Lightbulb,
@@ -37,6 +38,7 @@ const navSections = [
     label: "OPERAÇÕES",
     items: [
       { href: "/admin/notifications", label: "Notificações", icon: Megaphone, exact: false },
+      { href: "/admin/referrals", label: "Indicações", icon: Gift, exact: false },
       { href: "/admin/support", label: "Suporte", icon: LifeBuoy, exact: false },
       { href: "/admin/api-oficial", label: "API Oficial", icon: ShieldCheck, exact: false },
       { href: "/admin/n8n", label: "n8n", icon: Workflow, exact: false },

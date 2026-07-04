@@ -49,6 +49,15 @@ export type AutomationTriggerType =
   | "conversation_resolved";
 export type ScheduledJobType = "csat_send" | "flow_resume" | "automation_check";
 export type ScheduledJobStatus = "pending" | "done" | "error" | "canceled";
+export type ReferralStatus = "pending" | "activated" | "rewarded" | "canceled";
+export type RewardType = "discount_20" | "discount_50" | "free_month" | "free_6months";
+export type RewardStatus = "pending" | "applied" | "expired";
+export type ReferralMilestone = 3 | 7 | 10 | 20;
+export type ReferralNotificationType =
+  | "referral_pending"
+  | "referral_activated"
+  | "reward_ready"
+  | "reward_applied";
 
 export type OrganizationRow = {
   id: string;
@@ -663,6 +672,52 @@ export type TeamInviteRow = {
   created_at: string;
 };
 
+// ----------------------------------------------------------------------------
+// 0022 — Sistema de Indicações
+// ----------------------------------------------------------------------------
+
+export type ReferralLinkRow = {
+  id: string;
+  org_id: string;
+  code: string;
+  enabled: boolean;
+  clicks: number;
+  created_at: string;
+};
+
+export type ReferralRow = {
+  id: string;
+  referrer_org_id: string;
+  referred_org_id: string;
+  link_id: string;
+  status: ReferralStatus;
+  activated_at: string | null;
+  created_at: string;
+};
+
+export type ReferralRewardRow = {
+  id: string;
+  referral_id: string;
+  org_id: string;
+  reward_type: RewardType;
+  milestone: ReferralMilestone;
+  status: RewardStatus;
+  expires_at: string | null;
+  notes: string | null;
+  applied_at: string | null;
+  created_at: string;
+};
+
+export type ReferralNotificationRow = {
+  id: string;
+  org_id: string;
+  type: ReferralNotificationType;
+  referral_id: string | null;
+  read: boolean;
+  data: Json;
+  created_at: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -728,6 +783,11 @@ export type Database = {
       team_members: TableShape<TeamMemberRow>;
       team_member_permissions: TableShape<TeamMemberPermissionsRow>;
       team_invites: TableShape<TeamInviteRow>;
+      // 0022
+      referral_links: TableShape<ReferralLinkRow>;
+      referrals: TableShape<ReferralRow>;
+      referral_rewards: TableShape<ReferralRewardRow>;
+      referral_notifications: TableShape<ReferralNotificationRow>;
     };
     Views: Record<string, never>;
     Functions: {

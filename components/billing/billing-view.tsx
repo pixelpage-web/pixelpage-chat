@@ -1,20 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
-import {
-  Check,
-  Clock,
-  Lock,
-  Shield,
-  Zap,
-} from "lucide-react";
+import { Check, Clock, Lock, Shield, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn, formatBRL, formatCompact, formatFullDate } from "@/lib/utils";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckoutModal } from "@/components/billing/checkout-modal";
+import { ActivationModal } from "@/components/billing/activation-modal";
 import type { PlanRow, SubscriptionRow } from "@/types/database";
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Monta a URL de checkout com pre-fill de nome e e-mail.
+ * A Cakto não documenta esses params, mas é padrão universal —
+ * pior caso são ignorados sem efeito colateral.
+ */
+function buildCheckoutUrl(baseUrl: string, name: string, email: string): string {
+  try {
+    const url = new URL(baseUrl);
+    if (name.trim()) url.searchParams.set("name", name.trim());
+    if (email.trim()) url.searchParams.set("email", email.trim());
+    return url.toString();
+  } catch {
+    return baseUrl;
+  }
+}
+
+// ─── tipos locais ─────────────────────────────────────────────────────────────
+
+// (SuccessState removido — gerenciado pelo ActivationModal)
+
+// ─── constantes ───────────────────────────────────────────────────────────────
 
 const statusLabels: Record<
   SubscriptionRow["status"],
@@ -26,7 +45,6 @@ const statusLabels: Record<
   canceled: { label: "Cancelada", tone: "danger" },
 };
 
-/** Pitch e features por plano — copy de venda, não só lista de números. */
 const PLAN_COPY: Record<
   string,
   { tagline: string; features: string[]; featured?: boolean }
@@ -65,6 +83,8 @@ const PLAN_COPY: Record<
   },
 };
 
+// ─── sub-componentes ──────────────────────────────────────────────────────────
+
 function UsageBar({
   label,
   used,
@@ -101,6 +121,8 @@ function UsageBar({
   );
 }
 
+// ─── componente principal ─────────────────────────────────────────────────────
+
 export function BillingView({
   subscription,
   currentPlan,
@@ -111,6 +133,7 @@ export function BillingView({
   isOwner,
   userEmail,
   userName,
+  showSuccess,
 }: {
   subscription: SubscriptionRow | null;
   currentPlan: PlanRow | null;
@@ -121,9 +144,18 @@ export function BillingView({
   isOwner: boolean;
   userEmail: string;
   userName: string;
+  showSuccess: boolean;
 }) {
   const t = useT();
-  const [checkoutPlan, setCheckoutPlan] = useState<PlanRow | null>(null);
+  const router = useRouter();
+  const [modalOpen, setModalOpen] = useState(showSuccess);
+
+  function handleModalClose() {
+    setModalOpen(false);
+    // Remove ?success=true da URL sem recarregar
+    window.history.replaceState(null, "", "/app/billing");
+    router.refresh();
+  }
 
   const status = subscription ? statusLabels[subscription.status] : null;
   const trialDaysLeft =
@@ -136,7 +168,17 @@ export function BillingView({
 
   return (
     <div className="h-full overflow-y-auto">
+      {/* Modal de ativação pós-pagamento */}
+      {modalOpen && (
+        <ActivationModal
+          initiallyActive={subscription?.status === "active"}
+          initialPlanName={currentPlan?.name ?? ""}
+          onClose={handleModalClose}
+        />
+      )}
+
       <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+
         <header>
           <h1 className="font-display text-lg font-semibold">{t("Assinatura")}</h1>
           <p className="mt-0.5 text-sm text-txt-mut">
@@ -221,7 +263,6 @@ export function BillingView({
                       : "border-line bg-surface"
                   )}
                 >
-                  {/* Badge "Mais popular" flutuante no Plano 3 */}
                   {isFeatured && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                       <Badge tone="lime" className="px-3 py-0.5 text-[11px]">
@@ -230,11 +271,8 @@ export function BillingView({
                     </div>
                   )}
 
-                  {/* Cabeçalho */}
                   <div className="flex items-center justify-between">
-                    <p className="font-display text-sm font-semibold">
-                      {plan.name}
-                    </p>
+                    <p className="font-display text-sm font-semibold">{plan.name}</p>
                     {isCurrent && (
                       <Badge tone="lime" className="text-[10px]">
                         {t("atual")}
@@ -242,29 +280,23 @@ export function BillingView({
                     )}
                   </div>
 
-                  {/* Trial badge */}
                   {trialDays && !isCurrent && (
                     <span className="mt-1.5 self-start rounded-full border border-amber/40 bg-amber/10 px-2 py-0.5 text-[10px] font-medium text-amber">
                       {trialDays} {t("dias grátis")}
                     </span>
                   )}
 
-                  {/* Preço */}
                   <div className="mt-3">
                     <p className="font-display text-2xl font-bold leading-none">
                       {plan.price_cents > 0 ? (
                         <>
                           {formatBRL(plan.price_cents)}
-                          <span className="text-xs font-normal text-txt-dim">
-                            /{t("mês")}
-                          </span>
+                          <span className="text-xs font-normal text-txt-dim">/{t("mês")}</span>
                         </>
                       ) : (
                         <>
                           R$ 0
-                          <span className="text-xs font-normal text-txt-dim">
-                            /{t("mês")}
-                          </span>
+                          <span className="text-xs font-normal text-txt-dim">/{t("mês")}</span>
                         </>
                       )}
                     </p>
@@ -275,37 +307,37 @@ export function BillingView({
                     )}
                   </div>
 
-                  {/* Features */}
                   <ul className="mt-4 flex-1 space-y-2">
                     {(copy?.features ?? []).map((f) => (
                       <li
                         key={f}
                         className="flex items-start gap-1.5 text-[11px] text-txt-mut"
                       >
-                        <Check
-                          className="mt-0.5 h-3 w-3 shrink-0 text-lime"
-                          aria-hidden
-                        />
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-lime" aria-hidden />
                         {f}
                       </li>
                     ))}
                   </ul>
 
-                  {/* CTA */}
+                  {/* CTA — dono, plano pago, não-atual */}
                   {!isCurrent && isOwner && plan.price_cents > 0 && (
                     <div className="mt-5">
                       {hasCheckout ? (
-                        <button
-                          onClick={() => setCheckoutPlan(plan)}
+                        <a
+                          href={buildCheckoutUrl(
+                            plan.cakto_checkout_url!,
+                            userName,
+                            userEmail
+                          )}
                           className={cn(
-                            "focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+                            "focus-ring flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
                             isFeatured
                               ? "bg-lime text-black hover:opacity-90"
                               : "border border-line-strong text-txt hover:border-lime/60 hover:text-lime"
                           )}
                         >
                           {t("Assinar")} {plan.name}
-                        </button>
+                        </a>
                       ) : (
                         <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2 text-center text-[11px] text-txt-dim">
                           <Clock className="h-3 w-3" aria-hidden />
@@ -315,7 +347,6 @@ export function BillingView({
                     </div>
                   )}
 
-                  {/* Plano gratuito — sem botão */}
                   {!isCurrent && plan.price_cents === 0 && (
                     <div className="mt-5">
                       <p className="flex items-center justify-center gap-1.5 rounded-lg bg-surface-hover p-2 text-center text-[11px] text-txt-dim">
@@ -325,7 +356,6 @@ export function BillingView({
                     </div>
                   )}
 
-                  {/* Non-owner: plano pago sem botão */}
                   {!isCurrent && !isOwner && plan.price_cents > 0 && (
                     <div className="mt-5">
                       <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2 text-center text-[11px] text-txt-dim">
@@ -341,15 +371,6 @@ export function BillingView({
         </section>
 
       </div>
-
-      {checkoutPlan && (
-        <CheckoutModal
-          plan={checkoutPlan}
-          userEmail={userEmail}
-          userName={userName}
-          onClose={() => setCheckoutPlan(null)}
-        />
-      )}
     </div>
   );
 }

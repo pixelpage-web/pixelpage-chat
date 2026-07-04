@@ -7,10 +7,17 @@ export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Assinatura" };
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
   const orgId = session.profile.org_id;
+
+  const params = await searchParams;
+  const showSuccess = params.success === "true";
 
   const supabase = await createServerSupabase();
 
@@ -62,6 +69,7 @@ export default async function BillingPage() {
       isOwner={session.profile.role === "owner" || session.profile.role === "admin"}
       userEmail={session.user.email ?? ""}
       userName={session.profile.name}
+      showSuccess={showSuccess}
     />
   );
 }
