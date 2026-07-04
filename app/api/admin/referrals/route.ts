@@ -36,10 +36,11 @@ export async function GET(request: Request) {
       referrer_org:organizations!referrer_org_id(id, name, slug),
       referred_org:organizations!referred_org_id(id, name, slug),
       link:referral_links!link_id(code, clicks),
-      rewards:referral_rewards(id, reward_type, amount_cents, status, scratch_card_revealed, applied_at)
+      rewards:referral_rewards(id, reward_type, milestone, status, expires_at, applied_at)
       `,
       { count: "exact" }
     )
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

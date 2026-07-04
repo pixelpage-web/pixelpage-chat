@@ -132,15 +132,23 @@ export async function sendWhatsappMedia(
  * Assina o app do Tech Provider nos webhooks da WABA do cliente
  * (necessário após o Embedded Signup para receber mensagens).
  */
-export async function subscribeAppToWaba(wabaId: string): Promise<{ ok: boolean; error: string | null }> {
+export async function subscribeAppToWaba(
+  wabaId: string
+): Promise<{ ok: boolean; error: string | null; code?: number }> {
   try {
     const res = await fetch(`${GRAPH_BASE}/${wabaId}/subscribed_apps`, {
       method: "POST",
       headers: { Authorization: `Bearer ${systemToken()}` },
     });
     if (!res.ok) {
-      const json = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-      return { ok: false, error: json?.error?.message ?? `Meta respondeu ${res.status} em subscribed_apps` };
+      const json = (await res.json().catch(() => null)) as {
+        error?: { message?: string; code?: number };
+      } | null;
+      return {
+        ok: false,
+        error: json?.error?.message ?? `Meta respondeu ${res.status} em subscribed_apps`,
+        code: json?.error?.code,
+      };
     }
     return { ok: true, error: null };
   } catch (err) {
@@ -151,7 +159,7 @@ export async function subscribeAppToWaba(wabaId: string): Promise<{ ok: boolean;
 export async function registerPhoneNumber(
   phoneNumberId: string,
   pin = "000000"
-): Promise<{ ok: boolean; error: string | null }> {
+): Promise<{ ok: boolean; error: string | null; code?: number }> {
   try {
     const res = await fetch(`${GRAPH_BASE}/${phoneNumberId}/register`, {
       method: "POST",
@@ -162,8 +170,14 @@ export async function registerPhoneNumber(
       body: JSON.stringify({ messaging_product: "whatsapp", pin }),
     });
     if (!res.ok) {
-      const json = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-      return { ok: false, error: json?.error?.message ?? `Meta respondeu ${res.status} em register` };
+      const json = (await res.json().catch(() => null)) as {
+        error?: { message?: string; code?: number };
+      } | null;
+      return {
+        ok: false,
+        error: json?.error?.message ?? `Meta respondeu ${res.status} em register`,
+        code: json?.error?.code,
+      };
     }
     return { ok: true, error: null };
   } catch (err) {

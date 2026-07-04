@@ -1,96 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import {
   ArrowLeft,
   BadgeCheck,
   CheckCircle2,
-  Clock,
   Headphones,
+  Loader2,
   Lock,
   Plug,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { EmbeddedSignupButton } from "@/components/whatsapp/embedded-signup-button";
+import { formatPhone } from "@/lib/utils";
+import type { WhatsappConnectionRow } from "@/types/database";
+
+type Phase = "idle" | "connecting" | "success" | "error";
+
+function initialPhase(conn: WhatsappConnectionRow | null): Phase {
+  if (!conn) return "idle";
+  if (conn.status === "connected") return "success";
+  if (conn.status === "error") return "error";
+  return "idle";
+}
 
 const included = [
   { icon: BadgeCheck, text: "Número configurado e verificado" },
-  { icon: Plug, text: "API Meta ativada em até 48h úteis" },
+  { icon: Plug, text: "Ativação automática via Meta" },
   { icon: Headphones, text: "Suporte na configuração" },
   { icon: ShieldCheck, text: "Integração automática com o PixelPage Chat" },
 ];
 
-const steps = [
-  "Você preenche o formulário abaixo",
-  "Nossa equipe entra em contato em até 24h",
-  "Você fornece os dados da empresa",
-  "Em 48h o número está ativo",
-];
-
-/** Página de venda interna + formulário de interesse da API Oficial. */
 export function ApiOficialView({
-  defaultName,
-  defaultEmail,
-  defaultCompany,
-  alreadyRequested,
   hasPlan3,
+  existingConnection,
 }: {
-  defaultName: string;
-  defaultEmail: string;
-  defaultCompany: string;
-  alreadyRequested: boolean;
   hasPlan3: boolean;
+  existingConnection: WhatsappConnectionRow | null;
 }) {
   const t = useT();
-  const [sent, setSent] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    company_name: defaultCompany,
-    document: "",
-    desired_phone: "",
-    contact_name: defaultName,
-    contact_email: defaultEmail,
-    contact_whatsapp: "",
-  });
+  const [phase, setPhase] = useState<Phase>(initialPhase(existingConnection));
+  const [connection, setConnection] = useState<WhatsappConnectionRow | null>(existingConnection);
+  const [errorMsg, setErrorMsg] = useState<string | null>(
+    existingConnection?.status === "error" ? (existingConnection.error_detail ?? null) : null
+  );
 
-  function set<K extends keyof typeof form>(key: K, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
+  const handleConnecting = useCallback(() => {
+    setPhase("connecting");
+    setErrorMsg(null);
+  }, []);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.company_name || !form.contact_name || !form.contact_whatsapp) {
-      toast.error(t("Preencha empresa, responsável e WhatsApp de contato."));
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await fetch("/api/connections/api-oficial", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const json = (await res.json().catch(() => null)) as { error?: string } | null;
-      if (!res.ok) {
-        toast.error(json?.error ?? t("Não foi possível enviar. Tente novamente."));
-        return;
-      }
-      setSent(true);
-      toast.success(t("Pedido enviado! Entraremos em contato em até 24h."));
-    } catch {
-      toast.error(t("Erro de conexão."));
-    } finally {
-      setSaving(false);
-    }
-  }
+  const handleConnected = useCallback((conn: WhatsappConnectionRow) => {
+    setConnection(conn);
+    setPhase("success");
+  }, []);
 
-  const done = sent || alreadyRequested;
+  const handleError = useCallback((msg: string) => {
+    setErrorMsg(msg);
+    setPhase("error");
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    setPhase("idle");
+    setErrorMsg(null);
+  }, []);
 
   return (
     <div className="h-full overflow-y-auto">
@@ -103,7 +82,7 @@ export function ApiOficialView({
           {t("Voltar para Conexões")}
         </Link>
 
-        {/* Estado bloqueado — org não tem Plano 3 */}
+        {/* Gate — plano insuficiente */}
         {!hasPlan3 && (
           <Card className="border-line">
             <div className="flex flex-col items-center gap-4 py-6 text-center">
@@ -111,9 +90,9 @@ export function ApiOficialView({
                 <Lock className="h-7 w-7 text-txt-dim" aria-hidden />
               </div>
               <div>
-                <CardTitle>{t("Disponível no Plano 3")}</CardTitle>
+                <CardTitle>{t("Disponível no Plano Pro")}</CardTitle>
                 <CardDescription className="mt-1 max-w-sm">
-                  {t("A API Oficial da Meta está incluída no Plano 3 da PixelPage Chat — número verificado com selo ✓ verde, templates aprovados e sem risco de banimento.")}
+                  {t("A API Oficial da Meta está incluída no Plano Pro da PixelPage Chat — número verificado com selo ✓ verde, templates aprovados e sem risco de banimento.")}
                 </CardDescription>
               </div>
               <Link
@@ -126,165 +105,122 @@ export function ApiOficialView({
           </Card>
         )}
 
-        {/* Oferta — só visível para Plano 3 */}
+        {/* Conteúdo Pro */}
         {hasPlan3 && (
-        <Card className="border-ok/30 bg-gradient-to-br from-ok-soft to-transparent">
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ok-soft">
-              <ShieldCheck className="h-6 w-6 text-ok" aria-hidden />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle>🟢 {t("Número WhatsApp com API Oficial da Meta")}</CardTitle>
-                <Badge tone="ok">{t("Incluído no Plano 3")}</Badge>
+          <>
+            {/* Card de apresentação */}
+            <Card className="border-ok/30 bg-gradient-to-br from-ok-soft to-transparent">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ok-soft">
+                  <ShieldCheck className="h-6 w-6 text-ok" aria-hidden />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle>🟢 {t("Número WhatsApp com API Oficial da Meta")}</CardTitle>
+                    <Badge tone="ok">{t("Incluído no Plano Pro")}</Badge>
+                  </div>
+                  <CardDescription>
+                    {t("Número verificado, com selo ✓ verde, templates aprovados e zero risco de banimento por uso correto.")}
+                  </CardDescription>
+                </div>
               </div>
-              <CardDescription>
-                {t("Número verificado, com selo ✓ verde, templates aprovados e zero risco de banimento por uso correto.")}
-              </CardDescription>
-            </div>
-          </div>
 
-          {/* Incluído */}
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold text-txt-mut">{t("O que está incluído")}</p>
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {included.map((item) => (
-                <li key={item.text} className="flex items-center gap-2 text-sm text-txt">
-                  <item.icon className="h-4 w-4 shrink-0 text-ok" aria-hidden />
-                  {t(item.text)}
-                </li>
-              ))}
-            </ul>
-          </div>
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold text-txt-mut">{t("O que está incluído")}</p>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {included.map((item) => (
+                    <li key={item.text} className="flex items-center gap-2 text-sm text-txt">
+                      <item.icon className="h-4 w-4 shrink-0 text-ok" aria-hidden />
+                      {t(item.text)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Card>
 
-          {/* Como funciona */}
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold text-txt-mut">{t("Como funciona")}</p>
-            <ol className="space-y-2">
-              {steps.map((step, i) => (
-                <li key={step} className="flex items-center gap-2.5 text-sm text-txt-mut">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime-soft text-[11px] font-semibold text-lime">
-                    {i + 1}
-                  </span>
-                  {t(step)}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </Card>
-        )}
-
-        {/* Formulário — só para Plano 3 */}
-        {/* Estado: já enviado */}
-        {hasPlan3 && done ? (
-          <Card className="border-ok/30">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-ok" aria-hidden />
-              <div>
-                <CardTitle>{t("Pedido recebido!")}</CardTitle>
+            {/* Estado: idle — botão de conexão */}
+            {phase === "idle" && (
+              <Card>
+                <CardTitle>{t("Conectar via Embedded Signup da Meta")}</CardTitle>
                 <CardDescription>
-                  {t("Nossa equipe entra em contato em até 24h pelo WhatsApp ou email informado. Você pode acompanhar pelo suporte.")}
+                  {t("Clique no botão abaixo para iniciar o fluxo oficial da Meta. Um popup abrirá para você autorizar seu WhatsApp Business — o processo leva menos de 2 minutos.")}
                 </CardDescription>
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-amber">
-                  <Clock className="h-3.5 w-3.5" aria-hidden />
-                  {t("Status: aguardando contato da equipe")}
-                </div>
-              </div>
-            </div>
-          </Card>
-        ) : hasPlan3 ? (
-          /* Formulário de interesse */
-          <Card>
-            <CardTitle>{t("Quero meu número com API Oficial")}</CardTitle>
-            <CardDescription>
-              {t("Preencha os dados abaixo. Sem compromisso — primeiro entramos em contato para tirar suas dúvidas.")}
-            </CardDescription>
-
-            <form onSubmit={submit} className="mt-4 space-y-4">
-              <div>
-                <Label htmlFor="company_name">{t("Nome da empresa")}</Label>
-                <Input
-                  id="company_name"
-                  value={form.company_name}
-                  onChange={(e) => set("company_name", e.target.value)}
-                  placeholder={t("Ex.: Pizzaria do João")}
-                  required
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="document">
-                    CNPJ <span className="font-normal text-txt-dim">({t("opcional")})</span>
-                  </Label>
-                  <Input
-                    id="document"
-                    value={form.document}
-                    onChange={(e) => set("document", e.target.value)}
-                    placeholder={t("CNPJ ou CPF (para MEI)")}
-                  />
-                  <p className="mt-1 text-[11px] text-txt-dim">
-                    {t("MEI pode usar CPF. Deixe em branco se ainda não tiver.")}
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="desired_phone">{t("Número de telefone desejado")}</Label>
-                  <Input
-                    id="desired_phone"
-                    value={form.desired_phone}
-                    onChange={(e) => set("desired_phone", e.target.value)}
-                    placeholder={t("ou “qualquer disponível”")}
-                  />
-                  <p className="mt-1 text-[11px] text-txt-dim">
-                    {t("Se já tem um número em mente, informe com DDD.")}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="contact_name">{t("Nome do responsável")}</Label>
-                <Input
-                  id="contact_name"
-                  value={form.contact_name}
-                  onChange={(e) => set("contact_name", e.target.value)}
-                  placeholder={t("Quem vamos procurar")}
-                  required
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="contact_email">{t("Email de contato")}</Label>
-                  <Input
-                    id="contact_email"
-                    type="email"
-                    value={form.contact_email}
-                    onChange={(e) => set("contact_email", e.target.value)}
-                    placeholder="voce@empresa.com.br"
+                <div className="mt-5">
+                  <EmbeddedSignupButton
+                    onConnecting={handleConnecting}
+                    onConnected={handleConnected}
+                    onError={handleError}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="contact_whatsapp">{t("WhatsApp para contato")}</Label>
-                  <Input
-                    id="contact_whatsapp"
-                    value={form.contact_whatsapp}
-                    onChange={(e) => set("contact_whatsapp", e.target.value)}
-                    placeholder="(11) 98888-7777"
-                    required
-                  />
-                  <p className="mt-1 text-[11px] text-txt-dim">
-                    {t("É por aqui que falaremos com você.")}
-                  </p>
-                </div>
-              </div>
+              </Card>
+            )}
 
-              <Button type="submit" loading={saving} className="w-full sm:w-auto">
-                {t("Quero meu número com API Oficial")}
-                <ShieldCheck className="h-4 w-4" aria-hidden />
-              </Button>
-            </form>
-          </Card>
-        ) : null}
+            {/* Estado: connecting */}
+            {phase === "connecting" && (
+              <Card>
+                <div className="flex items-center gap-3 py-1">
+                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-lime" aria-hidden />
+                  <div>
+                    <p className="text-sm font-medium">{t("Configurando sua conexão...")}</p>
+                    <p className="text-xs text-txt-dim">
+                      {t("Registrando seu número na API da Meta. Aguarde alguns segundos.")}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Estado: success */}
+            {phase === "success" && connection && (
+              <Card className="border-ok/30">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-ok" aria-hidden />
+                  <div className="flex-1">
+                    <CardTitle>{t("Número conectado com sucesso!")}</CardTitle>
+                    <CardDescription>
+                      {connection.phone_display
+                        ? formatPhone(connection.phone_display)
+                        : connection.phone_number_id}{" "}
+                      {connection.label ? `— ${connection.label}` : ""}
+                    </CardDescription>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Badge tone="ok">{t("API Oficial ativa")}</Badge>
+                      <Badge tone="lime">{t("Parceiro Meta")}</Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/app/connections"
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                  >
+                    {t("Ver todas as conexões")}
+                  </Link>
+                </div>
+              </Card>
+            )}
+
+            {/* Estado: error */}
+            {phase === "error" && (
+              <Card className="border-danger/30">
+                <div className="flex items-start gap-3">
+                  <XCircle className="mt-0.5 h-6 w-6 shrink-0 text-danger" aria-hidden />
+                  <div className="flex-1">
+                    <CardTitle>{t("Não foi possível conectar")}</CardTitle>
+                    <CardDescription>
+                      {errorMsg ?? t("Ocorreu um erro ao registrar seu número. Tente novamente.")}
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Button variant="secondary" size="sm" onClick={handleRetry}>
+                    {t("Tentar novamente")}
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

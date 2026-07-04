@@ -247,7 +247,11 @@ export function ConversationList({
                         : "hover:bg-surface/60"
                     )}
                   >
-                    <Avatar name={contact?.name ?? contact?.phone} />
+                    <Avatar
+                      name={contact?.name ?? contact?.phone}
+                      imageUrl={contact?.avatar_url ?? undefined}
+                      colorSeed={contact?.id}
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
                         <p

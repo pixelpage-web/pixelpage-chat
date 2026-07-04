@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Headphones, Send } from "lucide-react";
+import { Headphones, Send, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, timeAgo } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
+import { Textarea, Label } from "@/components/ui/input";
 import type {
   SupportTicketMessageRow,
   SupportTicketRow,
@@ -44,6 +44,11 @@ export function SupportManager({
   const [filter, setFilter] = useState<Filter>("open");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
+
+  // Estado do modal de exclusão
+  const [deleteTarget, setDeleteTarget] = useState<SupportTicketRow | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const filtered = useMemo(
     () => (filter === "all" ? tickets : tickets.filter((ti) => ti.status === filter)),
@@ -112,6 +117,30 @@ export function SupportManager({
     }
   }
 
+  async function confirmDelete() {
+    if (!deleteTarget || !deleteReason.trim()) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/support/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticket_id: deleteTarget.id, reason: deleteReason.trim() }),
+      });
+      if (!res.ok) {
+        toast.error("Não foi possível excluir o ticket.");
+        return;
+      }
+      setTickets((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+      toast.success("Ticket excluído (soft-delete).");
+      setDeleteTarget(null);
+      setDeleteReason("");
+    } catch {
+      toast.error("Erro de conexão.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 sm:p-6">
       <header>
@@ -169,21 +198,30 @@ export function SupportManager({
                       {ti.org_id && orgNames[ti.org_id] ? ` · ${orgNames[ti.org_id]}` : ""}
                     </p>
                   </div>
-                  {ti.status !== "closed" ? (
+                  <div className="flex items-center gap-1.5">
+                    {ti.status !== "closed" ? (
+                      <button
+                        onClick={() => void setStatus(ti.id, "closed")}
+                        className="focus-ring shrink-0 rounded-md px-2 py-1 text-xs text-txt-dim hover:bg-surface-raised hover:text-txt"
+                      >
+                        Fechar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => void setStatus(ti.id, "open")}
+                        className="focus-ring shrink-0 rounded-md px-2 py-1 text-xs text-txt-dim hover:bg-surface-raised hover:text-txt"
+                      >
+                        Reabrir
+                      </button>
+                    )}
                     <button
-                      onClick={() => void setStatus(ti.id, "closed")}
-                      className="focus-ring shrink-0 rounded-md px-2 py-1 text-xs text-txt-dim hover:bg-surface-raised hover:text-txt"
+                      onClick={() => { setDeleteTarget(ti); setDeleteReason(""); }}
+                      className="focus-ring shrink-0 rounded-md px-2 py-1 text-xs text-danger/70 hover:bg-danger-soft hover:text-danger"
+                      title="Excluir ticket"
                     >
-                      Fechar
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                  ) : (
-                    <button
-                      onClick={() => void setStatus(ti.id, "open")}
-                      className="focus-ring shrink-0 rounded-md px-2 py-1 text-xs text-txt-dim hover:bg-surface-raised hover:text-txt"
-                    >
-                      Reabrir
-                    </button>
-                  )}
+                  </div>
                 </div>
 
                 {/* Mensagem original + thread */}
@@ -233,6 +271,70 @@ export function SupportManager({
             );
           })}
         </ul>
+      )}
+      {/* Modal de confirmação de exclusão */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-2xl">
+            <button
+              onClick={() => setDeleteTarget(null)}
+              className="absolute right-4 top-4 rounded-md p-1 text-txt-dim hover:text-txt"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <h2 className="font-display text-base font-semibold text-danger">
+              Excluir ticket de suporte
+            </h2>
+            <p className="mt-1 text-xs text-txt-dim">
+              Soft-delete — o ticket não será apagado do banco, apenas ocultado.
+              A ação é registrada no audit log.
+            </p>
+
+            {/* Preview do conteúdo */}
+            <div className="mt-4 rounded-lg border border-danger/20 bg-danger-soft p-3">
+              <p className="text-xs font-semibold text-txt">{deleteTarget.subject || "Sem assunto"}</p>
+              <p className="mt-1 text-[11px] text-txt-mut">
+                {deleteTarget.author_name} · {deleteTarget.author_email}
+              </p>
+              <p className="mt-2 line-clamp-3 text-xs text-txt-mut">{deleteTarget.message}</p>
+            </div>
+
+            {/* Motivo obrigatório */}
+            <div className="mt-4">
+              <Label htmlFor="delete-reason">Motivo da exclusão (obrigatório)</Label>
+              <Textarea
+                id="delete-reason"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="Ex.: spam, conteúdo impróprio, duplicado…"
+                className="mt-1 min-h-[60px] text-sm"
+              />
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <Button
+                variant="danger"
+                size="sm"
+                className="flex-1"
+                loading={deleting}
+                disabled={!deleteReason.trim()}
+                onClick={() => void confirmDelete()}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                Confirmar exclusão
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

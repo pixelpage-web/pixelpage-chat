@@ -13,6 +13,7 @@ export default async function AdminSupportPage() {
     admin
       .from("support_tickets")
       .select("*")
+      .is("deleted_at", null)
       .order("updated_at", { ascending: false })
       .limit(200),
     admin.from("organizations").select("id, name"),

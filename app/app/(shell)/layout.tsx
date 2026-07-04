@@ -32,6 +32,7 @@ export default async function ShellLayout({
     { count: downCount },
     { data: usage },
     { data: notifications },
+    { count: unreadConvCount },
   ] = await Promise.all([
     supabase.from("organizations").select("name, suspended").eq("id", orgId).maybeSingle(),
     supabase
@@ -59,6 +60,13 @@ export default async function ShellLayout({
       .eq("active", true)
       .order("created_at", { ascending: false })
       .limit(10),
+    // Conversas abertas com mensagens não lidas (badge no nav)
+    supabase
+      .from("conversations")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("status", "open")
+      .gt("unread_count", 0),
   ]);
 
   let planName = "—";
@@ -104,6 +112,7 @@ export default async function ShellLayout({
     aiUsage: { used: usage?.ai_messages_used ?? 0, limit: aiLimit },
     notifications: notifications ?? [],
     teamPermissions,
+    unreadInboxCount: unreadConvCount ?? 0,
     subscription: subscription
       ? {
           status: subscription.status,

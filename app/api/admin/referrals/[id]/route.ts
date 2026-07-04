@@ -30,8 +30,9 @@ export async function PATCH(
 
   const { id } = await params;
   const body = (await request.json()) as {
-    action: "apply_reward" | "cancel" | "expire_reward";
+    action: "apply_reward" | "cancel" | "expire_reward" | "delete";
     notes?: string;
+    reason?: string;
     rewardId?: string;
   };
 
@@ -106,6 +107,38 @@ export async function PATCH(
       .update({ status: "expired" })
       .eq("id", body.rewardId)
       .eq("referral_id", id);
+
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "delete") {
+    if (!body.reason?.trim()) {
+      return NextResponse.json({ error: "reason é obrigatório para exclusão" }, { status: 400 });
+    }
+
+    const { error } = await admin
+      .from("referrals")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id)
+      .is("deleted_at", null);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Expira rewards pendentes associados
+    await admin
+      .from("referral_rewards")
+      .update({ status: "expired" })
+      .eq("referral_id", id)
+      .eq("status", "pending");
+
+    await admin.from("audit_logs").insert({
+      org_id: null,
+      actor_id: session?.user.id ?? null,
+      action: "admin.referral.deleted",
+      metadata: { referral_id: id, reason: body.reason.trim() },
+    });
 
     return NextResponse.json({ ok: true });
   }

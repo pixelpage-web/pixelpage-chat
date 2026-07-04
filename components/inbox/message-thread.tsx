@@ -398,7 +398,12 @@ export function MessageThread({
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <Avatar name={contact.name ?? contact.phone} size="sm" />
+        <Avatar
+          name={contact.name ?? contact.phone}
+          imageUrl={contact.avatar_url ?? undefined}
+          colorSeed={contact.id}
+          size="sm"
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">
             {contact.name || formatPhone(contact.phone)}

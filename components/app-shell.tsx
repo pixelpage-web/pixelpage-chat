@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -51,6 +52,8 @@ export interface ShellData {
   notifications: SystemNotificationRow[];
   /** permissões granulares para membros da equipe; null = acesso total (owner/admin) */
   teamPermissions: TeamMemberPermissionsRow | null;
+  /** conversas abertas com mensagens não lidas (badge no nav) */
+  unreadInboxCount: number;
   subscription: {
     status: SubscriptionStatus;
     trialEndsAt: string | null;
@@ -220,6 +223,40 @@ export function AppShell({
   const router = useRouter();
   const t = useT();
 
+  // Badge de não lidas — inicia com valor do servidor, atualiza via realtime
+  const [unreadCount, setUnreadCount] = useState(data.unreadInboxCount);
+
+  useEffect(() => {
+    if (!data.orgId) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`inbox-unread-${data.orgId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "conversations",
+          filter: `org_id=eq.${data.orgId}`,
+        },
+        () => {
+          // Re-busca contagem leve ao detectar qualquer mudança
+          fetch("/api/inbox/unread-count")
+            .then((r) => r.json())
+            .then((json: { count?: number }) => {
+              if (typeof json.count === "number") setUnreadCount(json.count);
+            })
+            .catch(() => undefined);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [data.orgId]);
+
   const isOwnerOrAdmin = data.role === "owner" || data.role === "admin" || data.role === "superadmin";
 
   // Para members com permissões granulares, filtra o nav; owner/admin vêem tudo menos equipe
@@ -260,6 +297,7 @@ export function AppShell({
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
             {visibleNavItems.map((item) => {
               const active = pathname.startsWith(item.href);
+              const isInbox = item.href === "/app/inbox";
               return (
                 <Link
                   key={item.href}
@@ -272,7 +310,12 @@ export function AppShell({
                   )}
                 >
                   <item.icon className="h-4 w-4 shrink-0" aria-hidden />
-                  {t(item.label)}
+                  <span className="flex-1">{t(item.label)}</span>
+                  {isInbox && unreadCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-lime px-1.5 text-[10px] font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

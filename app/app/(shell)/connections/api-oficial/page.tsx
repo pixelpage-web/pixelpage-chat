@@ -15,13 +15,13 @@ export default async function ApiOficialPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: org }, { data: existing }, hasPlan3] = await Promise.all([
-    supabase.from("organizations").select("name").eq("id", orgId).maybeSingle(),
+  const [{ data: existingConnection }, hasPlan3] = await Promise.all([
     supabase
-      .from("api_oficial_requests")
-      .select("id, status")
+      .from("whatsapp_connections")
+      .select("*")
       .eq("org_id", orgId)
-      .in("status", ["pending", "contacted", "in_progress"])
+      .eq("connection_type", "meta_api")
+      .in("status", ["connected", "error", "pending"])
       .limit(1)
       .maybeSingle(),
     orgHasMetaApi(orgId),
@@ -29,11 +29,8 @@ export default async function ApiOficialPage() {
 
   return (
     <ApiOficialView
-      defaultName={session.profile.name}
-      defaultEmail={session.user.email ?? ""}
-      defaultCompany={org?.name ?? ""}
-      alreadyRequested={!!existing}
       hasPlan3={hasPlan3}
+      existingConnection={existingConnection}
     />
   );
 }

@@ -23,11 +23,14 @@ export function Avatar({
   imageUrl,
   size = "md",
   className,
+  colorSeed,
 }: {
   name: string | null | undefined;
   imageUrl?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Seed determinístico para cor de fundo (usa contact.id para Meta API onde não há foto). */
+  colorSeed?: string;
 }) {
   const sizes = {
     sm: "h-8 w-8 text-[11px]",
@@ -57,7 +60,7 @@ export function Avatar({
       className={cn(
         "flex shrink-0 select-none items-center justify-center rounded-full font-semibold",
         sizes[size],
-        paletteFor(display),
+        paletteFor(colorSeed ?? display),
         className
       )}
       aria-hidden

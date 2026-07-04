@@ -417,6 +417,7 @@ export type SupportTicketRow = {
   subject: string;
   message: string;
   status: SupportTicketStatus;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -692,6 +693,7 @@ export type ReferralRow = {
   link_id: string;
   status: ReferralStatus;
   activated_at: string | null;
+  deleted_at: string | null;
   created_at: string;
 };
 

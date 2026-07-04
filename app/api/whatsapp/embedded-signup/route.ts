@@ -15,6 +15,24 @@ interface SignupBody {
   phone_number_id?: string;
 }
 
+// Códigos de erro da Meta com mensagem amigável ao cliente
+const META_ERROR_MESSAGES: Record<number, string> = {
+  131031: "Sua conta Business Meta está bloqueada. Resolva isso no Gerenciador de Negócios antes de conectar.",
+  200008: "Nenhum número encontrado nessa conta. Verifique se você tem um número WhatsApp Business ativo.",
+  80008:  "Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.",
+};
+
+function resolveMetaError(code: number | undefined, technical: string): string {
+  if (code === 190) {
+    console.error(`[embedded-signup-critical] Token inválido ou expirado (code=190). Investigar META_SYSTEM_USER_TOKEN. technical="${technical}"`);
+    return "Erro temporário no nosso sistema. Nossa equipe já foi notificada.";
+  }
+  if (code !== undefined && META_ERROR_MESSAGES[code]) {
+    return META_ERROR_MESSAGES[code]!;
+  }
+  return technical;
+}
+
 export async function POST(request: Request) {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) {
@@ -116,7 +134,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(
       {
-        error: `Não foi possível assinar os webhooks na WABA. ${subscribeResult.error ?? ""}`.trim(),
+        error: resolveMetaError(
+          subscribeResult.code,
+          `Não foi possível assinar os webhooks na WABA. ${subscribeResult.error ?? ""}`.trim()
+        ),
         status: "error",
       },
       { status: 502 }
@@ -149,7 +170,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(
       {
-        error: `Não foi possível registrar o número para Cloud API. ${registerResult.error ?? ""}`.trim(),
+        error: resolveMetaError(
+          registerResult.code,
+          `Não foi possível registrar o número para Cloud API. ${registerResult.error ?? ""}`.trim()
+        ),
         status: "error",
       },
       { status: 502 }
