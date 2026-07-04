@@ -60,6 +60,8 @@ export default async function BillingPage() {
       connectionsCount={connectionsCount ?? 0}
       teamCount={teamCount ?? 0}
       isOwner={session.profile.role === "owner" || session.profile.role === "admin"}
+      userEmail={session.user.email ?? ""}
+      userName={session.profile.name}
     />
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { differenceInCalendarDays } from "date-fns";
 import {
   Check,
   Clock,
-  ExternalLink,
   Lock,
   Shield,
   Zap,
@@ -13,6 +13,7 @@ import { useT } from "@/lib/i18n";
 import { cn, formatBRL, formatCompact, formatFullDate } from "@/lib/utils";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CheckoutModal } from "@/components/billing/checkout-modal";
 import type { PlanRow, SubscriptionRow } from "@/types/database";
 
 const statusLabels: Record<
@@ -108,6 +109,8 @@ export function BillingView({
   connectionsCount,
   teamCount,
   isOwner,
+  userEmail,
+  userName,
 }: {
   subscription: SubscriptionRow | null;
   currentPlan: PlanRow | null;
@@ -116,8 +119,11 @@ export function BillingView({
   connectionsCount: number;
   teamCount: number;
   isOwner: boolean;
+  userEmail: string;
+  userName: string;
 }) {
   const t = useT();
+  const [checkoutPlan, setCheckoutPlan] = useState<PlanRow | null>(null);
 
   const status = subscription ? statusLabels[subscription.status] : null;
   const trialDaysLeft =
@@ -289,10 +295,8 @@ export function BillingView({
                   {!isCurrent && isOwner && plan.price_cents > 0 && (
                     <div className="mt-5">
                       {hasCheckout ? (
-                        <a
-                          href={plan.cakto_checkout_url!}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => setCheckoutPlan(plan)}
                           className={cn(
                             "focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
                             isFeatured
@@ -301,8 +305,7 @@ export function BillingView({
                           )}
                         >
                           {t("Assinar")} {plan.name}
-                          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                        </a>
+                        </button>
                       ) : (
                         <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2 text-center text-[11px] text-txt-dim">
                           <Clock className="h-3 w-3" aria-hidden />
@@ -338,6 +341,15 @@ export function BillingView({
         </section>
 
       </div>
+
+      {checkoutPlan && (
+        <CheckoutModal
+          plan={checkoutPlan}
+          userEmail={userEmail}
+          userName={userName}
+          onClose={() => setCheckoutPlan(null)}
+        />
+      )}
     </div>
   );
 }
