@@ -188,16 +188,16 @@ step("7. Atualizando cakto_checkout_url nos planos do Supabase");
 const { error: e2 } = await supabase
   .from("plans")
   .update({ cakto_checkout_url: checkoutUrl2 })
-  .eq("name", "Plano 2");
-if (e2) console.error("❌ Plano 2:", e2.message);
-else    console.log("✅ Plano 2 atualizado.");
+  .eq("name", "Starter");
+if (e2) console.error("❌ Starter:", e2.message);
+else    console.log("✅ Starter atualizado.");
 
 const { error: e3 } = await supabase
   .from("plans")
   .update({ cakto_checkout_url: checkoutUrl3 })
-  .eq("name", "Plano 3");
-if (e3) console.error("❌ Plano 3:", e3.message);
-else    console.log("✅ Plano 3 atualizado.");
+  .eq("name", "Pro");
+if (e3) console.error("❌ Pro:", e3.message);
+else    console.log("✅ Pro atualizado.");
 
 // ─── Resumo ───────────────────────────────────────────────────────────────────
 const EQ = "═".repeat(60);

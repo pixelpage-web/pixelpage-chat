@@ -358,6 +358,7 @@ export function AppShell({
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden">
         {visibleNavItems.slice(0, 5).map((item) => {
           const active = pathname.startsWith(item.href);
+          const isInbox = item.href === "/app/inbox";
           return (
             <Link
               key={item.href}
@@ -368,7 +369,14 @@ export function AppShell({
                 active ? "text-lime" : "text-txt-dim"
               )}
             >
-              <item.icon className="h-5 w-5" aria-hidden />
+              <span className="relative">
+                <item.icon className="h-5 w-5" aria-hidden />
+                {isInbox && unreadCount > 0 && (
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime px-1 text-[9px] font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </span>
               {t(item.label)}
             </Link>
           );

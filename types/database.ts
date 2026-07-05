@@ -78,6 +78,8 @@ export type ProfileRow = {
   name: string;
   notification_prefs: Json;
   created_at: string;
+  cpf: string | null;
+  phone: string | null;
 };
 
 export type PlanRow = {
@@ -796,6 +798,10 @@ export type Database = {
       create_organization: {
         Args: { p_name: string; p_slug: string };
         Returns: string;
+      };
+      check_cpf_available: {
+        Args: { p_cpf: string };
+        Returns: boolean;
       };
       increment_ai_usage: {
         Args: { p_org_id: string };

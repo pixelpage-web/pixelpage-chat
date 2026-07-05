@@ -49,7 +49,7 @@ const PLAN_COPY: Record<
   string,
   { tagline: string; features: string[]; featured?: boolean }
 > = {
-  "Grátis": {
+  "Free": {
     tagline: "Para dar os primeiros passos",
     features: [
       "1 conexão WhatsApp",
@@ -58,7 +58,7 @@ const PLAN_COPY: Record<
       "Webhook n8n ilimitado",
     ],
   },
-  "Plano 2": {
+  "Starter": {
     tagline: "Automatize e escale seu atendimento",
     features: [
       "Conexões WhatsApp ilimitadas",
@@ -68,7 +68,7 @@ const PLAN_COPY: Record<
       "Webhook n8n ilimitado",
     ],
   },
-  "Plano 3": {
+  "Pro": {
     tagline: "API Oficial Meta — número verificado, sem risco de ban",
     featured: true,
     features: [

@@ -15,10 +15,10 @@ export async function POST(request: Request) {
   }
   const orgId = session.profile.org_id;
 
-  // Gating: apenas orgs no Plano 3 (meta_api_enabled)
+  // Gating: apenas orgs no plano Pro (meta_api_enabled)
   const hasMetaApi = await orgHasMetaApi(orgId);
   if (!hasMetaApi) {
-    return NextResponse.json({ error: "Disponível apenas no Plano 3." }, { status: 403 });
+    return NextResponse.json({ error: "Disponível apenas no plano Pro." }, { status: 403 });
   }
 
   let body: Record<string, unknown>;

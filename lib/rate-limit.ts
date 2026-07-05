@@ -17,19 +17,25 @@ export interface RateLimitResult {
   reset: number;
 }
 
-export function checkRateLimit(keyId: string): RateLimitResult {
+export function checkRateLimit(
+  keyId: string,
+  opts?: { limit?: number; windowMs?: number }
+): RateLimitResult {
+  const limit = opts?.limit ?? LIMIT;
+  const windowMs = opts?.windowMs ?? WINDOW_MS;
+
   const now = Date.now();
-  const windowStart = now - WINDOW_MS;
+  const windowStart = now - windowMs;
 
   const timestamps = (hits.get(keyId) ?? []).filter((ts) => ts > windowStart);
 
-  if (timestamps.length >= LIMIT) {
+  if (timestamps.length >= limit) {
     hits.set(keyId, timestamps);
     return {
       allowed: false,
-      limit: LIMIT,
+      limit,
       remaining: 0,
-      reset: Math.ceil((timestamps[0] + WINDOW_MS) / 1000),
+      reset: Math.ceil((timestamps[0] + windowMs) / 1000),
     };
   }
 
@@ -45,9 +51,9 @@ export function checkRateLimit(keyId: string): RateLimitResult {
 
   return {
     allowed: true,
-    limit: LIMIT,
-    remaining: LIMIT - timestamps.length,
-    reset: Math.ceil((now + WINDOW_MS) / 1000),
+    limit,
+    remaining: limit - timestamps.length,
+    reset: Math.ceil((now + windowMs) / 1000),
   };
 }
 

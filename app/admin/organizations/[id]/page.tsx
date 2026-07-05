@@ -57,6 +57,7 @@ export default async function AdminOrgDetailPage({
 
   return (
     <OrgDetail
+      key={org.id}
       org={org}
       subscription={subscription ?? null}
       plans={plans ?? []}

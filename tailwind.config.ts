@@ -103,10 +103,15 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         shimmer: "shimmer 1.4s linear infinite",
         "fade-up": "fade-up 0.25s ease-out",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },

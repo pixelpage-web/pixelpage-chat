@@ -47,9 +47,9 @@ function LoginForm() {
   }
 
   return (
-    <div className="rounded-card border border-line bg-surface p-6">
-      <h1 className="font-display text-xl font-semibold">{t("Entrar")}</h1>
-      <p className="mt-1 text-sm text-txt-mut">
+    <div className="animate-fade-up rounded-card border border-line bg-surface p-6 sm:p-8">
+      <h1 className="font-display text-2xl font-semibold text-txt">{t("Entrar")}</h1>
+      <p className="mt-1.5 text-sm text-txt-mut">
         {t("Acesse o painel da sua empresa.")}
       </p>
 

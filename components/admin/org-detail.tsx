@@ -99,6 +99,9 @@ export function OrgDetail({
   }
 
   const currentPlan = plans.find((p) => p.id === subscription?.plan_id);
+  // Só planos ativos são opções válidas de troca; um plano arquivado só aparece
+  // se for o plano ATUAL da org (marcado como descontinuado).
+  const selectablePlans = plans.filter((p) => p.active || p.id === planId);
 
   async function toggleSuspended() {
     setBusy(true);
@@ -330,9 +333,10 @@ export function OrgDetail({
               disabled={busy || !subscription}
               onChange={(e) => void changePlan(e.target.value)}
             >
-              {plans.map((p) => (
+              {selectablePlans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — {formatCompact(p.ai_messages_limit)} msgs IA
+                  {p.name}
+                  {!p.active ? " (descontinuado)" : ""} — {formatCompact(p.ai_messages_limit)} msgs IA
                 </option>
               ))}
             </Select>

@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
   const hasMetaApi = await orgHasMetaApi(orgId);
   if (!hasMetaApi) {
-    return NextResponse.json({ error: "Disponível apenas no Plano 3." }, { status: 403 });
+    return NextResponse.json({ error: "Disponível apenas no plano Pro." }, { status: 403 });
   }
 
   let body: SignupBody;

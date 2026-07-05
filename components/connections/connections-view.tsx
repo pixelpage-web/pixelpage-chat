@@ -279,7 +279,7 @@ export function ConnectionsView({
                         <Lock className="h-5 w-5 text-txt-dim" aria-hidden />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold">{t("Disponível no Plano 3")}</p>
+                        <p className="text-sm font-semibold">{t("Disponível no plano Pro")}</p>
                         <p className="text-xs text-txt-mut">
                           {t("Número verificado, templates e campanhas oficiais.")}
                         </p>

@@ -5,8 +5,8 @@ import { activateReferralsForOrg } from "@/lib/referral";
 
 // product_id Cakto → nome do plano no banco (configurado por setup-cakto.mjs)
 const CAKTO_PRODUCT_PLAN: Record<string, string> = {
-  "e503993d-daa9-41c4-b1c7-3583aa83819c": "Plano 2",
-  "b68d3268-7b43-41e4-aa88-0fa193725004": "Plano 3",
+  "e503993d-daa9-41c4-b1c7-3583aa83819c": "Starter",
+  "b68d3268-7b43-41e4-aa88-0fa193725004": "Pro",
 };
 
 // Eventos que geram ação no banco; qualquer outro → 200 silencioso

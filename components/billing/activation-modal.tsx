@@ -227,7 +227,7 @@ export function ActivationModal({
 
   const isPro =
     planName.toLowerCase().includes("pro") ||
-    planName === "Plano 3";
+    planName === "Pro";
 
   return (
     // Overlay — não fecha com ESC ou clique externo durante "activating"
@@ -277,11 +277,11 @@ export function ActivationModal({
         )}
 
         {state === "success" && isPro && (
-          <SuccessPro planName={planName || "Plano 3"} onClose={onClose} />
+          <SuccessPro planName={planName || "Pro"} onClose={onClose} />
         )}
 
         {state === "success" && !isPro && (
-          <SuccessStarter planName={planName || "Plano 2"} onClose={onClose} />
+          <SuccessStarter planName={planName || "Starter"} onClose={onClose} />
         )}
 
         {state === "timeout" && <TimeoutState onClose={onClose} />}

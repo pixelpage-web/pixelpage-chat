@@ -696,4 +696,50 @@ export const en: Record<string, string> = {
   "Erro no bot IA": "AI bot error",
   "Não foi possível salvar a preferência.": "Could not save the preference.",
   "Mais popular": "Most popular",
+
+  // ---------------------------------------------------------------- Cadastro / Login
+  "Seus dados": "Your details",
+  "Confirmar e-mail": "Confirm email",
+  "Senha fraca": "Weak password",
+  "Senha média": "Medium password",
+  "Senha forte": "Strong password",
+  "Nome completo": "Full name",
+  "Informe seu nome completo.": "Enter your full name.",
+  "Informe um email válido.": "Enter a valid email.",
+  "Telefone inválido.": "Invalid phone number.",
+  "CPF inválido.": "Invalid CPF.",
+  "verificando…": "checking…",
+  "Este CPF já está cadastrado.": "This CPF is already registered.",
+  "mínimo 8 caracteres, 1 número, 1 maiúscula":
+    "minimum 8 characters, 1 number, 1 uppercase letter",
+  "A senha precisa ter 8+ caracteres, 1 número e 1 letra maiúscula.":
+    "Password needs 8+ characters, 1 number and 1 uppercase letter.",
+  "Confirmar senha": "Confirm password",
+  "As senhas não coincidem.": "Passwords don't match.",
+  "Não foi possível verificar seus dados agora. Tente novamente.":
+    "Could not verify your details right now. Try again.",
+  "Muitas tentativas. Aguarde um instante e tente novamente.":
+    "Too many attempts. Wait a moment and try again.",
+  "Enviamos um código de 6 dígitos para": "We sent a 6-digit code to",
+  "Código inválido ou expirado. Tente novamente ou solicite um novo código.":
+    "Invalid or expired code. Try again or request a new one.",
+  "Verificando…": "Verifying…",
+  "Reenviar em": "Resend in",
+  "Reenviar código": "Resend code",
+  "Não foi possível reenviar o código. Tente novamente em instantes.":
+    "Could not resend the code. Try again shortly.",
+  "Novo código enviado.": "New code sent.",
+  "Errou o email? Corrigir": "Wrong email? Fix it",
+  "online · resposta em segundos": "online · replies in seconds",
+  "Seu WhatsApp,": "Your WhatsApp,",
+  "automatizado com IA.": "automated with AI.",
+  "Inbox, bot inteligente e automações num só lugar para sua empresa vender e atender mais rápido.":
+    "Inbox, smart bot and automations in one place for your company to sell and support faster.",
+  "Olá! Vocês entregam hoje?": "Hi! Do you deliver today?",
+  "Sim! Entrega em até 40 min 🚀": "Yes! Delivery in up to 40 min 🚀",
+  "Bot com IA treinado com o jeito da sua empresa":
+    "AI bot trained on your company's own style",
+  "Número verificado — API oficial da Meta": "Verified number — official Meta API",
+  "Inbox unificado para toda a equipe responder junto":
+    "Unified inbox for the whole team to reply together",
 };

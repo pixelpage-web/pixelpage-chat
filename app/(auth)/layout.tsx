@@ -1,24 +1,136 @@
+"use client";
+
+import { Bot } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useT } from "@/lib/i18n";
+
+const bullets = [
+  "Bot com IA treinado com o jeito da sua empresa",
+  "Número verificado — API oficial da Meta",
+  "Inbox unificado para toda a equipe responder junto",
+];
 
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const t = useT();
+
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-      {/* Brilho sutil de fundo — identidade, sem gradiente genérico */}
-      <div
-        className="pointer-events-none fixed inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top,rgba(93,214,44,0.07),transparent_60%)]"
-        aria-hidden
-      />
-      <div className="fixed right-4 top-4">
-        <LanguageSwitcher />
+    <div className="flex min-h-dvh flex-col bg-ink lg:flex-row">
+      {/* Painel de marca — faixa compacta no mobile, painel completo a partir de lg */}
+      <div className="relative isolate overflow-hidden bg-ink-deep px-6 py-6 lg:flex lg:w-[46%] lg:min-w-[420px] lg:flex-col lg:justify-between lg:px-14 lg:py-14 lg:[clip-path:polygon(0_0,100%_0,92%_100%,0_100%)]">
+        {/* Grade de pontos — textura sutil */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(93,214,44,0.16) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+          aria-hidden
+        />
+        {/* Brilhos radiais — âncoras nos cantos, não no centro */}
+        <div
+          className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-lime/10 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -top-24 -right-16 hidden h-72 w-72 rounded-full bg-lime/5 blur-3xl lg:block"
+          aria-hidden
+        />
+
+        {/* Topo: logo + idioma (mobile) */}
+        <div className="relative z-10 flex items-center justify-between lg:block">
+          <Logo />
+          <div className="lg:hidden">
+            <LanguageSwitcher />
+          </div>
+        </div>
+
+        {/* Conteúdo completo — somente lg+ */}
+        <div className="relative z-10 mt-10 hidden flex-1 flex-col justify-center lg:flex">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-lime/70">
+            <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-lime align-middle" />
+            {t("online · resposta em segundos")}
+          </p>
+          <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-txt">
+            {t("Seu WhatsApp,")}
+            <br />
+            {t("automatizado com IA.")}
+          </h2>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-txt-mut">
+            {t(
+              "Inbox, bot inteligente e automações num só lugar para sua empresa vender e atender mais rápido."
+            )}
+          </p>
+
+          {/* Mock de conversa — bolhas flutuantes */}
+          <div className="relative mt-10 h-48" aria-hidden>
+            <div
+              className="absolute left-0 top-0 w-[70%] max-w-[230px] -rotate-2 animate-float rounded-2xl rounded-bl-sm border border-line bg-surface p-3 shadow-pop"
+              style={{ animationDelay: "0s" }}
+            >
+              <p className="text-xs leading-relaxed text-txt-mut">
+                {t("Olá! Vocês entregam hoje?")}
+              </p>
+            </div>
+            <div
+              className="absolute right-0 top-16 w-[75%] max-w-[240px] rotate-1 animate-float rounded-2xl rounded-br-sm border border-lime/30 bg-lime-soft p-3 shadow-pop"
+              style={{ animationDelay: "1.2s" }}
+            >
+              <div className="mb-1 flex items-center gap-1.5 text-lime">
+                <Bot className="h-3 w-3" aria-hidden />
+                <span className="font-mono text-[10px] uppercase tracking-wide">
+                  IA
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed text-txt">
+                {t("Sim! Entrega em até 40 min 🚀")}
+              </p>
+            </div>
+            <div className="absolute left-4 top-[7.5rem] flex items-center gap-1 rounded-2xl rounded-bl-sm border border-line bg-surface px-3 py-2.5">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-dim" />
+              <span
+                className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-dim"
+                style={{ animationDelay: "0.15s" }}
+              />
+              <span
+                className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-dim"
+                style={{ animationDelay: "0.3s" }}
+              />
+            </div>
+          </div>
+
+          <ul className="mt-8 space-y-3">
+            {bullets.map((bullet) => (
+              <li key={bullet} className="flex items-start gap-2.5 text-sm text-txt-mut">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-[2px] bg-lime" aria-hidden />
+                {t(bullet)}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative z-10 mt-8 hidden text-xs text-txt-dim lg:block">
+          PixelPage Chat — Tech Provider oficial Meta
+        </p>
       </div>
-      <Logo className="mb-8" />
-      <div className="w-full max-w-sm">{children}</div>
-      <p className="mt-8 text-center text-xs text-txt-dim">
-        PixelPage Chat — Tech Provider oficial Meta
-      </p>
+
+      {/* Painel direito — formulário */}
+      <div className="relative flex flex-1 flex-col">
+        <div className="hidden justify-end p-4 lg:flex">
+          <LanguageSwitcher />
+        </div>
+        <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 lg:py-10">
+          <div className="w-full max-w-sm">
+            {children}
+            <p className="mt-8 text-center text-xs text-txt-dim lg:hidden">
+              PixelPage Chat — Tech Provider oficial Meta
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
