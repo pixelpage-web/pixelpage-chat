@@ -156,6 +156,8 @@ if (assinatura !== esperado) {
   }
 
   // ----------------------------------------------------------------- Aba 2
+  // Passa pela rota do servidor (não escreve mais direto em external_webhooks)
+  // — validação de SSRF acontece lá antes de qualquer gravação.
   async function saveOwn() {
     const trimmed = url.trim();
     if (!/^https:\/\/.+/.test(trimmed)) {
@@ -164,15 +166,21 @@ if (assinatura !== esperado) {
     }
     setBusy("save");
     try {
-      const created = await ensureWebhook({
-        url: trimmed,
-        use_platform_workflow: false,
-        active: true,
+      const res = await fetch("/api/connections/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connection_id: connection.id, url: trimmed }),
       });
-      if (!created) {
-        toast.error(t("Não foi possível salvar o webhook."));
+      const data = (await res.json().catch(() => ({}))) as
+        | ExternalWebhookRow
+        | { error?: string };
+      if (!res.ok) {
+        toast.error(
+          ("error" in data && data.error) || t("Não foi possível salvar o webhook.")
+        );
         return;
       }
+      setWebhook(data as ExternalWebhookRow);
       toast.success(t("Webhook salvo!"));
     } catch {
       toast.error(t("Erro de conexão."));

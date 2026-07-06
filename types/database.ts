@@ -59,6 +59,9 @@ export type ReferralNotificationType =
   | "reward_ready"
   | "reward_applied";
 
+export type AiMode = "managed" | "byok" | "disabled";
+export type AiProvider = "anthropic" | "openai";
+
 export type OrganizationRow = {
   id: string;
   name: string;
@@ -69,6 +72,10 @@ export type OrganizationRow = {
   segment: string | null;
   phone: string | null;
   created_at: string;
+  // 0028 — BYOK de IA por organização
+  ai_mode: string;
+  ai_provider: string | null;
+  ai_byok_verified_at: string | null;
 };
 
 export type ProfileRow = {
@@ -96,6 +103,8 @@ export type PlanRow = {
   active: boolean;
   cakto_checkout_url: string | null;
   created_at: string;
+  max_ai_cost_usd_monthly: number | null;
+  allow_official_api: boolean;
 };
 
 export type SubscriptionRow = {
@@ -722,6 +731,59 @@ export type ReferralNotificationRow = {
   created_at: string;
 };
 
+// 0027 — rastreamento de custo real de IA
+export type AiUsageSource = "bot_reply" | "flow" | "summary" | "ai_note" | "simulate";
+export type OrgUsageStatus = "ok" | "warning" | "exceeded" | "blocked";
+
+export type AiModelPricingRow = {
+  model: string;
+  provider: string;
+  input_per_mtok: number;
+  output_per_mtok: number;
+  updated_at: string;
+};
+
+export type AiUsageLogRow = {
+  id: string;
+  org_id: string;
+  agent_id: string | null;
+  conversation_id: string | null;
+  provider: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
+  response_time_ms: number | null;
+  source: string;
+  is_byok: boolean;
+  created_at: string;
+};
+
+// 0028 — segredos por organização (BYOK de IA + auth do n8n do cliente).
+// SEMPRE cifrados (ver lib/crypto.ts). Tabela sem policy para `authenticated` —
+// só service_role e a RPC get_org_secrets_status (que nunca expõe o valor cifrado).
+export type OrgSecretsRow = {
+  org_id: string;
+  ai_byok_key_encrypted: string | null;
+  n8n_api_key_encrypted: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OrgUsageMonthlyRow = {
+  id: string;
+  org_id: string;
+  month: string;
+  total_messages: number;
+  total_ai_messages: number;
+  total_human_messages: number;
+  total_ai_cost_usd: number;
+  plan_limit_messages: number | null;
+  plan_limit_ai_cost_usd: number | null;
+  status: string;
+  updated_at: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -792,6 +854,12 @@ export type Database = {
       referrals: TableShape<ReferralRow>;
       referral_rewards: TableShape<ReferralRewardRow>;
       referral_notifications: TableShape<ReferralNotificationRow>;
+      // 0027
+      ai_model_pricing: TableShape<AiModelPricingRow>;
+      ai_usage_logs: TableShape<AiUsageLogRow>;
+      org_usage_monthly: TableShape<OrgUsageMonthlyRow>;
+      // 0028
+      org_secrets: TableShape<OrgSecretsRow>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -818,6 +886,35 @@ export type Database = {
       auth_org_id: { Args: Record<string, never>; Returns: string | null };
       auth_role: { Args: Record<string, never>; Returns: string | null };
       is_admin: { Args: Record<string, never>; Returns: boolean };
+      record_ai_usage: {
+        Args: {
+          p_org_id: string;
+          p_agent_id: string | null;
+          p_conversation_id: string | null;
+          p_provider: string;
+          p_model: string;
+          p_input_tokens: number;
+          p_output_tokens: number;
+          p_cost_usd: number;
+          p_response_time_ms: number | null;
+          p_source: string;
+          p_is_byok?: boolean;
+        };
+        Returns: {
+          previous_status: string;
+          new_status: string;
+          total_ai_cost_usd: number;
+          plan_limit_ai_cost_usd: number | null;
+        }[];
+      };
+      get_org_usage_status: {
+        Args: { p_org_id: string };
+        Returns: string;
+      };
+      get_org_secrets_status: {
+        Args: { p_org_id: string };
+        Returns: { has_ai_key: boolean; has_n8n_key: boolean }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

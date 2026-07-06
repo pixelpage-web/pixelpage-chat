@@ -92,23 +92,16 @@ export async function POST(request: Request) {
     systemPrompt,
     history,
     userMessage: message,
+    orgId: session.profile.org_id,
+    agentId: agent.id,
+    conversationId: null,
+    source: "simulate",
+    enforceLimit: false,
   });
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 502 });
   }
-
-  // Registra o uso para estimativa de custo no painel admin
-  await supabase.from("audit_logs").insert({
-    org_id: session.profile.org_id,
-    actor_id: session.user.id,
-    action: "ai.simulate",
-    metadata: {
-      model: result.model,
-      input_tokens: result.inputTokens,
-      output_tokens: result.outputTokens,
-    },
-  });
 
   return NextResponse.json({
     reply: result.text,

@@ -1,6 +1,8 @@
 import { createHmac } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, ExternalWebhookRow, Json } from "@/types/database";
+import { isUrlSafeForOutbound } from "@/lib/ssrf-guard";
+import { decryptSecret } from "@/lib/crypto";
 
 /**
  * Entrega de eventos ao webhook externo do cliente (n8n).
@@ -89,11 +91,51 @@ export async function deliverToWebhook(
   const rawBody = JSON.stringify(payload);
   const signature = signPayload(webhook.secret, rawBody);
 
+  // Auth opcional para n8n self-hosted que exige autenticação de entrada — só
+  // adicionamos o header se a org tiver configurado uma chave (a maioria não
+  // tem; n8n próprio atrás de auth é a exceção, não o padrão). Buscado 1x
+  // antes do loop de tentativas (não é sensível a rebinding como a URL).
+  let n8nAuthHeader: string | null = null;
+  try {
+    const { data: secretsRow } = await admin
+      .from("org_secrets")
+      .select("n8n_api_key_encrypted")
+      .eq("org_id", webhook.org_id)
+      .maybeSingle();
+    if (secretsRow?.n8n_api_key_encrypted) {
+      n8nAuthHeader = `Bearer ${decryptSecret(secretsRow.n8n_api_key_encrypted)}`;
+    }
+  } catch (err) {
+    console.error(
+      "[external-webhook] falha ao buscar/decifrar chave de auth do n8n (entregando sem o header):",
+      webhook.org_id,
+      err
+    );
+  }
+
   let lastStatus: number | null = null;
   let lastError: string | null = null;
 
   for (let attempt = 1; attempt <= DELIVERY_ATTEMPTS; attempt++) {
     const startedAt = Date.now();
+
+    // Checagem de SSRF a cada tentativa — defesa contra DNS rebinding entre o
+    // momento de salvar a URL e o de efetivamente entregar (ver lib/ssrf-guard.ts).
+    const ssrfCheck = await isUrlSafeForOutbound(webhook.url);
+    if (!ssrfCheck.safe) {
+      const elapsed = Date.now() - startedAt;
+      lastError = ssrfCheck.reason ?? "URL de webhook não permitida (SSRF).";
+      await admin.from("webhook_logs").insert({
+        webhook_id: webhook.id,
+        event: payload.event,
+        status_code: null,
+        response_ms: elapsed,
+        error: `${lastError} (tentativa ${attempt})`,
+        payload: JSON.parse(rawBody) as Json,
+      });
+      continue;
+    }
+
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -107,6 +149,8 @@ export async function deliverToWebhook(
           "X-Zari-Signature": signature,
           "X-Zari-Event": payload.event,
           "User-Agent": "PixelPageChat-Webhook/1.0",
+          // Auth opcional para n8n self-hosted (só presente se configurada)
+          ...(n8nAuthHeader ? { Authorization: n8nAuthHeader } : {}),
         },
         body: rawBody,
         signal: controller.signal,

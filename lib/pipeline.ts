@@ -682,7 +682,7 @@ async function routeToAiBot(params: {
       "Claro! Vou te transferir para alguém da nossa equipe. Só um instante 🙏"
     );
     // Resumo da conversa por IA (best effort — nunca trava o atendimento)
-    await generateConversationSummary(admin, conversation.id);
+    await generateConversationSummary(admin, conversation.id, orgId);
     return;
   }
 
@@ -770,30 +770,33 @@ async function routeToAiBot(params: {
     systemPrompt,
     history,
     userMessage: incomingText,
+    orgId,
+    agentId: agent.id,
+    conversationId: conversation.id,
+    source: "bot_reply",
   });
 
   if (!reply.ok) {
-    await admin.from("audit_logs").insert({
-      org_id: orgId,
-      action: "ai.error",
-      metadata: { conversation_id: conversation.id, error: reply.error },
-    });
+    // Budget estourado, IA desligada pela org, ou chave BYOK ausente são
+    // estados esperados (não erros reais da API) — não afetam o atendimento
+    // manual (a conversa continua visível no inbox para resposta humana).
+    if (
+      reply.error !== "ai_budget_exceeded" &&
+      reply.error !== "ai_disabled_by_org" &&
+      reply.error !== "byok_key_missing"
+    ) {
+      await admin.from("audit_logs").insert({
+        org_id: orgId,
+        action: "ai.error",
+        metadata: { conversation_id: conversation.id, error: reply.error },
+      });
+    }
     return;
   }
 
   const sent = await sendAndSave(reply.text);
   if (sent) {
     await admin.rpc("increment_ai_usage", { p_org_id: orgId });
-    await admin.from("audit_logs").insert({
-      org_id: orgId,
-      action: "ai.reply",
-      metadata: {
-        conversation_id: conversation.id,
-        model: reply.model,
-        input_tokens: reply.inputTokens,
-        output_tokens: reply.outputTokens,
-      },
-    });
   }
 }
 

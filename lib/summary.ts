@@ -1,6 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getClaudeConfig } from "@/lib/settings";
+import { generateAgentReply } from "@/lib/claude";
 import type { Database, Json } from "@/types/database";
 
 /**
@@ -55,7 +54,8 @@ function parseSummaryJson(text: string): ConversationSummary | null {
  */
 export async function generateConversationSummary(
   admin: AdminClient,
-  conversationId: string
+  conversationId: string,
+  orgId: string
 ): Promise<ConversationSummary | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
 
@@ -82,21 +82,20 @@ export async function generateConversationSummary(
     .join("\n");
 
   try {
-    const config = await getClaudeConfig();
-    const client = new Anthropic();
-    const response = await client.messages.create({
-      model: config.model,
-      max_tokens: 512,
-      system: SUMMARY_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: transcript.slice(0, 12_000) }],
+    const result = await generateAgentReply({
+      systemPrompt: SUMMARY_SYSTEM_PROMPT,
+      history: [],
+      userMessage: transcript.slice(0, 12_000),
+      orgId,
+      agentId: null,
+      conversationId,
+      source: "summary",
+      enforceLimit: false,
+      maxTokensOverride: 512,
     });
+    if (!result.ok) return null;
 
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-
-    const summary = parseSummaryJson(text);
+    const summary = parseSummaryJson(result.text);
     if (!summary) return null;
 
     await admin

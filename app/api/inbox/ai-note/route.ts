@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getClaudeConfig } from "@/lib/settings";
+import { generateAgentReply } from "@/lib/claude";
 
 /**
  * "✨ Gerar nota com IA" — cria uma nota interna estruturada a partir do
@@ -73,46 +72,21 @@ export async function POST(request: Request) {
     .join("\n")
     .slice(0, 12_000);
 
-  try {
-    const config = await getClaudeConfig();
-    const client = new Anthropic();
-    const response = await client.messages.create({
-      model: config.model,
-      max_tokens: 512,
-      system: NOTE_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: transcript }],
-    });
+  const result = await generateAgentReply({
+    systemPrompt: NOTE_SYSTEM_PROMPT,
+    history: [],
+    userMessage: transcript,
+    orgId: session.profile.org_id,
+    agentId: null,
+    conversationId: body.conversation_id,
+    source: "ai_note",
+    enforceLimit: false,
+    maxTokensOverride: 512,
+  });
 
-    const note = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n")
-      .trim();
-
-    if (!note) {
-      return NextResponse.json({ error: "A IA não retornou texto." }, { status: 502 });
-    }
-
-    await supabase.from("audit_logs").insert({
-      org_id: session.profile.org_id,
-      actor_id: session.user.id,
-      action: "ai.simulate",
-      metadata: {
-        model: config.model,
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens,
-        source: "ai_note",
-      },
-    });
-
-    return NextResponse.json({ note });
-  } catch (err) {
-    if (err instanceof Anthropic.APIError) {
-      return NextResponse.json(
-        { error: `Erro da Claude API (${err.status}): ${err.message}` },
-        { status: 502 }
-      );
-    }
-    return NextResponse.json({ error: "Falha de conexão com a Claude API." }, { status: 502 });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error ?? "A IA não retornou texto." }, { status: 502 });
   }
+
+  return NextResponse.json({ note: result.text });
 }

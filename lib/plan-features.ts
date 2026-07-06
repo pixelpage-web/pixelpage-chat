@@ -19,14 +19,14 @@ export async function getPlanFeatures(orgId: string): Promise<PlanFeatures | nul
 
   const { data: plan } = await admin
     .from("plans")
-    .select("features, team_limit, connections_limit")
+    .select("features, team_limit, connections_limit, allow_official_api")
     .eq("id", sub.plan_id)
     .maybeSingle();
   if (!plan) return null;
 
   const f = (plan.features ?? {}) as Record<string, unknown>;
   return {
-    meta_api_enabled: f.meta_api_enabled === true,
+    meta_api_enabled: plan.allow_official_api === true,
     team_limit: plan.team_limit ?? null,
     connections_limit: plan.connections_limit,
     price_pending: f.price_pending === true,

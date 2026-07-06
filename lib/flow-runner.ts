@@ -97,28 +97,29 @@ async function buildFlowAi(
       systemPrompt,
       history,
       userMessage: params.userMessage,
+      orgId,
+      agentId: agent?.id ?? null,
+      conversationId,
+      source: "flow",
     });
 
     if (result.ok) {
       await admin.rpc("increment_ai_usage", { p_org_id: orgId });
-      await admin.from("audit_logs").insert({
-        org_id: orgId,
-        action: "ai.reply",
-        metadata: {
-          conversation_id: conversationId,
-          model: result.model,
-          input_tokens: result.inputTokens,
-          output_tokens: result.outputTokens,
-          source: "flow",
-        },
-      });
       return result.text;
     }
-    await admin.from("audit_logs").insert({
-      org_id: orgId,
-      action: "ai.error",
-      metadata: { conversation_id: conversationId, error: result.error, source: "flow" },
-    });
+    // Budget estourado, IA desligada pela org, ou chave BYOK ausente são
+    // estados esperados — não logam como erro.
+    if (
+      result.error !== "ai_budget_exceeded" &&
+      result.error !== "ai_disabled_by_org" &&
+      result.error !== "byok_key_missing"
+    ) {
+      await admin.from("audit_logs").insert({
+        org_id: orgId,
+        action: "ai.error",
+        metadata: { conversation_id: conversationId, error: result.error, source: "flow" },
+      });
+    }
     return null;
   };
 }
@@ -181,7 +182,7 @@ async function applyFlowEffects(params: {
           })
           .eq("id", conversation.id);
         if (effect.generateSummary) {
-          await generateConversationSummary(admin, conversation.id);
+          await generateConversationSummary(admin, conversation.id, conversation.org_id);
         }
         await admin.from("audit_logs").insert({
           org_id: conversation.org_id,

@@ -40,7 +40,11 @@ export async function POST(request: Request) {
 
   // Geração usa o admin client (mesmo caminho do pipeline)
   const admin = createAdminClient();
-  const summary = await generateConversationSummary(admin, conversation.id);
+  const summary = await generateConversationSummary(
+    admin,
+    conversation.id,
+    session.profile.org_id
+  );
   if (!summary) {
     return NextResponse.json(
       { error: "Não foi possível gerar o resumo. Verifique a chave da Claude API." },

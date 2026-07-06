@@ -81,6 +81,8 @@ Content-Type: application/json
   "text": "Atendemos de seg a sex, das 9h às 18h!"
 }`;
 
+  // Passa pela rota do servidor (não escreve mais direto em external_webhooks)
+  // — validação de SSRF acontece lá antes de qualquer gravação.
   async function handleSave() {
     const trimmed = url.trim();
     if (!/^https:\/\/.+/.test(trimmed)) {
@@ -89,30 +91,20 @@ Content-Type: application/json
     }
     setSaving(true);
     try {
-      const supabase = createClient();
       const events = subscribedEvents.length > 0 ? subscribedEvents : ["message.received"];
-      if (webhook) {
-        const { error } = await supabase
-          .from("external_webhooks")
-          .update({ url: trimmed, subscribed_events: events })
-          .eq("id", webhook.id);
-        if (error) {
-          toast.error(t("Não foi possível salvar o webhook."));
-          return;
-        }
-        setWebhook({ ...webhook, url: trimmed, subscribed_events: events });
-      } else {
-        const { data, error } = await supabase
-          .from("external_webhooks")
-          .insert({ org_id: orgId, url: trimmed, secret: randomSecret(), subscribed_events: events })
-          .select("*")
-          .single();
-        if (error || !data) {
-          toast.error(t("Não foi possível criar o webhook."));
-          return;
-        }
-        setWebhook(data);
+      const res = await fetch("/api/connections/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: trimmed, subscribed_events: events }),
+      });
+      const data = (await res.json().catch(() => ({}))) as
+        | ExternalWebhookRow
+        | { error?: string };
+      if (!res.ok) {
+        toast.error(("error" in data && data.error) || t("Não foi possível salvar o webhook."));
+        return;
       }
+      setWebhook(data as ExternalWebhookRow);
       toast.success(t("Webhook salvo!"));
     } catch {
       toast.error(t("Erro de conexão ao salvar."));

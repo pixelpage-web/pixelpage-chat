@@ -1,6 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getClaudeConfig } from "@/lib/settings";
-import type { AgentFaqRow, AgentRow } from "@/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { checkAiUsageAllowed, recordAiUsage } from "@/lib/ai-usage";
+import { resolveOrgAiConfig } from "@/lib/ai-provider";
+import { callOpenAI } from "@/lib/openai-provider";
+import type { AgentFaqRow, AgentRow, AiUsageSource } from "@/types/database";
 
 /**
  * Integração com a Claude API (bot nativo + simulador).
@@ -107,39 +111,38 @@ function supportsTemperature(model: string): boolean {
 }
 
 /**
- * Gera a resposta do bot para uma conversa.
- * `history` deve vir em ordem cronológica (sem a mensagem atual do usuário).
+ * Chamada Anthropic propriamente dita (extraída de generateAgentReply — mesma
+ * lógica de sempre, agora reutilizável tanto pelo modo managed quanto pelo
+ * BYOK-Anthropic). Se `apiKey` não for informada, `new Anthropic()` lê
+ * ANTHROPIC_API_KEY do ambiente — o caminho de hoje (managed), inalterado.
  */
-export async function generateAgentReply(params: {
+async function callAnthropic(params: {
+  apiKey?: string;
+  model: string;
+  maxTokens: number;
+  temperature: number | null;
   systemPrompt: string;
   history: ChatTurn[];
   userMessage: string;
 }): Promise<AgentReplyResult> {
-  const config = await getClaudeConfig();
   const fail = (error: string): AgentReplyResult => ({
     ok: false,
     text: "",
     inputTokens: 0,
     outputTokens: 0,
-    model: config.model,
+    model: params.model,
     error,
   });
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return fail(
-      "ANTHROPIC_API_KEY não configurada — adicione a chave no .env.local para ativar o bot."
-    );
-  }
-
-  const client = new Anthropic();
+  const client = params.apiKey ? new Anthropic({ apiKey: params.apiKey }) : new Anthropic();
 
   // Garante alternância user/assistant válida e limita o histórico
   const history = params.history.slice(-20).filter((t) => t.content.trim());
 
   try {
     const response = await client.messages.create({
-      model: config.model,
-      max_tokens: config.maxTokens,
+      model: params.model,
+      max_tokens: params.maxTokens,
       // System prompt estável com cache (prefix match) — ver lib docs
       system: [
         {
@@ -152,8 +155,8 @@ export async function generateAgentReply(params: {
         ...history.map((t) => ({ role: t.role, content: t.content })),
         { role: "user" as const, content: params.userMessage },
       ],
-      ...(config.temperature !== null && supportsTemperature(config.model)
-        ? { temperature: config.temperature }
+      ...(params.temperature !== null && supportsTemperature(params.model)
+        ? { temperature: params.temperature }
         : {}),
     });
 
@@ -167,20 +170,23 @@ export async function generateAgentReply(params: {
       return fail("O modelo não retornou texto. Tente novamente.");
     }
 
+    const inputTokens =
+      response.usage.input_tokens +
+      (response.usage.cache_read_input_tokens ?? 0) +
+      (response.usage.cache_creation_input_tokens ?? 0);
+    const outputTokens = response.usage.output_tokens;
+
     return {
       ok: true,
       text,
-      inputTokens:
-        response.usage.input_tokens +
-        (response.usage.cache_read_input_tokens ?? 0) +
-        (response.usage.cache_creation_input_tokens ?? 0),
-      outputTokens: response.usage.output_tokens,
-      model: config.model,
+      inputTokens,
+      outputTokens,
+      model: response.model || params.model,
       error: null,
     };
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
-      return fail("Chave da Claude API inválida — verifique ANTHROPIC_API_KEY.");
+      return fail("Chave da Claude API inválida — verifique a chave configurada.");
     }
     if (error instanceof Anthropic.RateLimitError) {
       return fail("Limite de requisições da Claude API atingido — tente em instantes.");
@@ -190,6 +196,148 @@ export async function generateAgentReply(params: {
     }
     return fail("Falha de conexão com a Claude API.");
   }
+}
+
+/**
+ * Checagem de custo quase zero (só autenticação) via GET /models — usada para
+ * validar a chave Anthropic do cliente antes de salvar em BYOK. Retorna false
+ * SOMENTE para erro de autenticação; qualquer outro erro (rate limit, rede) é
+ * relançado para o chamador decidir como tratar — não é o mesmo que "chave
+ * inválida".
+ */
+export async function verifyAnthropicKey(apiKey: string): Promise<boolean> {
+  const client = new Anthropic({ apiKey });
+  try {
+    await client.models.list();
+    return true;
+  } catch (error) {
+    if (error instanceof Anthropic.AuthenticationError) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Gera a resposta do bot para uma conversa.
+ * `history` deve vir em ordem cronológica (sem a mensagem atual do usuário).
+ *
+ * Dispatcher por org: lê o modo de IA da organização (managed / byok /
+ * disabled, via lib/ai-provider.ts) e decide, ANTES de qualquer chamada de
+ * provider:
+ * - "disabled" → retorna de imediato com error: "ai_disabled_by_org".
+ * - "byok" sem chave utilizável (nunca verificada, decifra falhou, etc.) →
+ *   retorna de imediato com error: "byok_key_missing".
+ * - "managed" (comportamento de hoje) → proteção de margem: se `enforceLimit`
+ *   (default true) e a org já estourou o teto de custo de IA do plano, a
+ *   Claude API NEM É CHAMADA — retorna com error: "ai_budget_exceeded".
+ *   BYOK nunca passa por esse gate (custo é do próprio cliente).
+ * Após uma resposta bem sucedida, registra o uso (tokens + custo, custo
+ * zerado quando BYOK) via lib/ai-usage.ts.
+ */
+export async function generateAgentReply(params: {
+  systemPrompt: string;
+  history: ChatTurn[];
+  userMessage: string;
+  orgId: string;
+  agentId: string | null;
+  conversationId: string | null;
+  source: AiUsageSource;
+  enforceLimit?: boolean;
+  maxTokensOverride?: number;
+}): Promise<AgentReplyResult> {
+  const config = await getClaudeConfig();
+  const fail = (error: string): AgentReplyResult => ({
+    ok: false,
+    text: "",
+    inputTokens: 0,
+    outputTokens: 0,
+    model: config.model,
+    error,
+  });
+
+  const admin = createAdminClient();
+  const aiConfig = await resolveOrgAiConfig(admin, params.orgId);
+
+  if (aiConfig.mode === "disabled") {
+    return fail("ai_disabled_by_org");
+  }
+
+  if (aiConfig.mode === "byok" && !aiConfig.apiKey) {
+    return fail("byok_key_missing");
+  }
+
+  if (aiConfig.mode === "managed") {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return fail(
+        "ANTHROPIC_API_KEY não configurada — adicione a chave no .env.local para ativar o bot."
+      );
+    }
+    const enforceLimit = params.enforceLimit !== false;
+    if (enforceLimit) {
+      const allowed = await checkAiUsageAllowed(admin, params.orgId);
+      if (!allowed) {
+        return fail("ai_budget_exceeded");
+      }
+    }
+  }
+
+  const startedAt = Date.now();
+  const maxTokens = params.maxTokensOverride ?? config.maxTokens;
+
+  let result: AgentReplyResult;
+  let provider: "anthropic" | "openai";
+
+  if (aiConfig.mode === "byok" && aiConfig.provider === "openai") {
+    provider = "openai";
+    result = await callOpenAI({
+      apiKey: aiConfig.apiKey!,
+      model: "gpt-5.4-mini",
+      systemPrompt: params.systemPrompt,
+      history: params.history,
+      userMessage: params.userMessage,
+      maxTokens,
+    });
+  } else {
+    // managed (env key) ou byok + anthropic (chave do cliente) — mesmo path,
+    // só muda se `apiKey` é passada ou não.
+    provider = "anthropic";
+    result = await callAnthropic({
+      apiKey: aiConfig.mode === "byok" ? aiConfig.apiKey! : undefined,
+      model: config.model,
+      maxTokens,
+      temperature: config.temperature,
+      systemPrompt: params.systemPrompt,
+      history: params.history,
+      userMessage: params.userMessage,
+    });
+  }
+
+  if (!result.ok) {
+    return result;
+  }
+
+  const responseTimeMs = Date.now() - startedAt;
+
+  // Best effort — não deixa uma falha de log derrubar a resposta já gerada.
+  try {
+    await recordAiUsage(admin, {
+      orgId: params.orgId,
+      agentId: params.agentId,
+      conversationId: params.conversationId,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      responseTimeMs,
+      source: params.source,
+      provider,
+      isByok: aiConfig.mode === "byok",
+    });
+  } catch (err) {
+    console.error("[claude] falha ao registrar uso de IA (best effort):", err);
+  }
+
+  return result;
 }
 
 /** Verifica se a mensagem contém alguma palavra-chave de handoff. */

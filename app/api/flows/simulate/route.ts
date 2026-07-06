@@ -85,22 +85,15 @@ export async function POST(request: Request) {
       systemPrompt,
       history: aiHistory.slice(-10),
       userMessage: params.userMessage,
+      orgId,
+      agentId: agent?.id ?? null,
+      conversationId: null,
+      source: "simulate",
+      enforceLimit: false,
     });
     if (!result.ok) return `⚠️ ${result.error}`;
     aiHistory.push({ role: "user", content: params.userMessage });
     aiHistory.push({ role: "assistant", content: result.text });
-    // Registro para estimativa de custo (mesmo padrão do simulador do agente)
-    await supabase.from("audit_logs").insert({
-      org_id: orgId,
-      actor_id: session.user.id,
-      action: "ai.simulate",
-      metadata: {
-        model: result.model,
-        input_tokens: result.inputTokens,
-        output_tokens: result.outputTokens,
-        source: "flow_simulator",
-      },
-    });
     return result.text;
   };
 

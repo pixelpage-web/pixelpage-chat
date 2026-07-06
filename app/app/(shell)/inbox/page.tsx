@@ -73,10 +73,10 @@ export default async function InboxPage() {
         .eq("org_id", orgId)
         .eq("status", "published"),
       supabase
-        .from("audit_logs")
+        .from("ai_usage_logs")
         .select("id", { count: "exact", head: true })
         .eq("org_id", orgId)
-        .eq("action", "ai.simulate"),
+        .eq("source", "simulate"),
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("org_id", orgId),
       supabase
         .from("whatsapp_connections")

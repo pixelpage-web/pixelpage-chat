@@ -20,8 +20,10 @@ interface PlanDraft {
   connections_limit: string;
   team_limit: string; // vazio = ilimitado
   campaigns_limit: string; // vazio = ilimitado, 0 = sem acesso
+  max_ai_cost_usd_monthly: string; // vazio = sem limite
   highlight: boolean;
   active: boolean;
+  allow_official_api: boolean;
 }
 
 function toDraft(plan: PlanRow | null): PlanDraft {
@@ -33,8 +35,11 @@ function toDraft(plan: PlanRow | null): PlanDraft {
     connections_limit: plan ? String(plan.connections_limit) : "1",
     team_limit: plan?.team_limit != null ? String(plan.team_limit) : "",
     campaigns_limit: plan?.campaigns_limit != null ? String(plan.campaigns_limit) : "",
+    max_ai_cost_usd_monthly:
+      plan?.max_ai_cost_usd_monthly != null ? String(plan.max_ai_cost_usd_monthly) : "",
     highlight: plan?.highlight ?? false,
     active: plan?.active ?? true,
+    allow_official_api: plan?.allow_official_api ?? false,
   };
 }
 
@@ -60,8 +65,13 @@ export function PlansManager({ initialPlans }: { initialPlans: PlanRow[] }) {
         team_limit: draft.team_limit.trim() === "" ? null : Number(draft.team_limit),
         campaigns_limit:
           draft.campaigns_limit.trim() === "" ? null : Number(draft.campaigns_limit),
+        max_ai_cost_usd_monthly:
+          draft.max_ai_cost_usd_monthly.trim() === ""
+            ? null
+            : Number(draft.max_ai_cost_usd_monthly),
         highlight: draft.highlight,
         active: draft.active,
+        allow_official_api: draft.allow_official_api,
       };
 
       if (draft.id) {
@@ -242,6 +252,22 @@ export function PlansManager({ initialPlans }: { initialPlans: PlanRow[] }) {
                   placeholder="∞"
                 />
               </div>
+              <div>
+                <Label htmlFor="plan-ai-cost" hint="vazio = sem limite">
+                  Teto de custo de IA (USD/mês)
+                </Label>
+                <Input
+                  id="plan-ai-cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={draft.max_ai_cost_usd_monthly}
+                  onChange={(e) =>
+                    setDraft({ ...draft, max_ai_cost_usd_monthly: e.target.value })
+                  }
+                  placeholder="∞"
+                />
+              </div>
               <div className="flex items-end gap-2 pb-2">
                 <Switch
                   checked={draft.active}
@@ -260,6 +286,16 @@ export function PlansManager({ initialPlans }: { initialPlans: PlanRow[] }) {
                 />
                 <span className="text-xs text-txt-mut">
                   {draft.highlight ? "⭐ Mais popular" : "Sem destaque"}
+                </span>
+              </div>
+              <div className="flex items-end gap-2 pb-2">
+                <Switch
+                  checked={draft.allow_official_api}
+                  onChange={(v) => setDraft({ ...draft, allow_official_api: v })}
+                  label="Permite API Oficial (Meta)"
+                />
+                <span className="text-xs text-txt-mut">
+                  {draft.allow_official_api ? "Liberado" : "Bloqueado"}
                 </span>
               </div>
             </div>
