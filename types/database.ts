@@ -915,6 +915,24 @@ export type Database = {
         Args: { p_org_id: string };
         Returns: { has_ai_key: boolean; has_n8n_key: boolean }[];
       };
+      // 0029 — dashboard financeiro do Super Admin (leitura; guarda is_admin() interna)
+      get_admin_financial_dashboard: {
+        Args: { p_month: string };
+        Returns: {
+          org_id: string;
+          org_name: string;
+          plan_id: string;
+          plan_name: string;
+          mrr_usd: number;
+          subscription_status: string;
+          ai_mode: string;
+          ai_cost_usd: number;
+          ai_cost_limit_usd: number | null;
+          usage_status: string;
+          margin_usd: number;
+          negative_margin_since: string | null;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

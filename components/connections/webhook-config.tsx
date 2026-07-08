@@ -41,6 +41,7 @@ export function WebhookConfig({
   appUrl,
   platformWorkflowUrl,
   hasApiKey,
+  hasN8nKey,
 }: {
   connection: { id: string; label: string };
   orgId: string;
@@ -49,6 +50,7 @@ export function WebhookConfig({
   appUrl: string;
   platformWorkflowUrl: string;
   hasApiKey: boolean;
+  hasN8nKey: boolean;
 }) {
   const t = useT();
   const [webhook, setWebhook] = useState(initialWebhook);
@@ -61,6 +63,8 @@ export function WebhookConfig({
   const [tab, setTab] = useState<Tab>(
     initialWebhook && !initialWebhook.use_platform_workflow ? "own" : "platform"
   );
+  const [n8nApiKey, setN8nApiKey] = useState("");
+  const [n8nKeyRevealed, setN8nKeyRevealed] = useState(!hasN8nKey);
 
   const payloadExample = `{
   "event": "message.received",
@@ -164,12 +168,17 @@ if (assinatura !== esperado) {
       toast.error(t("Informe uma URL https:// válida."));
       return;
     }
+    const trimmedN8nKey = n8nApiKey.trim();
     setBusy("save");
     try {
       const res = await fetch("/api/connections/webhook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connection_id: connection.id, url: trimmed }),
+        body: JSON.stringify({
+          connection_id: connection.id,
+          url: trimmed,
+          ...(trimmedN8nKey ? { n8n_api_key: trimmedN8nKey } : {}),
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as
         | ExternalWebhookRow
@@ -181,6 +190,10 @@ if (assinatura !== esperado) {
         return;
       }
       setWebhook(data as ExternalWebhookRow);
+      if (trimmedN8nKey) {
+        setN8nApiKey("");
+        setN8nKeyRevealed(false);
+      }
       toast.success(t("Webhook salvo!"));
     } catch {
       toast.error(t("Erro de conexão."));
@@ -415,6 +428,41 @@ if (assinatura !== esperado) {
                 <p className="mt-1 text-[11px] text-txt-dim">
                   {t("Exemplo: https://seu-n8n.app.n8n.cloud/webhook/meu-bot")}
                 </p>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="own-n8n-key"
+                  hint={t(
+                    "só necessário se seu n8n exigir autenticação — enviada como header Authorization: Bearer"
+                  )}
+                >
+                  {t("Chave de autenticação (opcional)")}
+                </Label>
+                {!n8nKeyRevealed ? (
+                  <div className="flex items-center justify-between gap-2 rounded-lg border border-line bg-ink px-3 py-2.5 text-xs text-txt-mut">
+                    <span>🔒 {t("Chave de autenticação configurada")}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setN8nApiKey("");
+                        setN8nKeyRevealed(true);
+                      }}
+                      className="focus-ring rounded text-xs font-medium text-lime transition-colors hover:underline"
+                    >
+                      {t("Trocar")}
+                    </button>
+                  </div>
+                ) : (
+                  <Input
+                    id="own-n8n-key"
+                    type="password"
+                    value={n8nApiKey}
+                    onChange={(e) => setN8nApiKey(e.target.value)}
+                    placeholder={t("Cole a chave/token exigida pelo seu n8n")}
+                    autoComplete="off"
+                  />
+                )}
               </div>
 
               {webhook && !webhook.use_platform_workflow && (

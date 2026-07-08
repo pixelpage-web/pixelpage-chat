@@ -32,6 +32,8 @@ export default async function BillingPage({
     { data: usage },
     { count: connectionsCount },
     { count: teamCount },
+    { data: org },
+    { data: costUsage },
   ] = await Promise.all([
     supabase.from("subscriptions").select("*").eq("org_id", orgId).maybeSingle(),
     supabase
@@ -53,6 +55,19 @@ export default async function BillingPage({
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("org_id", orgId),
+    // ai_mode/ai_provider são colunas não-secretas, legíveis via RLS — sem RPC.
+    supabase
+      .from("organizations")
+      .select("ai_mode, ai_provider")
+      .eq("id", orgId)
+      .maybeSingle(),
+    // Rollup mensal de custo de IA (0027) — mesma chave dia-1-do-mês de usage_counters.
+    supabase
+      .from("org_usage_monthly")
+      .select("total_ai_cost_usd, plan_limit_ai_cost_usd, status")
+      .eq("org_id", orgId)
+      .eq("month", periodKey)
+      .maybeSingle(),
   ]);
 
   const currentPlan =
@@ -66,6 +81,10 @@ export default async function BillingPage({
       aiUsed={usage?.ai_messages_used ?? 0}
       connectionsCount={connectionsCount ?? 0}
       teamCount={teamCount ?? 0}
+      aiMode={org?.ai_mode ?? "managed"}
+      aiCostUsd={costUsage?.total_ai_cost_usd ?? 0}
+      aiCostLimitUsd={costUsage?.plan_limit_ai_cost_usd ?? null}
+      aiUsageStatus={costUsage?.status ?? "ok"}
       isOwner={session.profile.role === "owner" || session.profile.role === "admin"}
       userEmail={session.user.email ?? ""}
       userName={session.profile.name}

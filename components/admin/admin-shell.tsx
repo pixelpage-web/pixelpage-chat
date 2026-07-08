@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   Building2,
   CalendarClock,
+  DollarSign,
   FileText,
   Flag,
   Gift,
@@ -32,6 +33,7 @@ const navSections = [
       { href: "/admin/trials", label: "Trials", icon: CalendarClock, exact: false },
       { href: "/admin/feature-flags", label: "Feature Flags", icon: Flag, exact: false },
       { href: "/admin/plans", label: "Planos", icon: Tags, exact: false },
+      { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign, exact: false },
     ],
   },
   {

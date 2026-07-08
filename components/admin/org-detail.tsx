@@ -67,6 +67,9 @@ export function OrgDetail({
   const [planId, setPlanId] = useState(subscription?.plan_id ?? "");
   const [busy, setBusy] = useState(false);
   const [resetLink, setResetLink] = useState<string | null>(null);
+  const [aiMode, setAiMode] = useState(org.ai_mode);
+  const [aiProvider, setAiProvider] = useState(org.ai_provider);
+  const [forcingManaged, setForcingManaged] = useState(false);
 
   // Trial extension state
   const [trialModalOpen, setTrialModalOpen] = useState(false);
@@ -145,6 +148,28 @@ export function OrgDetail({
       toast.error("Erro de conexão.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function forceManagedAiMode() {
+    setForcingManaged(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("organizations")
+        .update({ ai_mode: "managed", ai_provider: null, ai_byok_verified_at: null })
+        .eq("id", org.id);
+      if (error) {
+        toast.error("Não foi possível forçar o modo gerenciado.");
+        return;
+      }
+      setAiMode("managed");
+      setAiProvider(null);
+      toast.success("Modo de IA forçado para Gerenciado.");
+    } catch {
+      toast.error("Erro de conexão.");
+    } finally {
+      setForcingManaged(false);
     }
   }
 
@@ -341,6 +366,34 @@ export function OrgDetail({
               ))}
             </Select>
           </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+          <div>
+            <Label>Modo de IA</Label>
+            <p className="flex items-center gap-2 text-sm">
+              <Badge
+                tone={aiMode === "byok" ? "amber" : aiMode === "disabled" ? "danger" : "neutral"}
+              >
+                {aiMode === "byok" ? "BYOK" : aiMode === "disabled" ? "Desligada" : "Gerenciado"}
+              </Badge>
+              {aiMode === "byok" && aiProvider && (
+                <span className="text-xs text-txt-dim">
+                  {aiProvider === "anthropic" ? "Claude (Anthropic)" : "ChatGPT (OpenAI)"}
+                </span>
+              )}
+            </p>
+          </div>
+          {aiMode !== "managed" && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void forceManagedAiMode()}
+              loading={forcingManaged}
+            >
+              Forçar modo Gerenciado
+            </Button>
+          )}
         </div>
       </Card>
 

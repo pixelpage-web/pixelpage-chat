@@ -1,9 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
-import { Check, Clock, Lock, Shield, Zap } from "lucide-react";
+import {
+  AlertOctagon,
+  AlertTriangle,
+  BotOff,
+  Check,
+  Clock,
+  KeyRound,
+  Lock,
+  Shield,
+  Zap,
+} from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn, formatBRL, formatCompact, formatFullDate } from "@/lib/utils";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -89,23 +100,38 @@ function UsageBar({
   label,
   used,
   limit,
+  format = "compact",
 }: {
   label: string;
   used: number;
   limit: number | null;
+  /** "currency" formata como dólar (US$ X.XX) — custo de IA é um valor em USD, não contagem. */
+  format?: "compact" | "currency";
 }) {
   const t = useT();
   const unlimited = limit === null;
   const pct =
     unlimited || limit === 0 ? 0 : Math.min((used / limit) * 100, 100);
   const danger = !unlimited && limit > 0 && used / limit >= 0.9;
+  const fmt = (n: number) =>
+    format === "currency" ? `US$ ${n.toFixed(2)}` : formatCompact(n);
 
   return (
     <div>
       <div className="flex items-baseline justify-between text-xs">
         <span className="text-txt-mut">{t(label)}</span>
-        <span className={cn("font-medium", danger ? "text-amber" : "text-txt")}>
-          {formatCompact(used)} / {unlimited ? t("ilimitado") : formatCompact(limit)}
+        <span
+          className={cn(
+            "whitespace-nowrap font-medium",
+            danger ? "text-amber" : "text-txt"
+          )}
+        >
+          {fmt(used)} /{" "}
+          {unlimited
+            ? t("ilimitado")
+            : format === "currency"
+              ? limit.toFixed(2) // "US$" já aparece no valor usado — evita repetição
+              : formatCompact(limit)}
         </span>
       </div>
       <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-raised">
@@ -130,6 +156,10 @@ export function BillingView({
   aiUsed,
   connectionsCount,
   teamCount,
+  aiMode,
+  aiCostUsd,
+  aiCostLimitUsd,
+  aiUsageStatus,
   isOwner,
   userEmail,
   userName,
@@ -141,6 +171,14 @@ export function BillingView({
   aiUsed: number;
   connectionsCount: number;
   teamCount: number;
+  /** organizations.ai_mode — "managed" | "byok" | "disabled". */
+  aiMode: string;
+  /** org_usage_monthly.total_ai_cost_usd do mês corrente (0 se sem registro). */
+  aiCostUsd: number;
+  /** org_usage_monthly.plan_limit_ai_cost_usd — null = sem limite. */
+  aiCostLimitUsd: number | null;
+  /** org_usage_monthly.status — "ok" | "warning" | "blocked". */
+  aiUsageStatus: string;
   isOwner: boolean;
   userEmail: string;
   userName: string;
@@ -216,7 +254,48 @@ export function BillingView({
             )}
           </div>
 
-          <div className="mt-6 grid gap-5 sm:grid-cols-3">
+          {/* Alerta de custo de IA — só faz sentido no modo gerenciado (teto nosso). */}
+          {aiMode === "managed" &&
+            (aiUsageStatus === "warning" || aiUsageStatus === "blocked") && (
+              <div
+                className={cn(
+                  "mt-5 flex flex-col gap-3 rounded-lg border p-3.5 sm:flex-row sm:items-center sm:justify-between",
+                  aiUsageStatus === "blocked"
+                    ? "border-danger/30 bg-danger-soft"
+                    : "border-amber/30 bg-amber-soft"
+                )}
+                role="alert"
+              >
+                <p
+                  className={cn(
+                    "flex items-start gap-2 text-xs font-medium leading-relaxed",
+                    aiUsageStatus === "blocked" ? "text-danger" : "text-amber"
+                  )}
+                >
+                  {aiUsageStatus === "blocked" ? (
+                    <AlertOctagon className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  ) : (
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  )}
+                  {aiUsageStatus === "blocked"
+                    ? t("Limite de custo de IA atingido — o assistente automático está pausado.")
+                    : t("Você está perto do limite de custo de IA do seu plano.")}
+                </p>
+                <a
+                  href="#planos"
+                  className={cn(
+                    "focus-ring inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90",
+                    aiUsageStatus === "blocked"
+                      ? "bg-danger text-white"
+                      : "bg-amber text-black"
+                  )}
+                >
+                  {t("Fazer upgrade")}
+                </a>
+              </div>
+            )}
+
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <UsageBar
               label="Mensagens IA no mês"
               used={aiUsed}
@@ -232,6 +311,51 @@ export function BillingView({
               used={teamCount}
               limit={currentPlan?.team_limit ?? null}
             />
+
+            {/* 4ª célula — depende do modo de IA da organização */}
+            {aiMode === "managed" && (
+              <div>
+                <UsageBar
+                  label="Custo de IA no mês"
+                  used={aiCostUsd}
+                  limit={aiCostLimitUsd}
+                  format="currency"
+                />
+                <p className="mt-2 text-xs text-txt-mut">
+                  {t("Mensagens respondidas pelo seu assistente de IA contam para o limite. Mensagens respondidas manualmente pela sua equipe não contam.")}
+                </p>
+              </div>
+            )}
+
+            {aiMode === "byok" && (
+              <div className="rounded-lg border border-line bg-surface-raised/60 p-3">
+                <p className="flex items-center gap-1.5 text-xs font-medium text-txt">
+                  <KeyRound className="h-3.5 w-3.5 text-lime" aria-hidden />
+                  {t("Chave própria (BYOK)")}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-txt-mut">
+                  {t("Você está usando sua própria chave de IA (Claude ou ChatGPT, conforme configurado em Integrações) — sem limite de custo da nossa parte.")}
+                </p>
+              </div>
+            )}
+
+            {aiMode === "disabled" && (
+              <div className="rounded-lg border border-line bg-surface-raised/60 p-3">
+                <p className="flex items-center gap-1.5 text-xs font-medium text-txt">
+                  <BotOff className="h-3.5 w-3.5 text-txt-dim" aria-hidden />
+                  {t("IA desligada")}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-txt-mut">
+                  {t("Assistente automático de IA desligado para sua organização. Mensagens continuam chegando normalmente — sua equipe responde manualmente.")}
+                </p>
+                <Link
+                  href="/app/integrations"
+                  className="mt-2 inline-flex items-center text-xs font-medium text-lime hover:underline"
+                >
+                  {t("Reativar em Integrações")} →
+                </Link>
+              </div>
+            )}
           </div>
           <p className="mt-4 flex items-center gap-1.5 text-[11px] text-txt-dim">
             <Zap className="h-3 w-3 text-lime" aria-hidden />
@@ -240,7 +364,7 @@ export function BillingView({
         </Card>
 
         {/* Planos disponíveis */}
-        <section>
+        <section id="planos" className="scroll-mt-6">
           <h2 className="mb-4 font-display text-sm font-semibold text-txt-mut">
             {t("Planos disponíveis")}
           </h2>

@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CheckCheck, MessageSquare, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  AlertOctagon,
+  Bell,
+  CheckCheck,
+  MessageSquare,
+  TrendingUp,
+  UserPlus,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn, timeAgo } from "@/lib/utils";
@@ -20,7 +28,18 @@ const typeIcon: Record<string, typeof Bell> = {
   conversation_mention: Bell,
   conversation_reply: MessageSquare,
   conversation_creation: MessageSquare,
+  ai_usage_warning: TrendingUp,
+  ai_usage_blocked: AlertOctagon,
 };
+
+/** Tom do ícone por tipo — sobrepõe o padrão lido/não-lido para alertas de uso de IA. */
+const typeIconTone: Record<string, string> = {
+  ai_usage_warning: "bg-amber-soft text-amber",
+  ai_usage_blocked: "bg-danger-soft text-danger",
+};
+
+/** Tipos que navegam para a página de assinatura (custo/limite de IA do plano). */
+const billingTypes = new Set(["ai_usage_warning", "ai_usage_blocked"]);
 
 export function InboxNotifications({
   userId,
@@ -32,6 +51,7 @@ export function InboxNotifications({
   onNavigate?: (conversationId: string) => void;
 }) {
   const t = useT();
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
@@ -131,7 +151,10 @@ export function InboxNotifications({
                       key={n.id}
                       onClick={() => {
                         void markRead(n.id);
-                        if (n.conversation_id && onNavigate) {
+                        if (billingTypes.has(n.notification_type)) {
+                          router.push("/app/billing");
+                          setOpen(false);
+                        } else if (n.conversation_id && onNavigate) {
                           onNavigate(n.conversation_id);
                           setOpen(false);
                         }
@@ -143,7 +166,8 @@ export function InboxNotifications({
                     >
                       <div className={cn(
                         "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-                        !n.read_at ? "bg-lime-soft text-lime" : "bg-surface text-txt-dim"
+                        typeIconTone[n.notification_type] ??
+                          (!n.read_at ? "bg-lime-soft text-lime" : "bg-surface text-txt-dim")
                       )}>
                         <Icon className="h-3.5 w-3.5" />
                       </div>
@@ -174,6 +198,8 @@ function typeLabel(type: string, t: (s: string) => string) {
     case "conversation_mention": return t("Você foi mencionado numa nota");
     case "conversation_reply": return t("Nova mensagem em conversa atribuída");
     case "conversation_creation": return t("Nova conversa criada");
+    case "ai_usage_warning": return t("Seu uso de IA está perto do limite do plano");
+    case "ai_usage_blocked": return t("Limite de IA atingido — assistente pausado");
     default: return t("Nova notificação");
   }
 }

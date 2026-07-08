@@ -12,10 +12,6 @@ import { cn, formatBRL, formatCompact } from "@/lib/utils";
 
 export const metadata = { title: "Dashboard · Admin" };
 
-/** Preço do claude-haiku-4-5: US$ 1/MTok entrada, US$ 5/MTok saída. */
-const HAIKU_INPUT_PER_MTOK = 1;
-const HAIKU_OUTPUT_PER_MTOK = 5;
-
 function monthStartIso(): string {
   const now = new Date();
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
@@ -41,7 +37,8 @@ export default async function AdminDashboardPage() {
     { count: aiCount },
     { count: externalCount },
     { count: inboundCount },
-    { data: aiLogs },
+    { data: usageRollup },
+    { data: tokenLogs },
   ] = await Promise.all([
     admin.from("organizations").select("id, created_at"),
     admin.from("subscriptions").select("plan_id, status"),
@@ -70,12 +67,19 @@ export default async function AdminDashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("sender_type", "contact")
       .gte("created_at", monthStart),
+    // Custo real de IA (0027): rollup mensal por org — cobre todos os modelos
+    // com preço em ai_model_pricing; uso BYOK entra como custo 0 (custo do cliente).
     admin
-      .from("audit_logs")
-      .select("metadata")
-      .in("action", ["ai.reply", "ai.simulate"])
+      .from("org_usage_monthly")
+      .select("total_ai_cost_usd")
+      .eq("month", monthStart.slice(0, 10)),
+    // Tokens do mês (só uso gerenciado — pago pela plataforma) para os sub-boxes.
+    admin
+      .from("ai_usage_logs")
+      .select("input_tokens, output_tokens")
+      .eq("is_byok", false)
       .gte("created_at", monthStart)
-      .limit(5000),
+      .limit(10000),
   ]);
 
   const todayStart = todayStartIso();
@@ -116,17 +120,19 @@ export default async function AdminDashboardPage() {
     .filter((s) => s.status === "active")
     .reduce((sum, s) => sum + (planPrices.get(s.plan_id) ?? 0), 0);
 
-  // Custo Claude
+  // Custo de IA — soma do rollup org_usage_monthly do mês corrente (mesma
+  // fonte do dashboard /admin/financeiro), no lugar do antigo cálculo
+  // hardcoded de Haiku sobre audit_logs.
+  const costUsd = (usageRollup ?? []).reduce(
+    (sum, r) => sum + r.total_ai_cost_usd,
+    0
+  );
   let inputTokens = 0;
   let outputTokens = 0;
-  for (const log of aiLogs ?? []) {
-    const meta = log.metadata as { input_tokens?: number; output_tokens?: number };
-    inputTokens += meta.input_tokens ?? 0;
-    outputTokens += meta.output_tokens ?? 0;
+  for (const log of tokenLogs ?? []) {
+    inputTokens += log.input_tokens;
+    outputTokens += log.output_tokens;
   }
-  const costUsd =
-    (inputTokens / 1_000_000) * HAIKU_INPUT_PER_MTOK +
-    (outputTokens / 1_000_000) * HAIKU_OUTPUT_PER_MTOK;
 
   // Crescimento: últimos 6 meses
   const months: { label: string; count: number }[] = [];
@@ -417,11 +423,11 @@ export default async function AdminDashboardPage() {
         {/* ── Bottom row ─────────────────────────────── */}
         <div className="grid gap-4 lg:grid-cols-3">
 
-          {/* Custo Claude */}
+          {/* Custo de IA (rollup org_usage_monthly) */}
           <div className="rounded-xl border border-panel-border bg-panel-card p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[11px] text-[#555]">Custo Claude este mês</p>
+                <p className="text-[11px] text-[#555]">Custo de IA este mês</p>
                 <p className="mt-1.5 font-display text-2xl font-bold tabular-nums text-[#F8F8F8]">
                   US$ {costUsd.toFixed(2)}
                 </p>

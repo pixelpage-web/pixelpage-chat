@@ -5,22 +5,9 @@ import { timeAgo } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HelpCard } from "@/components/ui/help-card";
+import { statusLabel, statusTone } from "@/components/admin/subscription-status";
 
 export const metadata = { title: "Organizações · Admin" };
-
-const statusTone: Record<string, "lime" | "ok" | "amber" | "danger" | "neutral"> = {
-  trial: "lime",
-  active: "ok",
-  past_due: "amber",
-  canceled: "danger",
-};
-
-const statusLabel: Record<string, string> = {
-  trial: "Trial",
-  active: "Ativa",
-  past_due: "Pendente",
-  canceled: "Cancelada",
-};
 
 export default async function AdminOrganizationsPage({
   searchParams,
@@ -32,7 +19,7 @@ export default async function AdminOrganizationsPage({
 
   let query = admin
     .from("organizations")
-    .select("id, name, slug, suspended, created_at")
+    .select("id, name, slug, suspended, created_at, ai_mode")
     .order("created_at", { ascending: false })
     .limit(100);
   if (q?.trim()) {
@@ -106,6 +93,16 @@ export default async function AdminOrganizationsPage({
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
+                    {org.ai_mode === "byok" && (
+                      <Badge tone="amber" className="hidden sm:inline-flex">
+                        BYOK
+                      </Badge>
+                    )}
+                    {org.ai_mode === "disabled" && (
+                      <Badge tone="danger" className="hidden sm:inline-flex">
+                        IA desligada
+                      </Badge>
+                    )}
                     {sub && (
                       <>
                         <span className="hidden text-xs text-txt-mut sm:inline">

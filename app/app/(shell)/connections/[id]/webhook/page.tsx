@@ -52,6 +52,13 @@ export default async function ConnectionWebhookPage({
     .select("id", { count: "exact", head: true })
     .eq("org_id", orgId);
 
+  // Chave de auth do n8n já configurada? (segredo cifrado — só status via RPC,
+  // o valor em si nunca é lido pelo cliente).
+  const { data: secretsStatus } = await supabase.rpc("get_org_secrets_status", {
+    p_org_id: orgId,
+  });
+  const hasN8nKey = secretsStatus?.[0]?.has_n8n_key ?? false;
+
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
     "https://www.pixelpagechat.com.br";
@@ -65,6 +72,7 @@ export default async function ConnectionWebhookPage({
       appUrl={appUrl}
       platformWorkflowUrl={PLATFORM_WORKFLOW_URL}
       hasApiKey={(apiKeyCount ?? 0) > 0}
+      hasN8nKey={hasN8nKey}
     />
   );
 }
