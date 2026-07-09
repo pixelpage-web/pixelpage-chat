@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Bot,
   CheckCircle2,
-  Clock,
   Inbox,
   QrCode,
   ShieldCheck,
@@ -34,9 +33,6 @@ const segments = [
   "Beleza / Estética",
   "Outro",
 ];
-
-const signupEnabled =
-  process.env.NEXT_PUBLIC_EMBEDDED_SIGNUP_ENABLED === "true";
 
 const steps = ["Sua empresa", "WhatsApp", "Modo de resposta"];
 
@@ -316,12 +312,7 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
               )}
             </div>
 
-            <div
-              className={cn(
-                "rounded-lg border border-line bg-surface-raised p-4",
-                !signupEnabled && "opacity-70"
-              )}
-            >
+            <div className="rounded-lg border border-line bg-surface-raised p-4">
               <ShieldCheck className="h-6 w-6 text-ok" aria-hidden />
               <p className="mt-2 text-sm font-semibold">
                 {t("API Oficial Meta")}
@@ -329,23 +320,11 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
               <p className="mt-0.5 text-xs leading-relaxed text-txt-mut">
                 {t("Número verificado · templates e campanhas")}
               </p>
-              {signupEnabled ? (
-                <div className="mt-3">
-                  <EmbeddedSignupButton
-                    onConnected={() => void captureLatestConnection()}
-                  />
-                </div>
-              ) : (
-                <>
-                  <Button size="sm" variant="secondary" className="mt-3 w-full" disabled>
-                    <Clock className="h-3.5 w-3.5" aria-hidden />
-                    {t("Em breve")}
-                  </Button>
-                  <p className="mt-2 text-center text-[10px] text-txt-dim">
-                    {t("Em análise na Meta")}
-                  </p>
-                </>
-              )}
+              <div className="mt-3">
+                <EmbeddedSignupButton
+                  onConnected={() => void captureLatestConnection()}
+                />
+              </div>
             </div>
           </div>
 

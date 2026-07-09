@@ -8,7 +8,6 @@ import {
   Bell,
   BookOpen,
   Building2,
-  Languages,
   Lightbulb,
   ShieldCheck,
   Trash2,
@@ -26,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
 import { Switch } from "@/components/ui/switch";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { SuggestionForm } from "@/components/suggestion-form";
 import type { Json, Role } from "@/types/database";
 
@@ -234,22 +232,6 @@ export function SettingsView({
             {t("Sua conta, sua empresa e sua equipe.")}
           </p>
         </header>
-
-        {/* Idioma */}
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <Languages className="mt-0.5 h-5 w-5 text-txt-dim" aria-hidden />
-              <div>
-                <CardTitle>{t("Idioma")}</CardTitle>
-                <CardDescription>
-                  {t("Escolha o idioma da interface.")}
-                </CardDescription>
-              </div>
-            </div>
-            <LanguageSwitcher />
-          </div>
-        </Card>
 
         {/* Conta */}
         <Card>

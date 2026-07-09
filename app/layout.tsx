@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Exo_2 } from "next/font/google";
 import { Toaster } from "sonner";
-import { LanguageProvider } from "@/lib/i18n";
-import { getLang } from "@/lib/i18n/server";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -33,19 +31,20 @@ export const metadata: Metadata = {
       { url: "/logo.png", type: "image/png" },
     ],
   },
+  // Impede a sugestão automática de tradução do Chrome — a interface é só em
+  // português por design, não faz sentido o navegador oferecer traduzir.
+  other: {
+    google: "notranslate",
+  },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const lang = await getLang();
   return (
-    <html
-      lang={lang === "pt" ? "pt-BR" : "en"}
-      className={`${plusJakarta.variable} ${exo2.variable}`}
-    >
+    <html lang="pt-BR" className={`${plusJakarta.variable} ${exo2.variable}`}>
       <body className="font-sans">
-        <LanguageProvider initialLang={lang}>{children}</LanguageProvider>
+        {children}
         <Toaster
           theme="dark"
           position="top-right"

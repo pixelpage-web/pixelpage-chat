@@ -2,7 +2,6 @@
 
 import { Bot } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { useT } from "@/lib/i18n";
 
 const bullets = [
@@ -40,12 +39,9 @@ export default function AuthLayout({
           aria-hidden
         />
 
-        {/* Topo: logo + idioma (mobile) */}
+        {/* Topo: logo */}
         <div className="relative z-10 flex items-center justify-between lg:block">
           <Logo />
-          <div className="lg:hidden">
-            <LanguageSwitcher />
-          </div>
         </div>
 
         {/* Conteúdo completo — somente lg+ */}
@@ -119,9 +115,6 @@ export default function AuthLayout({
 
       {/* Painel direito — formulário */}
       <div className="relative flex flex-1 flex-col">
-        <div className="hidden justify-end p-4 lg:flex">
-          <LanguageSwitcher />
-        </div>
         <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 lg:py-10">
           <div className="w-full max-w-sm">
             {children}

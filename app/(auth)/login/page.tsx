@@ -77,6 +77,12 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
           />
+          <Link
+            href="/forgot-password"
+            className="focus-ring mt-1.5 inline-block text-xs font-medium text-txt-mut hover:text-lime hover:underline"
+          >
+            {t("Esqueci minha senha")}
+          </Link>
         </div>
         <Button type="submit" className="w-full" loading={loading}>
           {t("Entrar")}

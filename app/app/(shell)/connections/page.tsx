@@ -75,7 +75,6 @@ export default async function ConnectionsPage() {
     <ConnectionsView
       initialConnections={connections ?? []}
       connectionsLimit={connectionsLimit}
-      signupEnabled={process.env.NEXT_PUBLIC_EMBEDDED_SIGNUP_ENABLED === "true"}
       hasMetaApi={hasMetaApi}
       qrEnabled={isEvolutionConfigured(evolutionCfg)}
       limitOverride={isSuperAdmin(session.user.email)}

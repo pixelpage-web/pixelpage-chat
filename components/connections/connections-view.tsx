@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  ArrowRight,
   Bot,
   CheckCircle2,
   Clock,
@@ -12,11 +13,14 @@ import {
   Lock,
   QrCode,
   RefreshCw,
+  Settings2,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Star,
   Trash2,
   Workflow,
+  Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
@@ -26,7 +30,6 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FeatureBadge } from "@/components/ui/feature-badge";
-import { EmbeddedSignupButton } from "@/components/whatsapp/embedded-signup-button";
 import { QrConnectModal } from "@/components/whatsapp/qr-connect-modal";
 import { QrConsentModal } from "./qr-consent-modal";
 import { CsatSettingsModal } from "./csat-settings-modal";
@@ -69,7 +72,6 @@ export interface WebhookInfo {
 export function ConnectionsView({
   initialConnections,
   connectionsLimit,
-  signupEnabled,
   qrEnabled,
   hasMetaApi,
   limitOverride = false,
@@ -77,7 +79,6 @@ export function ConnectionsView({
 }: {
   initialConnections: WhatsappConnectionRow[];
   connectionsLimit: number;
-  signupEnabled: boolean;
   qrEnabled: boolean;
   hasMetaApi: boolean;
   /** Super Admin: ignora o limite de conexões do plano (exibe badge) */
@@ -97,8 +98,7 @@ export function ConnectionsView({
   const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
 
   const metaConn = connections.find((c) => c.connection_type === "meta_api") ?? null;
-  const [metaPhase, setMetaPhase] = useState<"idle" | "connecting" | "error">("idle");
-  const [metaErrorMsg, setMetaErrorMsg] = useState<string | null>(null);
+  const metaConnected = metaConn?.status === "connected";
 
   // Teste rápido do webhook externo direto na listagem (Tarefa 4)
   async function quickTestWebhook(webhookId: string) {
@@ -209,11 +209,16 @@ export function ConnectionsView({
 
         {/* Conectar novo número — dois modos lado a lado */}
         {canAddMore ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {/* QR Code (Evolution API) */}
-            <Card className={cn(!qrEnabled && "opacity-70")}>
+            <Card
+              className={cn(
+                "group relative transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop",
+                !qrEnabled && "opacity-70"
+              )}
+            >
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-lime-soft transition-transform duration-200 group-hover:scale-105">
                   <QrCode className="h-5 w-5 text-lime" aria-hidden />
                 </div>
                 <div>
@@ -223,6 +228,22 @@ export function ConnectionsView({
                   </CardDescription>
                 </div>
               </div>
+
+              <ul className="mt-4 space-y-2 text-xs leading-relaxed text-txt-mut">
+                <li className="flex items-start gap-2">
+                  <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime" aria-hidden />
+                  {t("Ideal para começar ou testar — sem espera de aprovação.")}
+                </li>
+                <li className="flex items-start gap-2">
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-txt-dim" aria-hidden />
+                  {t("Não é a API oficial — o número segue as regras do WhatsApp comum.")}
+                </li>
+                <li className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber" aria-hidden />
+                  {t("Envio em volume alto ou disparo em massa aumenta o risco de bloqueio.")}
+                </li>
+              </ul>
+
               {qrEnabled ? (
                 <Button
                   onClick={() => {
@@ -242,190 +263,119 @@ export function ConnectionsView({
               )}
             </Card>
 
-            {/* API Oficial Meta */}
-            {(() => {
-              const showConnecting = metaPhase === "connecting";
-              const showError =
-                !showConnecting &&
-                (metaPhase === "error" || metaConn?.status === "error");
-              const showSuccess =
-                !showConnecting && !showError && metaConn?.status === "connected";
-              const showIdle = !showConnecting && !showError && !showSuccess;
+            {/* API Oficial Meta — reflete o estado real da org (mesma fonte de
+                dado da página dedicada /app/connections/api-oficial): bloqueado
+                sem plano Pro, CTA para conectar, ou resumo quando já ativo. */}
+            <Card
+              className={cn(
+                "relative overflow-hidden border-lime/20 transition-all duration-200 hover:-translate-y-0.5 hover:border-lime/40 hover:shadow-glow",
+                !hasMetaApi && "opacity-90"
+              )}
+            >
+              {/* Glow decorativo no canto — reforça "upgrade premium" sem poluir */}
+              <div
+                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lime/10 blur-2xl"
+                aria-hidden
+              />
 
-              return (
-                <Card className={cn(!signupEnabled && !metaConn && "opacity-70")}>
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ok-soft">
-                      <ShieldCheck className="h-5 w-5 text-ok" aria-hidden />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <CardTitle>{t("API Oficial Meta")}</CardTitle>
-                        {!signupEnabled && !metaConn && (
-                          <Badge tone="amber">{t("Em breve")}</Badge>
-                        )}
-                      </div>
-                      <CardDescription>
-                        {t("Número verificado, templates aprovados e campanhas oficiais.")}
-                      </CardDescription>
-                    </div>
+              <div className="relative flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ok-soft">
+                  <ShieldCheck className="h-5 w-5 text-ok" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle>{t("API Oficial Meta")}</CardTitle>
+                    <Badge tone="lime" className="gap-1">
+                      <Sparkles className="h-2.5 w-2.5" aria-hidden />
+                      {t("Recomendado")}
+                    </Badge>
                   </div>
+                  <CardDescription>
+                    {t("Licenciada pela Meta — verificação oficial, sem risco de ban por volume.")}
+                  </CardDescription>
+                </div>
+              </div>
 
-                  {/* Plano não inclui Meta API */}
-                  {!hasMetaApi && (
-                    <div className="mt-4 flex flex-col items-center gap-3 py-2 text-center">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover">
-                        <Lock className="h-5 w-5 text-txt-dim" aria-hidden />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{t("Disponível no plano Pro")}</p>
-                        <p className="text-xs text-txt-mut">
-                          {t("Número verificado, templates e campanhas oficiais.")}
-                        </p>
-                      </div>
-                      <Link
-                        href="/app/billing"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-lime px-3 py-1.5 text-xs font-semibold text-black hover:opacity-90"
-                      >
-                        {t("Ver planos")}
-                      </Link>
-                    </div>
+              {/* Plano não inclui Meta API */}
+              {!hasMetaApi && (
+                <div className="relative mt-4 flex flex-col items-center gap-3 rounded-lg border border-dashed border-line py-5 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-hover">
+                    <Lock className="h-5 w-5 text-txt-dim" aria-hidden />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{t("Benefício do plano Pro")}</p>
+                    <p className="mt-0.5 max-w-[230px] text-xs text-txt-mut">
+                      {t("Faça upgrade para conectar um número com a API oficial da Meta.")}
+                    </p>
+                  </div>
+                  <Link
+                    href="/app/billing"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-lime px-3.5 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90"
+                  >
+                    {t("Ver planos")}
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
+                </div>
+              )}
+
+              {/* Pro, já conectado — resumo + gerenciar na página dedicada */}
+              {hasMetaApi && metaConnected && (
+                <div className="relative mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-ok/30 bg-ok-soft p-3">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-ok" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {metaConn!.phone_display ? formatPhone(metaConn!.phone_display) : metaConn!.label}
+                    </p>
+                    <p className="text-xs text-txt-mut">
+                      {metaConn!.connected_at
+                        ? `${t("Conectado")} ${timeAgo(metaConn!.connected_at)}`
+                        : t("Conectado")}
+                    </p>
+                  </div>
+                  <Link
+                    href="/app/connections/api-oficial"
+                    className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium text-txt transition-colors hover:border-ok/50 hover:text-ok"
+                  >
+                    <Settings2 className="h-3.5 w-3.5" aria-hidden />
+                    {t("Gerenciar")}
+                  </Link>
+                </div>
+              )}
+
+              {/* Pro, sem conexão ainda (ou pendente/erro — o detalhe fica na
+                  página dedicada, que já lida com cada estado) */}
+              {hasMetaApi && !metaConnected && (
+                <>
+                  <ul className="relative mt-4 space-y-2 text-xs leading-relaxed text-txt-mut">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+                      {t("Qualquer volume de envio, dentro das políticas de mensageria da Meta.")}
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+                      {t("Mais rápido com um número limpo, sem WhatsApp pessoal ativo.")}
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+                      {t("Já usa o número? Desative o WhatsApp pessoal e aguarde ~5 min antes de conectar.")}
+                    </li>
+                  </ul>
+                  {metaConn?.status === "error" && (
+                    <p className="relative mt-3 flex items-center gap-1.5 text-[11px] text-danger">
+                      <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
+                      {t("A última tentativa falhou — clique para ver o detalhe e tentar de novo.")}
+                    </p>
                   )}
-
-                  {hasMetaApi && (
-                    <>
-                      <ul className="mt-3 space-y-1 text-xs text-txt-mut">
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
-                          {t("Número verificado com selo verde")}
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
-                          {t("Templates aprovados pela Meta")}
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
-                          {t("Campanhas oficiais e zero risco de ban")}
-                        </li>
-                      </ul>
-
-                      {/* Estado 3: registrando na Cloud API */}
-                      {showConnecting && (
-                        <div className="mt-4 flex items-center gap-2 rounded-lg border border-line bg-surface-hover p-3 text-sm text-txt-mut">
-                          <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />
-                          {t("Registrando número na Meta Cloud API…")}
-                        </div>
-                      )}
-
-                      {/* Estado 5: erro — mostra mensagem + botão de retry */}
-                      {showError && (
-                        <div className="mt-4 space-y-2">
-                          <div className="flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft p-3 text-xs text-danger">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                            <span>
-                              {metaErrorMsg ??
-                                metaConn?.error_detail ??
-                                t("Erro ao conectar com a Meta.")}
-                            </span>
-                          </div>
-                          {signupEnabled && (
-                            <EmbeddedSignupButton
-                              onConnecting={() => {
-                                setMetaPhase("connecting");
-                                setMetaErrorMsg(null);
-                              }}
-                              onConnected={(conn) => {
-                                setConnections((prev) => [
-                                  ...prev.filter((c) => c.id !== conn.id),
-                                  conn,
-                                ]);
-                                setMetaPhase("idle");
-                              }}
-                              onError={(msg) => {
-                                setMetaPhase("error");
-                                setMetaErrorMsg(msg);
-                              }}
-                            />
-                          )}
-                        </div>
-                      )}
-
-                      {/* Estado 4: conectado com sucesso */}
-                      {showSuccess && (
-                        <div className="mt-4 flex items-center gap-3 rounded-lg border border-ok/30 bg-ok-soft p-3">
-                          <CheckCircle2 className="h-5 w-5 shrink-0 text-ok" aria-hidden />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">
-                              {metaConn!.phone_display ?? metaConn!.label}
-                            </p>
-                            <p className="text-xs text-txt-mut">
-                              {metaConn!.connected_at
-                                ? `${t("Conectado")} ${timeAgo(metaConn!.connected_at)}`
-                                : t("Conectado")}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Estado 1: idle — nenhuma conexão ativa */}
-                      {showIdle && signupEnabled && !metaConn && (
-                        <div className="mt-4 space-y-2">
-                          <EmbeddedSignupButton
-                            onConnecting={() => {
-                              setMetaPhase("connecting");
-                              setMetaErrorMsg(null);
-                            }}
-                            onConnected={(conn) => {
-                              setConnections((prev) => [...prev, conn]);
-                              setMetaPhase("idle");
-                            }}
-                            onError={(msg) => {
-                              setMetaPhase("error");
-                              setMetaErrorMsg(msg);
-                            }}
-                          />
-                          <Link
-                            href="/app/connections/api-oficial"
-                            className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-ok/50 hover:text-ok"
-                          >
-                            {t("Quero um número novo com API oficial")}
-                          </Link>
-                        </div>
-                      )}
-
-                      {/* Estado 1: idle — signup não habilitado */}
-                      {showIdle && !signupEnabled && !metaConn && (
-                        <div className="mt-4 space-y-2">
-                          <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2.5 text-center text-xs text-txt-dim">
-                            <Clock className="h-3.5 w-3.5" aria-hidden />
-                            {t(
-                              "Conexão do seu número em análise na Meta — use QR Code por enquanto."
-                            )}
-                          </p>
-                          <Link
-                            href="/app/connections/api-oficial"
-                            className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok-soft px-3 py-2 text-xs font-medium text-ok transition-colors hover:bg-ok/20"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                            {t("Quero um número novo com API oficial")}
-                          </Link>
-                        </div>
-                      )}
-
-                      {/* Estado 2: pending (aguardando análise Meta) */}
-                      {showIdle && metaConn?.status === "pending" && (
-                        <div className="mt-4">
-                          <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2.5 text-center text-xs text-txt-dim">
-                            <Clock className="h-3.5 w-3.5" aria-hidden />
-                            {t("Conexão em análise pela Meta — aguarde.")}
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </Card>
-              );
-            })()}
+                  <Link
+                    href="/app/connections/api-oficial"
+                    className="focus-ring relative mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-lime px-3 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+                  >
+                    <ShieldCheck className="h-4 w-4" aria-hidden />
+                    {t("Conectar agora")}
+                  </Link>
+                </>
+              )}
+            </Card>
           </div>
         ) : (
           <Card className="border-amber/25">

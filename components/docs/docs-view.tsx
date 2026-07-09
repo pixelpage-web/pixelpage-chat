@@ -12,7 +12,6 @@ import {
   Users,
   Workflow,
 } from "lucide-react";
-import { useLang } from "@/lib/i18n";
 import { useT } from "@/lib/i18n";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { CodeBlock } from "@/components/integrations/code-block";
@@ -353,9 +352,8 @@ export function DocsView({
   authorName: string;
   appUrl?: string;
 }) {
-  const { lang } = useLang();
   const t = useT();
-  const pick = (bi: Bi) => (lang === "en" ? bi.en : bi.pt);
+  const pick = (bi: Bi) => bi.pt;
 
   // Guia prático de n8n (com código) — fora do modelo term/body das seções
   const n8nPayload = `{

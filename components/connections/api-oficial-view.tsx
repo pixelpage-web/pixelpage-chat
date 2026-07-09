@@ -6,11 +6,13 @@ import {
   ArrowLeft,
   BadgeCheck,
   CheckCircle2,
+  Clock,
   Headphones,
   Loader2,
   Lock,
   Plug,
   ShieldCheck,
+  Sparkles,
   XCircle,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -35,6 +37,22 @@ const included = [
   { icon: Plug, text: "Ativação automática via Meta" },
   { icon: Headphones, text: "Suporte na configuração" },
   { icon: ShieldCheck, text: "Integração automática com o PixelPage Chat" },
+];
+
+/** O que o cliente precisa saber antes de conectar — não é aviso legal, é orientação prática. */
+const beforeConnect = [
+  {
+    icon: Sparkles,
+    text: "O mais rápido é conectar um número limpo, sem WhatsApp pessoal ativo nele.",
+  },
+  {
+    icon: Clock,
+    text: "Já usa esse número? Saia do WhatsApp pessoal antes e aguarde uns 5 minutos — a Meta não permite duas sessões ao mesmo tempo.",
+  },
+  {
+    icon: Lock,
+    text: "Depois de conectado, o número passa a funcionar só pelo painel do PixelPage Chat, não mais no WhatsApp do celular.",
+  },
 ];
 
 export function ApiOficialView({
@@ -137,6 +155,21 @@ export function ApiOficialView({
                 </ul>
               </div>
             </Card>
+
+            {/* Antes de conectar — orientação prática, não aviso legal */}
+            {phase === "idle" && (
+              <Card>
+                <CardTitle>{t("Antes de conectar")}</CardTitle>
+                <ul className="mt-3 space-y-2.5">
+                  {beforeConnect.map((item) => (
+                    <li key={item.text} className="flex items-start gap-2.5 text-sm text-txt-mut">
+                      <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-hidden />
+                      <span className="leading-relaxed">{t(item.text)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
 
             {/* Estado: idle — botão de conexão */}
             {phase === "idle" && (
