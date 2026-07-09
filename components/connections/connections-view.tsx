@@ -139,13 +139,12 @@ export function ConnectionsView({
           return;
         }
       } else if (action === "delete") {
-        const supabase = createClient();
-        const { error } = await supabase
-          .from("whatsapp_connections")
-          .delete()
-          .eq("id", connection.id);
-        if (error) {
-          toast.error(t("Não foi possível excluir a conexão."));
+        const res = await fetch(`/api/connections/${connection.id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const json = (await res.json().catch(() => null)) as { error?: string } | null;
+          toast.error(json?.error ?? t("Não foi possível excluir a conexão."));
           return;
         }
       }

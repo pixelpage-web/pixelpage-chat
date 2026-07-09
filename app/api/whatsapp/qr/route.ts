@@ -158,6 +158,12 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "delete") {
+    if (session.profile.role !== "owner" && session.profile.role !== "admin") {
+      return NextResponse.json(
+        { error: "Apenas o dono ou administrador da organização pode excluir uma conexão." },
+        { status: 403 }
+      );
+    }
     // Arquivar conversas antes de deletar: ON DELETE SET NULL anularia connection_id,
     // mas já marcamos como archived para não aparecerem no inbox.
     await supabase

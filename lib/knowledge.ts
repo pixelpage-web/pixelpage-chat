@@ -3,6 +3,7 @@ import mammoth from "mammoth";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { isUrlSafeForOutbound } from "@/lib/ssrf-guard";
 
 /**
  * "Ensine sua IA" — extração de texto de arquivos (PDF/TXT/DOCX) e de sites.
@@ -72,26 +73,48 @@ function extractHtmlText(html: string): string {
   return normalizeText(title ? `${title}\n${body}` : body);
 }
 
+const MAX_REDIRECTS = 3;
+
+/**
+ * Busca uma página validando SSRF a cada hop — inclusive redirecionamentos,
+ * que são seguidos manualmente (redirect: "manual") e revalidados um a um
+ * antes de seguir. Sem isso, um site malicioso poderia devolver um 302 para
+ * um alvo interno (ex.: 169.254.169.254) e o fetch seguiria sem checagem.
+ */
 async function fetchPage(url: string): Promise<string | null> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "ZariBot/1.0 (+https://pixelpagechat.com.br)",
-        Accept: "text/html",
-      },
-      redirect: "follow",
-    });
-    clearTimeout(timer);
-    if (!res.ok) return null;
-    const type = res.headers.get("content-type") ?? "";
-    if (!type.includes("text/html") && !type.includes("text/plain")) return null;
-    return await res.text();
-  } catch {
-    return null;
+  let currentUrl = url;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const check = await isUrlSafeForOutbound(currentUrl);
+    if (!check.safe) return null;
+
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      const res = await fetch(currentUrl, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "ZariBot/1.0 (+https://pixelpagechat.com.br)",
+          Accept: "text/html",
+        },
+        redirect: "manual",
+      });
+      clearTimeout(timer);
+
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get("location");
+        if (!location) return null;
+        currentUrl = new URL(location, currentUrl).toString();
+        continue;
+      }
+      if (!res.ok) return null;
+      const type = res.headers.get("content-type") ?? "";
+      if (!type.includes("text/html") && !type.includes("text/plain")) return null;
+      return await res.text();
+    } catch {
+      return null;
+    }
   }
+  return null; // excedeu o limite de redirecionamentos
 }
 
 export interface CrawlResult {
@@ -103,7 +126,10 @@ export interface CrawlResult {
 
 /**
  * Lê as páginas principais do site e combina o texto.
- * Bloqueia alvos internos (SSRF): só http/https e hosts públicos.
+ * Bloqueia alvos internos (SSRF) via lib/ssrf-guard.ts — mesma proteção do
+ * webhook n8n: resolve DNS de verdade e checa os IPs contra faixas privadas,
+ * em vez de só olhar o hostname literal. Exige https:// (mesmo padrão do
+ * guard compartilhado).
  */
 export async function crawlWebsite(rawUrl: string): Promise<CrawlResult> {
   let base: URL;
@@ -112,16 +138,9 @@ export async function crawlWebsite(rawUrl: string): Promise<CrawlResult> {
   } catch {
     throw new Error("Endereço inválido. Use o formato https://suaempresa.com.br");
   }
-  if (base.protocol !== "http:" && base.protocol !== "https:") {
-    throw new Error("Só endereços http(s) são aceitos.");
-  }
-  const host = base.hostname.toLowerCase();
-  if (
-    host === "localhost" ||
-    /^(\d{1,3}\.){3}\d{1,3}$/.test(host) ||
-    host.endsWith(".local") ||
-    host.endsWith(".internal")
-  ) {
+
+  const baseCheck = await isUrlSafeForOutbound(base.toString());
+  if (!baseCheck.safe) {
     throw new Error("Não consegui acessar o site.");
   }
 
