@@ -3,11 +3,15 @@
 import { useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
 import {
+  CheckCircle2,
   FileText,
   Globe,
   Loader2,
+  RefreshCw,
   Trash2,
   Upload,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -23,11 +27,11 @@ import type { AgentKnowledgeRow } from "@/types/database";
 
 const statusMeta: Record<
   AgentKnowledgeRow["status"],
-  { label: string; emoji: string; tone: string }
+  { label: string; icon: LucideIcon; tone: string }
 > = {
-  processing: { label: "Processando", emoji: "🔄", tone: "text-amber" },
-  ready: { label: "Pronto", emoji: "✅", tone: "text-ok" },
-  error: { label: "Erro", emoji: "❌", tone: "text-danger" },
+  processing: { label: "Processando", icon: RefreshCw, tone: "text-amber" },
+  ready: { label: "Pronto", icon: CheckCircle2, tone: "text-ok" },
+  error: { label: "Erro", icon: XCircle, tone: "text-danger" },
 };
 
 function formatSize(bytes: number | undefined): string {
@@ -49,7 +53,9 @@ export function KnowledgeManager({
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [url, setUrl] = useState("");
-  const [urlStatus, setUrlStatus] = useState<string | null>(null);
+  const [urlStatus, setUrlStatus] = useState<
+    { kind: "processing" | "success" | "error"; text: string } | null
+  >(null);
   const [processingUrl, setProcessingUrl] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -97,7 +103,10 @@ export function KnowledgeManager({
     const value = url.trim();
     if (!value || processingUrl) return;
     setProcessingUrl(true);
-    setUrlStatus(t("🔄 Processando... lendo as páginas principais do site"));
+    setUrlStatus({
+      kind: "processing",
+      text: t("Processando... lendo as páginas principais do site"),
+    });
     try {
       const res = await fetch("/api/agent/knowledge/url", {
         method: "POST",
@@ -110,22 +119,29 @@ export function KnowledgeManager({
         error?: string;
       };
       if (!res.ok || !json.knowledge) {
-        setUrlStatus(`❌ ${json.error ?? t("Não consegui acessar o site.")}`);
+        setUrlStatus({
+          kind: "error",
+          text: json.error ?? t("Não consegui acessar o site."),
+        });
         return;
       }
       const row = json.knowledge;
       setSources((prev) => [...prev.filter((s) => s.id !== row.id), row]);
       if (row.status === "ready") {
         const pages = json.pages_read ?? 1;
-        setUrlStatus(
-          `✅ ${t("Pronto!")} ${pages} ${pages === 1 ? t("página aprendida") : t("páginas aprendidas")}`
-        );
+        setUrlStatus({
+          kind: "success",
+          text: `${t("Pronto!")} ${pages} ${pages === 1 ? t("página aprendida") : t("páginas aprendidas")}`,
+        });
         setUrl("");
       } else {
-        setUrlStatus(`❌ ${row.error_message ?? t("Não consegui acessar o site.")}`);
+        setUrlStatus({
+          kind: "error",
+          text: row.error_message ?? t("Não consegui acessar o site."),
+        });
       }
     } catch {
-      setUrlStatus(`❌ ${t("Erro de conexão ao processar o site.")}`);
+      setUrlStatus({ kind: "error", text: t("Erro de conexão ao processar o site.") });
     } finally {
       setProcessingUrl(false);
     }
@@ -237,8 +253,17 @@ export function KnowledgeManager({
           </Button>
         </div>
         {urlStatus && (
-          <p className="mt-2 rounded-lg border border-line bg-ink px-3 py-2 text-xs text-txt-mut">
-            {urlStatus}
+          <p className="mt-2 flex items-center gap-1.5 rounded-lg border border-line bg-ink px-3 py-2 text-xs text-txt-mut">
+            {urlStatus.kind === "processing" && (
+              <RefreshCw className="h-3.5 w-3.5 shrink-0 animate-spin text-amber" aria-hidden />
+            )}
+            {urlStatus.kind === "success" && (
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+            )}
+            {urlStatus.kind === "error" && (
+              <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-hidden />
+            )}
+            {urlStatus.text}
           </p>
         )}
       </div>
@@ -262,8 +287,9 @@ export function KnowledgeManager({
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-txt">{source.source_name}</p>
-                  <p className={cn("text-[11px]", status.tone)}>
-                    {status.emoji} {t(status.label)}
+                  <p className={cn("flex items-center gap-1", "text-[11px]", status.tone)}>
+                    <status.icon className="h-3 w-3 shrink-0" aria-hidden />
+                    {t(status.label)}
                     {source.source_type === "file" && meta.size_bytes
                       ? ` · ${formatSize(meta.size_bytes)}`
                       : ""}

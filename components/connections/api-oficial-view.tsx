@@ -92,7 +92,7 @@ export function ApiOficialView({
               <div>
                 <CardTitle>{t("Disponível no Plano Pro")}</CardTitle>
                 <CardDescription className="mt-1 max-w-sm">
-                  {t("A API Oficial da Meta está incluída no Plano Pro da PixelPage Chat — número verificado com selo ✓ verde, templates aprovados e sem risco de banimento.")}
+                  {t("A API Oficial da Meta está incluída no Plano Pro da PixelPage Chat — número verificado com selo verde, templates aprovados e sem risco de banimento.")}
                 </CardDescription>
               </div>
               <Link
@@ -116,11 +116,11 @@ export function ApiOficialView({
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <CardTitle>🟢 {t("Número WhatsApp com API Oficial da Meta")}</CardTitle>
+                    <CardTitle>{t("Número WhatsApp com API Oficial da Meta")}</CardTitle>
                     <Badge tone="ok">{t("Incluído no Plano Pro")}</Badge>
                   </div>
                   <CardDescription>
-                    {t("Número verificado, com selo ✓ verde, templates aprovados e zero risco de banimento por uso correto.")}
+                    {t("Número verificado, com selo verde, templates aprovados e zero risco de banimento por uso correto.")}
                   </CardDescription>
                 </div>
               </div>

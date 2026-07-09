@@ -1,7 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bot, Inbox as InboxIcon, Search, User, Workflow } from "lucide-react";
+import {
+  Bot,
+  FileText,
+  Image as ImageIcon,
+  Inbox as InboxIcon,
+  Mic,
+  Search,
+  User,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import { KeyboardShortcutsButton } from "./keyboard-shortcuts";
 import { useT } from "@/lib/i18n";
 import { cn, formatConversationTime, formatPhone } from "@/lib/utils";
@@ -42,12 +52,12 @@ function previewPrefix(preview: MessagePreview) {
 function previewText(
   preview: MessagePreview | undefined,
   t: (s: string) => string
-) {
-  if (!preview) return t("Sem mensagens");
-  if (preview.message_type === "image") return `📷 ${t("Imagem")}`;
-  if (preview.message_type === "audio") return `🎙️ ${t("Áudio")}`;
-  if (preview.message_type === "document") return `📄 ${t("Documento")}`;
-  return preview.content;
+): { icon: LucideIcon | null; text: string } {
+  if (!preview) return { icon: null, text: t("Sem mensagens") };
+  if (preview.message_type === "image") return { icon: ImageIcon, text: t("Imagem") };
+  if (preview.message_type === "audio") return { icon: Mic, text: t("Áudio") };
+  if (preview.message_type === "document") return { icon: FileText, text: t("Documento") };
+  return { icon: null, text: preview.content };
 }
 
 export function ConversationList({
@@ -234,6 +244,7 @@ export function ConversationList({
             {filtered.map((conv) => {
               const contact = contacts[conv.contact_id];
               const preview = lastMessages[conv.id];
+              const previewMeta = previewText(preview, t);
               const displayName =
                 contact?.name || (contact ? formatPhone(contact.phone) : t("Contato"));
               return (
@@ -271,7 +282,10 @@ export function ConversationList({
                       <div className="mt-0.5 flex items-center justify-between gap-2">
                         <span className="flex min-w-0 items-center gap-1.5 text-xs text-txt-mut">
                           {preview && previewPrefix(preview)}
-                          <span className="truncate">{previewText(preview, t)}</span>
+                          {previewMeta.icon && (
+                            <previewMeta.icon className="h-3 w-3 shrink-0" aria-hidden />
+                          )}
+                          <span className="truncate">{previewMeta.text}</span>
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5">
                           {/* Label dots */}

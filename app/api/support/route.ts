@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   await sendOwnerEmail({
-    subject: `🎧 Novo ticket de suporte — ${subject || "Sem assunto"}`,
+    subject: `Novo ticket de suporte — ${subject || "Sem assunto"}`,
     html: `
       <h2>Novo ticket de suporte</h2>
       <p><strong>De:</strong> ${authorName} (${authorEmail})</p>

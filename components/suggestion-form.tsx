@@ -45,7 +45,7 @@ export function SuggestionForm({
       }
       setContent("");
       setSent(true);
-      toast.success(t("Sugestão enviada — obrigado! 💚"));
+      toast.success(t("Sugestão enviada — obrigado!"));
     } catch {
       toast.error(t("Erro de conexão ao enviar a sugestão."));
     } finally {
@@ -59,7 +59,7 @@ export function SuggestionForm({
         <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-lime" aria-hidden />
         <div>
           <p className="text-xs font-medium text-lime">
-            {t("Sugestão enviada — obrigado! 💚")}
+            {t("Sugestão enviada — obrigado!")}
           </p>
           <button
             onClick={() => setSent(false)}

@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
+import { Check, X, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { nodeMeta } from "./node-meta";
@@ -60,11 +61,11 @@ function namedOutputs(
   type: FlowNodeType,
   data: FlowNodeData,
   t: (s: string) => string
-): { handle: string; label: string }[] {
+): { handle: string; label: string; icon?: LucideIcon }[] {
   if (type === "condition") {
     return [
-      { handle: "yes", label: `${t("Sim")} ✓` },
-      { handle: "no", label: `${t("Não")} ✗` },
+      { handle: "yes", label: t("Sim"), icon: Check },
+      { handle: "no", label: t("Não"), icon: X },
     ];
   }
   if (type === "menu") {
@@ -129,7 +130,8 @@ function FlowNodeComponent({ type, data, selected }: NodeProps<EditorNodeData>) 
       {outputs.length > 0 && (
         <div className="space-y-1 border-t border-line px-0 py-1.5">
           {outputs.map((o) => (
-            <div key={o.handle} className="relative flex items-center justify-end pr-4">
+            <div key={o.handle} className="relative flex items-center justify-end gap-1 pr-4">
+              {o.icon && <o.icon className="h-2.5 w-2.5 shrink-0 text-txt-dim" aria-hidden />}
               <span className="truncate pl-3 text-[10px] text-txt-dim">{o.label}</span>
               <Handle
                 type="source"

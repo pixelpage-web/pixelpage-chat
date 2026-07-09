@@ -51,7 +51,7 @@ export function OnboardingBanner({ steps }: { steps: OnboardingSteps }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold">
-            {t("Bem-vindo à PixelPage Chat!")} 👋
+            {t("Bem-vindo à PixelPage Chat!")}
           </p>
           <p className="mt-0.5 text-xs text-txt-mut">
             {t("Ordem recomendada: 1) Conectar WhatsApp → 2) Configurar bot/fluxo → 3) Testar no simulador → 4) Publicar.")}

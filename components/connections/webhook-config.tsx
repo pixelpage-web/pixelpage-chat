@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import {
   AlertTriangle,
   ArrowLeft,
+  BookOpen,
   Check,
   Eye,
   EyeOff,
   KeyRound,
+  Lock,
   RefreshCw,
   Send,
   Sparkles,
@@ -299,7 +301,7 @@ if (assinatura !== esperado) {
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <CardTitle>✨ {t("Workflow PixelPage Chat")}</CardTitle>
+                  <CardTitle>{t("Workflow PixelPage Chat")}</CardTitle>
                   <Badge tone="lime">{t("Recomendado")}</Badge>
                 </div>
                 <CardDescription>
@@ -385,7 +387,7 @@ if (assinatura !== esperado) {
                 <Wrench className="h-5 w-5 text-amber" aria-hidden />
               </div>
               <div>
-                <CardTitle>🔧 {t("Usar meu próprio n8n")}</CardTitle>
+                <CardTitle>{t("Usar meu próprio n8n")}</CardTitle>
                 <CardDescription>
                   {t("Cole a URL do webhook do seu workflow n8n. Você tem controle total sobre a lógica de atendimento.")}
                 </CardDescription>
@@ -441,7 +443,10 @@ if (assinatura !== esperado) {
                 </Label>
                 {!n8nKeyRevealed ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-line bg-ink px-3 py-2.5 text-xs text-txt-mut">
-                    <span>🔒 {t("Chave de autenticação configurada")}</span>
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      {t("Chave de autenticação configurada")}
+                    </span>
                     <button
                       type="button"
                       onClick={() => {
@@ -505,8 +510,9 @@ if (assinatura !== esperado) {
 
               {/* Documentação inline */}
               <details className="group rounded-lg border border-line">
-                <summary className="focus-ring cursor-pointer select-none rounded-lg px-4 py-3 text-sm font-medium text-txt-mut transition-colors hover:text-txt">
-                  📖 {t("Como configurar seu n8n")}
+                <summary className="focus-ring flex cursor-pointer select-none items-center gap-1.5 rounded-lg px-4 py-3 text-sm font-medium text-txt-mut transition-colors hover:text-txt">
+                  <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {t("Como configurar seu n8n")}
                 </summary>
                 <div className="space-y-3 border-t border-line p-4">
                   <ol className="list-inside list-decimal space-y-1 text-xs leading-relaxed text-txt-mut">

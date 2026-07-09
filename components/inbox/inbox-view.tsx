@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Inbox as InboxIcon, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useUnreadCount } from "@/components/app-shell";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export function InboxView({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const t = useT();
+  const { decrementUnread } = useUnreadCount();
 
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
@@ -300,6 +302,9 @@ export function InboxView({
           setConversations((prev) =>
             prev.map((c) => (c.id === id ? { ...c, unread_count: 0 } : c))
           );
+          // Ponte otimista: zera o badge do nav (AppShell) na hora, sem esperar
+          // o round trip do realtime (DB write → WAL → broadcast → refetch).
+          decrementUnread(1);
           void supabase.rpc("mark_conversation_read", { p_conversation_id: id });
         }
 

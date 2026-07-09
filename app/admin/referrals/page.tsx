@@ -32,6 +32,8 @@ type ReferralItem = {
   created_at: string;
   referrer_org: OrgRef | null;
   referred_org: OrgRef | null;
+  /** Nome do dono (role='owner') da org indicada — quem de fato se cadastrou. */
+  referred_owner_name: string | null;
   link: { code: string; clicks: number } | null;
   rewards: RewardRef[];
 };
@@ -216,6 +218,9 @@ export default function AdminReferralsPage() {
                         <span className="font-medium">{r.referrer_org?.name ?? "—"}</span>
                         <span className="mx-1.5 text-[#444]">→</span>
                         <span>{r.referred_org?.name ?? "—"}</span>
+                        {r.referred_owner_name && (
+                          <span className="text-[#666]"> ({r.referred_owner_name})</span>
+                        )}
                       </p>
                       <p className="text-[11px] text-[#555]">
                         Link: <span className="font-mono">{r.link?.code ?? "—"}</span>
@@ -339,6 +344,7 @@ export default function AdminReferralsPage() {
                 {deleteTarget.referrer_org?.name ?? "—"}
                 <span className="mx-1.5 text-[#444]">→</span>
                 {deleteTarget.referred_org?.name ?? "—"}
+                {deleteTarget.referred_owner_name && ` (${deleteTarget.referred_owner_name})`}
               </p>
               <p className="mt-1 text-[11px] text-[#555]">
                 Status: {deleteTarget.status} · ID: {deleteTarget.id.slice(0, 12)}

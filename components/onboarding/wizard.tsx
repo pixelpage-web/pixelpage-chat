@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -80,6 +80,32 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<ConnectionMode>("manual");
   const [qrOpen, setQrOpen] = useState(false);
+  const [referralCodeFromMeta, setReferralCodeFromMeta] = useState<string | undefined>(undefined);
+
+  // Pré-preenche "Nome da empresa" com o "Nome do estabelecimento" já coletado
+  // na página de cadastro (raw_user_meta_data.establishment_name), evitando
+  // pedir a mesma informação de novo — segmento e telefone da empresa ainda
+  // são perguntados aqui, pois hoje não existe outra tela para editá-los depois.
+  useEffect(() => {
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        const metadata = data.user?.user_metadata ?? {};
+        if (
+          typeof metadata.establishment_name === "string" &&
+          metadata.establishment_name.trim()
+        ) {
+          setCompanyName(metadata.establishment_name.trim());
+        }
+        if (typeof metadata.referral_code === "string" && metadata.referral_code.trim()) {
+          setReferralCodeFromMeta(metadata.referral_code.trim());
+        }
+      } catch {
+        // segue sem pré-preencher — usuário digita normalmente
+      }
+    })();
+  }, []);
 
   /** Após conectar (QR ou Meta), captura a conexão recém-criada p/ o passo 3 */
   async function captureLatestConnection() {
@@ -126,8 +152,13 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
       }
       toast.success(t("Empresa criada! Seu teste de 7 dias começou."));
 
-      // Registra indicação caso o usuário tenha vindo via link de referral
-      fetch("/api/referral/register", { method: "POST" }).catch(() => {});
+      // Registra indicação: código digitado no cadastro tem prioridade,
+      // com fallback para o cookie de link de referral (a rota decide)
+      fetch("/api/referral/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referral_code: referralCodeFromMeta }),
+      }).catch(() => {});
 
       setStep(1);
     } catch {
@@ -266,7 +297,7 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
               )}
             >
               <QrCode className="h-6 w-6 text-lime" aria-hidden />
-              <p className="mt-2 text-sm font-semibold">📱 QR Code</p>
+              <p className="mt-2 text-sm font-semibold">QR Code</p>
               <p className="mt-0.5 text-xs leading-relaxed text-txt-mut">
                 {t("Conecta em segundos · qualquer número")}
               </p>
@@ -292,8 +323,8 @@ export function OnboardingWizard({ qrEnabled }: { qrEnabled: boolean }) {
               )}
             >
               <ShieldCheck className="h-6 w-6 text-ok" aria-hidden />
-              <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold">
-                ✅ {t("API Oficial Meta")}
+              <p className="mt-2 text-sm font-semibold">
+                {t("API Oficial Meta")}
               </p>
               <p className="mt-0.5 text-xs leading-relaxed text-txt-mut">
                 {t("Número verificado · templates e campanhas")}

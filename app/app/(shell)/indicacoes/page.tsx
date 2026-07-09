@@ -109,7 +109,9 @@ function MilestoneProgressBar({ progress }: { progress: MilestoneProgress }) {
           </span>
         )}
         {!nextMilestone && (
-          <span className="font-medium text-lime">Nível máximo! 🏆</span>
+          <span className="inline-flex items-center gap-1 font-medium text-lime">
+            Nível máximo! <Trophy className="h-3.5 w-3.5" aria-hidden />
+          </span>
         )}
       </div>
     </div>

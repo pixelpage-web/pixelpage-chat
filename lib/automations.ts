@@ -220,7 +220,7 @@ async function notifyTeamByEmail(
       body: JSON.stringify({
         from,
         to: emails,
-        subject: `⚡ Automação disparada: ${rule.name}`,
+        subject: `Automação disparada: ${rule.name}`,
         text: `A regra "${rule.name}" foi disparada em uma conversa.\n\nAbra o inbox para ver: ${appUrl}/app/inbox`,
       }),
     });

@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
   // Email para a equipe (no-op se Resend não estiver configurado)
   await sendOwnerEmail({
-    subject: `🟢 Novo pedido de API Oficial — ${companyName}`,
+    subject: `Novo pedido de API Oficial — ${companyName}`,
     html: `
       <h2>Novo pedido de número com API Oficial</h2>
       <ul>

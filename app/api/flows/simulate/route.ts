@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       source: "simulate",
       enforceLimit: false,
     });
-    if (!result.ok) return `⚠️ ${result.error}`;
+    if (!result.ok) return result.error;
     aiHistory.push({ role: "user", content: params.userMessage });
     aiHistory.push({ role: "assistant", content: result.text });
     return result.text;
@@ -105,20 +105,20 @@ export async function POST(request: Request) {
           events.push({ kind: "bot", text: effect.text });
           break;
         case "set_tag":
-          events.push({ kind: "event", text: `🏷️ Etiqueta aplicada: ${effect.tag}` });
+          events.push({ kind: "event", text: `Etiqueta aplicada: ${effect.tag}` });
           break;
         case "handoff":
           events.push({
             kind: "event",
-            text: "👤 Conversa transferida para atendimento humano. O bot pausaria aqui.",
+            text: "Conversa transferida para atendimento humano. O bot pausaria aqui.",
           });
           break;
         case "send_csat":
           events.push({ kind: "bot", text: DEFAULT_CSAT_MESSAGE });
-          events.push({ kind: "event", text: "⭐ Pesquisa de satisfação enviada." });
+          events.push({ kind: "event", text: "Pesquisa de satisfação enviada." });
           break;
         case "resolve":
-          events.push({ kind: "event", text: "✅ Conversa marcada como resolvida." });
+          events.push({ kind: "event", text: "Conversa marcada como resolvida." });
           break;
         case "wait":
           // tratado no loop abaixo (avanço imediato no simulador)
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
       const mins = Math.round(waitEffect.ms / 60_000);
       events.push({
         kind: "event",
-        text: `⏳ No WhatsApp real, o fluxo pausaria ${mins >= 60 ? `${Math.round(mins / 60)}h` : `${mins} min`} aqui. No simulador, seguimos direto.`,
+        text: `No WhatsApp real, o fluxo pausaria ${mins >= 60 ? `${Math.round(mins / 60)}h` : `${mins} min`} aqui. No simulador, seguimos direto.`,
       });
       nodeId = waitEffect.resumeNodeId;
       state = { ...state, awaiting: null };

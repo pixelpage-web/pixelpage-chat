@@ -58,15 +58,16 @@ export function QrConsentModal({
             <ul className="space-y-1 text-xs leading-relaxed text-txt-mut">
               <li>{t("Templates oficiais")}</li>
               <li>{t("API Meta verificada")}</li>
-              <li>{t("Número com ✓ verde")}</li>
+              <li>{t("Número com selo verde")}</li>
             </ul>
           </div>
         </div>
 
         {/* Riscos assumidos */}
         <div className="rounded-lg border border-danger/25 bg-danger-soft p-3">
-          <p className="mb-1.5 text-xs font-semibold text-danger">
-            ⚠️ {t("Riscos que você assume ao usar:")}
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-danger">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t("Riscos que você assume ao usar:")}
           </p>
           <ul className="list-inside list-disc space-y-1 text-xs leading-relaxed text-txt-mut">
             <li>

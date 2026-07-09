@@ -1,0 +1,64 @@
+-- Nome do estabelecimento agora é coletado na página de cadastro (etapa única
+-- de dados), não mais só no onboarding — create_organization passa a preferir
+-- esse valor (raw_user_meta_data.establishment_name) como nome da organização
+-- quando presente, mantendo o parâmetro p_name como fallback (chamado ainda
+-- pelo onboarding wizard, que continua funcionando sem mudança se um usuário
+-- antigo/OAuth chegar até ele sem esse metadata).
+create or replace function public.create_organization(p_name text, p_slug text)
+returns uuid
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  v_org uuid;
+  v_plan uuid;
+  v_slug text;
+  v_user_name text;
+  v_user_phone text;
+  v_user_cpf text;
+  v_establishment_name text;
+  v_final_name text;
+begin
+  if auth.uid() is null then
+    raise exception 'Não autenticado';
+  end if;
+
+  if exists (select 1 from public.profiles where id = auth.uid() and org_id is not null) then
+    raise exception 'Usuário já pertence a uma organização';
+  end if;
+
+  select
+    coalesce(raw_user_meta_data ->> 'name', raw_user_meta_data ->> 'full_name', split_part(email, '@', 1)),
+    raw_user_meta_data ->> 'phone',
+    raw_user_meta_data ->> 'cpf',
+    nullif(trim(raw_user_meta_data ->> 'establishment_name'), '')
+  into v_user_name, v_user_phone, v_user_cpf, v_establishment_name
+  from auth.users where id = auth.uid();
+
+  v_final_name := coalesce(v_establishment_name, p_name);
+  v_slug := left(coalesce(nullif(p_slug, ''), 'org'), 40) || '-' || substr(md5(random()::text), 1, 6);
+
+  insert into public.organizations (name, slug, owner_id)
+  values (v_final_name, v_slug, auth.uid())
+  returning id into v_org;
+
+  insert into public.profiles (id, org_id, role, name, phone, cpf)
+  values (auth.uid(), v_org, 'owner', coalesce(v_user_name, ''), v_user_phone, v_user_cpf)
+  on conflict (id) do update
+    set org_id = excluded.org_id,
+        role = case when public.profiles.role = 'admin' then 'admin' else 'owner' end,
+        phone = coalesce(public.profiles.phone, excluded.phone),
+        cpf = coalesce(public.profiles.cpf, excluded.cpf);
+
+  select id into v_plan from public.plans where name = 'Free' and active = true limit 1;
+  if v_plan is not null then
+    insert into public.subscriptions (org_id, plan_id, status, trial_ends_at)
+    values (v_org, v_plan, 'active', null);
+  end if;
+
+  insert into public.audit_logs (org_id, actor_id, action, metadata)
+  values (v_org, auth.uid(), 'organization.created', jsonb_build_object('name', v_final_name));
+
+  return v_org;
+end;
+$$;

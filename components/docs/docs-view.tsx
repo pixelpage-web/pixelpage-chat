@@ -120,15 +120,15 @@ const sections: DocSection[] = [
       {
         term: { pt: "Painel do contato (direita)", en: "Contact panel (right)" },
         body: {
-          pt: "Mostra telefone, etiquetas e notas internas do cliente. Etiquetas organizam (ex.: 'vip', 'orçamento'); notas são anotações que só sua equipe vê. Em telas menores, toque no ícone ⓘ.",
-          en: "Shows the customer's phone, tags and internal notes. Tags help organize (e.g. 'vip', 'quote'); notes are visible only to your team. On smaller screens, tap the ⓘ icon.",
+          pt: "Mostra telefone, etiquetas e notas internas do cliente. Etiquetas organizam (ex.: 'vip', 'orçamento'); notas são anotações que só sua equipe vê. Em telas menores, toque no ícone de informações.",
+          en: "Shows the customer's phone, tags and internal notes. Tags help organize (e.g. 'vip', 'quote'); notes are visible only to your team. On smaller screens, tap the info icon.",
         },
       },
       {
         term: { pt: "Ícones nas mensagens (quem respondeu)", en: "Message icons (who replied)" },
         body: {
-          pt: "Cada resposta mostra quem a enviou: 👤 Equipe (humano), 🤖 Bot IA, ⚙️ n8n (automação externa). Assim você sempre sabe o que foi automático e o que foi manual.",
-          en: "Each reply shows who sent it: 👤 Team (human), 🤖 AI Bot, ⚙️ n8n (external automation). You always know what was automatic vs manual.",
+          pt: "Cada resposta mostra quem a enviou: ícone de pessoa para Equipe (humano), ícone de robô para Bot IA, ícone de engrenagem para n8n (automação externa). Assim você sempre sabe o que foi automático e o que foi manual.",
+          en: "Each reply shows who sent it: a person icon for Team (human), a bot icon for AI Bot, a gear icon for n8n (external automation). You always know what was automatic vs manual.",
         },
       },
     ],

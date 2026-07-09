@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
+  Angry,
   ArrowLeft,
   Bot,
   Check,
+  ClipboardList,
+  FileText,
+  Image as ImageIcon,
   Info,
   Lock,
+  Mic,
   Paperclip,
   Pause,
   Play,
@@ -15,12 +20,15 @@ import {
   Send,
   SlashSquare,
   Sparkles,
+  Sticker,
   Tag,
   Trash2,
   User,
   UserPlus,
+  Video,
   Workflow,
   X,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
@@ -62,44 +70,44 @@ function AiSummaryNote({
 }) {
   const t = useT();
   return (
-    <div
-      className="mx-3 mt-3 rounded-lg border px-3.5 py-3 sm:mx-5"
-      style={{ backgroundColor: "#FEF3C7", borderColor: "#F59E0B" }}
-    >
+    <div className="mx-3 mt-3 rounded-lg border border-amber/30 bg-amber-soft px-3.5 py-3 sm:mx-5">
       <div className="flex items-start justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-[#92400E]">
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-amber">
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
           {t("Resumo gerado pela IA")}
         </p>
         <button
           onClick={onDismiss}
-          className="focus-ring -mr-1 -mt-1 rounded-md p-1 text-[#92400E] hover:bg-[#FDE68A]"
+          className="focus-ring -mr-1 -mt-1 rounded-md p-1 text-amber hover:bg-amber/15"
           aria-label={t("Fechar resumo")}
         >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <dl className="mt-1.5 space-y-1 text-xs leading-relaxed text-[#78350F]">
+      <dl className="mt-1.5 space-y-1 text-xs leading-relaxed text-amber">
         {summary.motivo && (
-          <div>
-            <dt className="inline font-semibold">📋 {t("Motivo")}: </dt>
+          <div className="flex items-start gap-1">
+            <ClipboardList className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+            <dt className="inline font-semibold">{t("Motivo")}: </dt>
             <dd className="inline">{summary.motivo}</dd>
           </div>
         )}
         {summary.humor && (
-          <div>
-            <dt className="inline font-semibold">😤 {t("Humor")}: </dt>
+          <div className="flex items-start gap-1">
+            <Angry className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+            <dt className="inline font-semibold">{t("Humor")}: </dt>
             <dd className="inline">{summary.humor}</dd>
           </div>
         )}
         {summary.ponto_principal && (
-          <div>
-            <dt className="inline font-semibold">⚡ {t("Importante")}: </dt>
+          <div className="flex items-start gap-1">
+            <Zap className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+            <dt className="inline font-semibold">{t("Importante")}: </dt>
             <dd className="inline">{summary.ponto_principal}</dd>
           </div>
         )}
       </dl>
-      <p className="mt-1.5 text-[10px] text-[#92400E]/80">
+      <p className="mt-1.5 text-[10px] text-amber/80">
         {t("Conteúdo gerado por inteligência artificial — confira antes de usar.")}
       </p>
     </div>
@@ -154,16 +162,37 @@ function MessageBubble({ message }: { message: MessageRow }) {
               rel="noopener noreferrer"
               className="mb-1.5 flex items-center gap-2 rounded-lg border border-line bg-ink/40 px-3 py-2 text-xs text-lime underline"
             >
-              📄 {message.content || t("Documento")}
+              <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              {message.content || t("Documento")}
             </a>
           )}
         {message.message_type !== "text" && !message.media_url && (
-          <p className="mb-1 text-[11px] uppercase tracking-wide text-txt-dim">
-            {message.message_type === "image" && `📷 ${t("Imagem")}`}
-            {message.message_type === "audio" && `🎙️ ${t("Áudio")}`}
-            {message.message_type === "video" && `🎬 ${t("Vídeo")}`}
-            {message.message_type === "sticker" && `✨ ${t("Figurinha")}`}
-            {message.message_type === "document" && `📄 ${t("Documento")}`}
+          <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-txt-dim">
+            {message.message_type === "image" && (
+              <>
+                <ImageIcon className="h-3 w-3 shrink-0" aria-hidden /> {t("Imagem")}
+              </>
+            )}
+            {message.message_type === "audio" && (
+              <>
+                <Mic className="h-3 w-3 shrink-0" aria-hidden /> {t("Áudio")}
+              </>
+            )}
+            {message.message_type === "video" && (
+              <>
+                <Video className="h-3 w-3 shrink-0" aria-hidden /> {t("Vídeo")}
+              </>
+            )}
+            {message.message_type === "sticker" && (
+              <>
+                <Sticker className="h-3 w-3 shrink-0" aria-hidden /> {t("Figurinha")}
+              </>
+            )}
+            {message.message_type === "document" && (
+              <>
+                <FileText className="h-3 w-3 shrink-0" aria-hidden /> {t("Documento")}
+              </>
+            )}
           </p>
         )}
         {message.content &&
@@ -658,8 +687,9 @@ export function MessageThread({
           <div className="empty:hidden [&:not(:empty)]:mb-2">
           {conversation.bot_paused ? (
             <div className="flex items-center justify-between rounded-lg border border-line bg-ink px-3 py-1.5">
-              <span className="text-[11px] text-txt-mut">
-                👤 {t("Atendimento humano")}
+              <span className="flex items-center gap-1 text-[11px] text-txt-mut">
+                <User className="h-3 w-3 shrink-0" aria-hidden />
+                {t("Atendimento humano")}
               </span>
               <button
                 onClick={onToggleBotPause}
@@ -670,8 +700,9 @@ export function MessageThread({
             </div>
           ) : conversation.current_flow_id ? (
             <div className="flex items-center justify-between rounded-lg border border-lime/25 bg-lime-soft px-3 py-1.5">
-              <span className="truncate text-[11px] text-lime">
-                ⚡ {t("Fluxo ativo")}: {flowName ?? t("fluxo")}
+              <span className="flex min-w-0 items-center gap-1 truncate text-[11px] text-lime">
+                <Zap className="h-3 w-3 shrink-0" aria-hidden />
+                {t("Fluxo ativo")}: {flowName ?? t("fluxo")}
               </span>
               <button
                 onClick={onPauseFlow}
@@ -682,7 +713,10 @@ export function MessageThread({
             </div>
           ) : connectionMode === "ai_bot" ? (
             <div className="flex items-center justify-between rounded-lg border border-ok/25 bg-ok-soft px-3 py-1.5">
-              <span className="text-[11px] text-ok">🤖 {t("Bot ativo")}</span>
+              <span className="flex items-center gap-1 text-[11px] text-ok">
+                <Bot className="h-3 w-3 shrink-0" aria-hidden />
+                {t("Bot ativo")}
+              </span>
               <button
                 onClick={onTakeOver}
                 className="focus-ring rounded-md px-2 py-1 text-[11px] font-semibold text-txt hover:bg-surface-hover"
@@ -715,10 +749,12 @@ export function MessageThread({
                 onClick={() => setNoteMode(true)}
                 className={cn(
                   "rounded-md px-3 py-1 text-xs font-medium transition-colors",
-                  noteMode ? "bg-amber-soft text-amber" : "text-txt-dim hover:text-txt"
+                  noteMode ? "bg-amber-soft text-amber" : "text-txt-dim hover:text-txt",
+                  "flex items-center gap-1"
                 )}
               >
-                🔒 {t("Nota interna")}
+                <Lock className="h-3 w-3 shrink-0" aria-hidden />
+                {t("Nota interna")}
               </button>
             </div>
 

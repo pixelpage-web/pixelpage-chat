@@ -296,9 +296,18 @@ export function ConnectionsView({
                   {hasMetaApi && (
                     <>
                       <ul className="mt-3 space-y-1 text-xs text-txt-mut">
-                        <li>✅ {t("Número verificado com ✓ verde")}</li>
-                        <li>✅ {t("Templates aprovados pela Meta")}</li>
-                        <li>✅ {t("Campanhas oficiais e zero risco de ban")}</li>
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+                          {t("Número verificado com selo verde")}
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+                          {t("Templates aprovados pela Meta")}
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden />
+                          {t("Campanhas oficiais e zero risco de ban")}
+                        </li>
                       </ul>
 
                       {/* Estado 3: registrando na Cloud API */}

@@ -471,7 +471,7 @@ export const en: Record<string, string> = {
   // ---------------------------------------------------------------- Sugestões
   "Não foi possível enviar a sugestão. Tente novamente.":
     "Could not send the suggestion. Try again.",
-  "Sugestão enviada — obrigado! 💚": "Suggestion sent — thank you! 💚",
+  "Sugestão enviada — obrigado!": "Suggestion sent — thank you!",
   "Erro de conexão ao enviar a sugestão.": "Connection error sending the suggestion.",
   "Enviar outra sugestão": "Send another suggestion",
   "Sua ideia de melhoria — o que facilitaria seu dia a dia na PixelPage Chat?":

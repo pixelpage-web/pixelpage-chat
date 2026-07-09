@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bot, RotateCcw, Send, User } from "lucide-react";
+import { Bot, RotateCcw, Send, User, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { AgentRow } from "@/types/database";
@@ -141,8 +141,9 @@ export function Simulator({
                 )}
               </div>
               {msg.handoff && (
-                <p className="mt-1.5 rounded-md bg-amber-soft px-2 py-1 text-[10px] text-amber">
-                  ⚡ {t("Palavra-chave de handoff detectada — no WhatsApp real, o bot pausaria e sua equipe assumiria.")}
+                <p className="mt-1.5 flex items-center gap-1 rounded-md bg-amber-soft px-2 py-1 text-[10px] text-amber">
+                  <Zap className="h-3 w-3 shrink-0" aria-hidden />
+                  {t("Palavra-chave de handoff detectada — no WhatsApp real, o bot pausaria e sua equipe assumiria.")}
                 </p>
               )}
             </div>

@@ -60,7 +60,7 @@ function SuccessStarter({ planName, onClose }: { planName: string; onClose: () =
         <Smartphone className="h-8 w-8 text-lime" aria-hidden />
       </div>
       <h2 className="font-display text-xl font-semibold">
-        🎉 Bem-vindo ao {planName}!
+        Bem-vindo ao {planName}!
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-txt-mut">
         Seu plano está ativo. Conecte seu WhatsApp e comece a atender seus
@@ -104,7 +104,7 @@ function SuccessPro({ planName, onClose }: { planName: string; onClose: () => vo
       </div>
 
       <h2 className="font-display text-xl font-semibold">
-        ⭐ Bem-vindo ao {planName}!
+        Bem-vindo ao {planName}!
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-txt-mut">
         Você agora tem acesso à{" "}

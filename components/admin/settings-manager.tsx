@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   Bot,
   KeyRound,
   Lock,
@@ -174,8 +175,9 @@ export function SettingsManager({
             <CardDescription>
               Modelo e parâmetros do bot nativo.
               {!envFlags.claude_api_key && (
-                <span className="mt-1 block text-amber">
-                  ⚠ ANTHROPIC_API_KEY não configurada — o bot e o simulador não
+                <span className="mt-1 flex items-start gap-1.5 text-amber">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  ANTHROPIC_API_KEY não configurada — o bot e o simulador não
                   funcionam sem ela (somente via env, nunca pelo painel).
                 </span>
               )}
@@ -346,8 +348,9 @@ export function SettingsManager({
           </div>
         </div>
         {!envFlags.meta_system_token && (
-          <p className="mt-3 text-xs text-amber">
-            ⚠ META_SYSTEM_USER_TOKEN não configurado — envio de mensagens
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-amber">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            META_SYSTEM_USER_TOKEN não configurado — envio de mensagens
             desativado (somente via env).
           </p>
         )}

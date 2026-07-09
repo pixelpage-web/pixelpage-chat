@@ -78,6 +78,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
+  const [establishmentName, setEstablishmentName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
 
   const [touched, setTouched] = useState({
     name: false,
@@ -86,6 +88,7 @@ export default function RegisterPage() {
     confirmPassword: false,
     phone: false,
     cpf: false,
+    establishmentName: false,
   });
 
   const [cpfCheck, setCpfCheck] = useState<{
@@ -101,6 +104,7 @@ export default function RegisterPage() {
   }, []);
 
   const nameValid = name.trim().length >= 3;
+  const establishmentNameValid = establishmentName.trim().length > 0;
   const emailValid = EMAIL_RE.test(email);
   const phoneValid = isValidPhoneBR(phone);
   const cpfFormatValid = isValidCPF(cpf);
@@ -166,9 +170,18 @@ export default function RegisterPage() {
       confirmPassword: true,
       phone: true,
       cpf: true,
+      establishmentName: true,
     });
 
-    if (!nameValid || !emailValid || !phoneValid || !cpfFormatValid || !passwordValid || !confirmValid) {
+    if (
+      !nameValid ||
+      !establishmentNameValid ||
+      !emailValid ||
+      !phoneValid ||
+      !cpfFormatValid ||
+      !passwordValid ||
+      !confirmValid
+    ) {
       return;
     }
 
@@ -185,13 +198,20 @@ export default function RegisterPage() {
       const cpfDigits = cpf.replace(/\D/g, "");
       const phoneLocal = phone.replace(/\D/g, "").replace(/^55/, "").slice(0, 11);
       const metaPhone = `55${phoneLocal}`;
+      const trimmedReferralCode = referralCode.trim().toLowerCase();
 
       const supabase = createClient();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { name: name.trim(), phone: metaPhone, cpf: cpfDigits },
+          data: {
+            name: name.trim(),
+            phone: metaPhone,
+            cpf: cpfDigits,
+            establishment_name: establishmentName.trim(),
+            ...(trimmedReferralCode ? { referral_code: trimmedReferralCode } : {}),
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/onboarding`,
         },
       });
@@ -368,6 +388,23 @@ export default function RegisterPage() {
             </div>
 
             <div>
+              <Label htmlFor="establishment-name">{t("Nome do estabelecimento")}</Label>
+              <IconInput
+                id="establishment-name"
+                autoComplete="organization"
+                required
+                value={establishmentName}
+                status={statusOf(touched.establishmentName, establishmentName, establishmentNameValid)}
+                onChange={(e) => setEstablishmentName(e.target.value)}
+                onBlur={() => setTouched((s) => ({ ...s, establishmentName: true }))}
+                placeholder="Pizzaria do Zé"
+              />
+              {touched.establishmentName && !establishmentNameValid && (
+                <FieldError>{t("Informe o nome do seu estabelecimento.")}</FieldError>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="email">Email</Label>
               <IconInput
                 id="email"
@@ -493,6 +530,19 @@ export default function RegisterPage() {
               {touched.confirmPassword && confirmPassword.length > 0 && !confirmValid && (
                 <FieldError>{t("As senhas não coincidem.")}</FieldError>
               )}
+            </div>
+
+            <div>
+              <Label htmlFor="referral-code" hint={t("opcional")}>
+                {t("Código de indicação")}
+              </Label>
+              <Input
+                id="referral-code"
+                autoComplete="off"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                placeholder="ab12cd34"
+              />
             </div>
 
             <Button type="submit" className="w-full" loading={loading}>

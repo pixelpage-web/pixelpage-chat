@@ -159,12 +159,9 @@ export function QrConnectModal({
 
         {phase === "connected" && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <div className="animate-fade-up text-5xl" aria-hidden>
-              🎉
-            </div>
-            <CheckCircle2 className="h-10 w-10 text-ok" aria-hidden />
+            <CheckCircle2 className="h-12 w-12 animate-fade-up text-ok" aria-hidden />
             <p className="font-display text-base font-semibold text-ok">
-              {t("Conectado!")} ✓
+              {t("Conectado!")}
             </p>
             {phone && (
               <p className="flex items-center gap-1.5 text-sm text-txt-mut">

@@ -7,17 +7,23 @@ const COOKIE = "ppref";
 
 /**
  * POST — registra a indicação após a criação de org no onboarding.
- * Lê o cookie `ppref` (código do link), valida e cria o referral.
- * Sem body necessário: a org do usuário é lida da sessão.
+ * Aceita opcionalmente um código digitado manualmente no cadastro
+ * (`{ referral_code }`, prioridade); na ausência, cai para o cookie `ppref`
+ * (código do link de referral). A org do usuário é lida da sessão.
  */
-export async function POST() {
+export async function POST(request: Request) {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
+  const body = (await request.json().catch(() => ({}))) as { referral_code?: string };
+  const manualCode =
+    typeof body.referral_code === "string" ? body.referral_code.trim().toLowerCase() : undefined;
+
   const cookieStore = await cookies();
-  const code = cookieStore.get(COOKIE)?.value;
+  const cookieCode = cookieStore.get(COOKIE)?.value;
+  const code = manualCode || cookieCode;
 
   if (!code) {
     // Sem cookie de referral — fluxo normal sem indicação

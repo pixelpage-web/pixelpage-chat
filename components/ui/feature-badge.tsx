@@ -1,5 +1,6 @@
 "use client";
 
+import { Unlock } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -19,12 +20,12 @@ export function FeatureBadge({
     <span
       title={t("Seu email de Super Admin libera este recurso para demonstração e testes. Clientes neste plano não têm acesso — para liberar, eles precisam fazer upgrade.")}
       className={cn(
-        "inline-flex cursor-help items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-4",
+        "inline-flex cursor-help items-center gap-1 rounded-full bg-lime-soft px-2 py-0.5 text-[11px] font-medium leading-4 text-lime",
         className
       )}
-      style={{ backgroundColor: "rgba(93, 214, 44, 0.15)", color: "#5DD62C" }}
     >
-      🔓 {t("Recurso do plano")} {requiredPlan} — {t("visível como Super Admin")}
+      <Unlock className="h-3 w-3 shrink-0" aria-hidden />
+      {t("Recurso do plano")} {requiredPlan} — {t("visível como Super Admin")}
     </span>
   );
 }

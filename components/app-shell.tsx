@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -8,6 +8,7 @@ import {
   BookOpen,
   Bot,
   CreditCard,
+  Eye,
   Gift,
   GitBranch,
   Inbox,
@@ -61,6 +62,32 @@ export interface ShellData {
   } | null;
 }
 
+/**
+ * Badge de não lidas do nav — ponte entre o AppShell (dono do estado) e as
+ * páginas internas (ex.: inbox), que podem atualizar o badge otimisticamente
+ * sem depender do round trip do Realtime.
+ *
+ * Semântica: o badge conta CONVERSAS abertas com unread_count > 0 (não o total
+ * de mensagens). Abrir uma conversa não lida deve decrementar em 1.
+ */
+export interface UnreadCountContextValue {
+  unreadCount: number;
+  /** Decrementa o badge otimisticamente (padrão: 1 conversa). */
+  decrementUnread: (by?: number) => void;
+  /** Re-busca a contagem no servidor (fallback/ressincronização). */
+  refetchUnread: () => void;
+}
+
+export const UnreadCountContext = createContext<UnreadCountContextValue>({
+  unreadCount: 0,
+  decrementUnread: () => undefined,
+  refetchUnread: () => undefined,
+});
+
+export function useUnreadCount() {
+  return useContext(UnreadCountContext);
+}
+
 /** Banner do modo suporte: admin vendo o painel como uma organização. */
 function ImpersonationBanner({ orgName }: { orgName: string }) {
   const t = useT();
@@ -74,8 +101,9 @@ function ImpersonationBanner({ orgName }: { orgName: string }) {
   }
   return (
     <div className="flex items-center justify-center gap-3 border-b border-amber/40 bg-amber/15 px-4 py-1.5 text-xs text-amber">
-      <span>
-        👁 {t("Modo suporte — vendo como")} <strong>{orgName}</strong>
+      <span className="flex items-center gap-1.5">
+        <Eye className="h-3.5 w-3.5" aria-hidden />
+        {t("Modo suporte — vendo como")} <strong>{orgName}</strong>
       </span>
       <button
         onClick={() => void handleExit()}
@@ -101,8 +129,8 @@ const navItems = [
   { href: "/app/indicacoes", label: "Indicações", icon: Gift },
   { href: "/app/docs", label: "Documentação", icon: BookOpen },
   { href: "/app/help", label: "Central de Ajuda", icon: LifeBuoy },
-  { href: "/app/settings", label: "Configurações", icon: Settings },
   { href: "/app/equipe", label: "Equipe", icon: UserCog, ownerOnly: true },
+  { href: "/app/settings", label: "Configurações", icon: Settings },
 ] as const;
 
 function TrialBanner({ data }: { data: ShellData }) {
@@ -224,15 +252,39 @@ export function AppShell({
   const t = useT();
 
   // Badge de não lidas — inicia com valor do servidor, atualiza via realtime
+  // e otimisticamente via UnreadCountContext (ex.: inbox abre uma conversa).
   const [unreadCount, setUnreadCount] = useState(data.unreadInboxCount);
+
+  // Ressincroniza quando o servidor re-renderiza o layout (router.refresh()):
+  // o useState só semeia no primeiro mount e o shell nunca remonta em navegação.
+  useEffect(() => {
+    setUnreadCount(data.unreadInboxCount);
+  }, [data.unreadInboxCount]);
+
+  const refetchUnread = useCallback(() => {
+    fetch("/api/inbox/unread-count")
+      .then((r) => r.json())
+      .then((json: { count?: number }) => {
+        if (typeof json.count === "number") setUnreadCount(json.count);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const decrementUnread = useCallback((by: number = 1) => {
+    setUnreadCount((prev) => Math.max(0, prev - by));
+  }, []);
 
   useEffect(() => {
     if (!data.orgId) return;
 
     const supabase = createClient();
-    const channel = supabase
-      .channel(`inbox-unread-${data.orgId}`)
-      .on(
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let disposed = false;
+
+    const subscribeChannel = () => {
+      if (disposed) return;
+      const ch = supabase.channel(`inbox-unread-${data.orgId}`).on(
         "postgres_changes",
         {
           event: "*",
@@ -242,20 +294,39 @@ export function AppShell({
         },
         () => {
           // Re-busca contagem leve ao detectar qualquer mudança
-          fetch("/api/inbox/unread-count")
-            .then((r) => r.json())
-            .then((json: { count?: number }) => {
-              if (typeof json.count === "number") setUnreadCount(json.count);
-            })
-            .catch(() => undefined);
+          refetchUnread();
         }
-      )
-      .subscribe();
+      );
+      channel = ch;
+      ch.subscribe((status) => {
+        // Ignora callbacks de canais já descartados (evita loop de retry)
+        if (disposed || channel !== ch) return;
+        // Canal caiu (rede instável, app em background no mobile) — sem isso
+        // o badge ficaria congelado até um reload completo.
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          console.warn(`[inbox-unread] canal realtime caiu (${status}), reagendando`);
+          // Fallback imediato: garante contagem atual mesmo sem realtime
+          refetchUnread();
+          if (retryTimer) clearTimeout(retryTimer);
+          retryTimer = setTimeout(() => {
+            if (disposed) return;
+            const old = channel;
+            channel = null;
+            if (old) void supabase.removeChannel(old);
+            subscribeChannel();
+          }, 5000);
+        }
+      });
+    };
+
+    subscribeChannel();
 
     return () => {
-      void supabase.removeChannel(channel);
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      if (channel) void supabase.removeChannel(channel);
     };
-  }, [data.orgId]);
+  }, [data.orgId, refetchUnread]);
 
   const isOwnerOrAdmin = data.role === "owner" || data.role === "admin" || data.role === "superadmin";
 
@@ -280,6 +351,7 @@ export function AppShell({
   }
 
   return (
+    <UnreadCountContext.Provider value={{ unreadCount, decrementUnread, refetchUnread }}>
     <div className="flex h-dvh flex-col">
       {/* Busca global — Cmd+K */}
       {data.orgId && <GlobalSearch orgId={data.orgId} />}
@@ -397,5 +469,6 @@ export function AppShell({
       {/* Botão de suporte flutuante — presente em todas as páginas */}
       <SupportButton />
     </div>
+    </UnreadCountContext.Provider>
   );
 }

@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       `
       id, status, activated_at, created_at,
       referrer_org:organizations!referrer_org_id(id, name, slug),
-      referred_org:organizations!referred_org_id(id, name, slug),
+      referred_org:organizations!referred_org_id(id, name, slug, profiles(id, name, role)),
       link:referral_links!link_id(code, clicks),
       rewards:referral_rewards(id, reward_type, milestone, status, expires_at, applied_at)
       `,
@@ -55,8 +55,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // PostgREST não filtra um embed pelo valor de uma coluna do lado N
+  // inline (não dá pra pedir só o profile com role='owner' direto no
+  // select) — então embutimos todos os profiles da org indicada via
+  // profiles.org_id ⇄ organizations.id e filtramos aqui pelo dono.
+  const referrals = (data ?? []).map((r) => {
+    const referredOrg = r.referred_org as unknown as
+      | { id: string; name: string; slug: string; profiles?: { id: string; name: string; role: string }[] }
+      | null;
+    const owner = referredOrg?.profiles?.find((p) => p.role === "owner") ?? null;
+    return {
+      ...r,
+      referred_org: referredOrg
+        ? { id: referredOrg.id, name: referredOrg.name, slug: referredOrg.slug }
+        : null,
+      referred_owner_name: owner?.name ?? null,
+    };
+  });
+
   return NextResponse.json({
-    referrals: data ?? [],
+    referrals,
     total: count ?? 0,
     page,
     pages: Math.ceil((count ?? 0) / limit),

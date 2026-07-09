@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { KeyRound, Plus, Trash2 } from "lucide-react";
+import { BookOpen, KeyRound, Plus, Trash2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { timeAgo } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -172,8 +172,9 @@ curl ${appUrl}/api/v1/conversations/{id}/messages \\
 
         {/* Documentação inline */}
         <details className="group rounded-lg border border-line">
-          <summary className="focus-ring cursor-pointer select-none rounded-lg px-4 py-3 text-sm font-medium text-txt-mut transition-colors hover:text-txt">
-            📖 {t("Documentação: endpoints públicos")}
+          <summary className="focus-ring flex cursor-pointer select-none items-center gap-1.5 rounded-lg px-4 py-3 text-sm font-medium text-txt-mut transition-colors hover:text-txt">
+            <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t("Documentação: endpoints públicos")}
           </summary>
           <div className="space-y-3 border-t border-line p-4">
             <ul className="space-y-1 text-xs text-txt-mut">
