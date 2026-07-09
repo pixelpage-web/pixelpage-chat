@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchWithRetry } from "@/lib/http-retry";
 
 /**
  * Integração com a Evolution API (conexão WhatsApp via QR Code).
@@ -62,7 +63,7 @@ async function evoFetch<T>(
     };
   }
   try {
-    const res = await fetch(`${cfg.url}${path}`, {
+    const res = await fetchWithRetry(`${cfg.url}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",

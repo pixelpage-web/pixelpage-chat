@@ -24,6 +24,7 @@ import {
 import { maybeCaptureCsatResponse } from "@/lib/csat";
 import { runInboundAutomations } from "@/lib/automations";
 import { runFlowForMessage } from "@/lib/flow-runner";
+import { processDueJobs, shouldCheckDueJobs } from "@/lib/scheduled-jobs";
 import { getAgentKnowledge } from "@/lib/knowledge";
 import { generateConversationSummary } from "@/lib/summary";
 import type { MessageType, WhatsappConnectionRow } from "@/types/database";
@@ -66,6 +67,16 @@ export async function handleInboundMessage(
     .eq("id", connection.org_id)
     .maybeSingle();
   if (!org || org.suspended) return;
+
+  // Ponte pro cron 1x/dia do plano Hobby (ver lib/scheduled-jobs.ts): resolve
+  // jobs vencidos desta org (flow_resume/csat_send/automation_check) assim que
+  // ela tiver tráfego real, sem esperar até o próximo cron diário. Rate-limited
+  // por org — na prática só roda a query em 1 de cada N mensagens.
+  if (shouldCheckDueJobs(org.id)) {
+    await processDueJobs(admin, { orgId: org.id, limit: 5 }).catch((err) => {
+      console.error("[pipeline] falha ao processar scheduled_jobs pendentes (bridge):", err);
+    });
+  }
 
   // 1. Contato (upsert por org+phone)
   const { data: exactMatch } = await admin

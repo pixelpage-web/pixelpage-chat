@@ -212,6 +212,17 @@ async function applyFlowEffects(params: {
           .update({ status: "resolved" })
           .eq("id", conversation.id);
         break;
+      case "guard_triggered":
+        await admin.from("audit_logs").insert({
+          org_id: conversation.org_id,
+          action: "flow.guard_triggered",
+          metadata: {
+            conversation_id: conversation.id,
+            flow_id: flowId,
+            node_id: effect.nodeId,
+          },
+        });
+        break;
     }
   }
 }
@@ -369,7 +380,18 @@ export async function resumeFlow(params: {
       .maybeSingle(),
   ]);
 
-  if (!flow || flow.status !== "published" || !contact || !org || org.suspended) return;
+  if (!flow || flow.status !== "published") {
+    // Fluxo apagado/despublicado durante a espera do "Aguardar" — mesma
+    // limpeza que runFlowForMessage já faz, para não deixar a conversa presa
+    // apontando pro fluxo morto até a próxima mensagem do cliente chegar.
+    await persistFlowState(admin, conversation.id, null, null, {
+      variables: {},
+      awaiting: null,
+      retries: 0,
+    });
+    return;
+  }
+  if (!contact || !org || org.suspended) return;
   if (!conversation.connection_id) return;
 
   const { data: connection } = await admin

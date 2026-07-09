@@ -1,3 +1,5 @@
+import { fetchWithRetry } from "@/lib/http-retry";
+
 /**
  * Integração com a Meta Cloud API (WhatsApp Business).
  * O token de System User é do Tech Provider (global, em env) — cada conexão
@@ -31,7 +33,7 @@ export async function sendWhatsappText(
   body: string
 ): Promise<MetaSendResult> {
   try {
-    const res = await fetch(`${GRAPH_BASE}/${phoneNumberId}/messages`, {
+    const res = await fetchWithRetry(`${GRAPH_BASE}/${phoneNumberId}/messages`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${systemToken()}`,
@@ -92,7 +94,7 @@ export async function sendWhatsappMedia(
       mediaPayload.filename = fileName;
     }
 
-    const res = await fetch(`${GRAPH_BASE}/${phoneNumberId}/messages`, {
+    const res = await fetchWithRetry(`${GRAPH_BASE}/${phoneNumberId}/messages`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${systemToken()}`,

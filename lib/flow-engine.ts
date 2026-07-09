@@ -22,7 +22,8 @@ export type FlowEffect =
     }
   | { type: "send_csat" }
   | { type: "wait"; ms: number; resumeNodeId: string }
-  | { type: "resolve" };
+  | { type: "resolve" }
+  | { type: "guard_triggered"; nodeId: string };
 
 export interface FlowEngineContext {
   /** Nome do contato para a variável {nome} */
@@ -393,6 +394,13 @@ export async function advanceFlow(params: {
         current = findNode(def, nextNodeId(def, node.id));
         break;
     }
+  }
+
+  // Guard atingido com o fluxo ainda "no meio" (current não-nulo) — distingue
+  // de um fim natural (current null) para dar visibilidade via audit_logs
+  // (ver "guard_triggered" em lib/flow-runner.ts).
+  if (current) {
+    effects.push({ type: "guard_triggered", nodeId: current.id });
   }
 
   // Sem próximo nó (ou loop interrompido) → fluxo encerra silenciosamente

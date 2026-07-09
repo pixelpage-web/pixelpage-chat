@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { processDueJobs, shouldCheckDueJobs } from "@/lib/scheduled-jobs";
 import { AppShell, type ShellData } from "@/components/app-shell";
 import type { TeamMemberPermissionsRow } from "@/types/database";
 
@@ -19,6 +21,20 @@ export default async function ShellLayout({
 
   const supabase = await createServerSupabase();
   const orgId = session.profile.org_id;
+
+  // Segundo gatilho de ponte pro cron 1x/dia (ver lib/scheduled-jobs.ts): cobre
+  // o caso "WhatsApp quieto, mas atendente com o painel aberto" — roda em
+  // qualquer carregamento de página autenticada, rate-limited por org. Via
+  // after() para não adicionar latência ao render (mesmo padrão dos webhooks).
+  if (shouldCheckDueJobs(orgId)) {
+    after(async () => {
+      try {
+        await processDueJobs(createAdminClient(), { orgId, limit: 5 });
+      } catch (err) {
+        console.error("[shell-layout] falha ao processar scheduled_jobs pendentes (bridge):", err);
+      }
+    });
+  }
 
   // Período atual (início do mês) para o contador de mensagens IA
   const now = new Date();
