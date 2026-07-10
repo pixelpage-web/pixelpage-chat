@@ -31,6 +31,12 @@ export interface CannedResponse {
   content: string;
 }
 
+/** Unidade/filial resumida (para o filtro de dono/admin no inbox). */
+export interface UnitSummary {
+  id: string;
+  name: string;
+}
+
 /** Etiqueta colorida de conversa. */
 export interface LabelRow {
   id: string;

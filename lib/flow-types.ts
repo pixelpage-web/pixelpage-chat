@@ -16,6 +16,7 @@ export type FlowNodeType =
   | "handoff"
   | "tag"
   | "csat"
+  | "transfer_unit"
   | "wait"
   | "end";
 
@@ -47,6 +48,8 @@ export interface FlowNodeData {
   generateSummary?: boolean;
   // Definir etiqueta
   tag?: string;
+  // Transferir para unidade
+  unitId?: string | null;
   // Aguardar
   waitAmount?: number;
   waitUnit?: WaitUnit;
@@ -226,6 +229,11 @@ export function validateFlow(def: FlowDefinition): FlowValidationError[] {
             nodeId: node.id,
             message: "Explique como a IA deve se comportar neste bloco.",
           });
+        }
+        break;
+      case "transfer_unit":
+        if (!d.unitId?.trim()) {
+          errors.push({ nodeId: node.id, message: "Escolha a unidade de destino." });
         }
         break;
       case "handoff":

@@ -39,6 +39,10 @@ function summaryText(type: FlowNodeType, data: FlowNodeData, t: (s: string) => s
       return data.tag?.trim() ? `🏷️ ${data.tag}` : t("Clique para definir a etiqueta…");
     case "csat":
       return t("Pede a nota de 1 a 5 ao cliente.");
+    case "transfer_unit":
+      return data.unitId?.trim()
+        ? t("🏢 Transfere a conversa para a unidade escolhida.")
+        : t("Clique para escolher a unidade…");
     case "wait": {
       const unitLabel: Record<string, string> = {
         minutes: t("minutos"),

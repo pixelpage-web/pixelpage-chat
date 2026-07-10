@@ -117,6 +117,9 @@ export async function POST(request: Request) {
           events.push({ kind: "bot", text: DEFAULT_CSAT_MESSAGE });
           events.push({ kind: "event", text: "Pesquisa de satisfação enviada." });
           break;
+        case "set_unit":
+          events.push({ kind: "event", text: "Conversa transferida para a unidade selecionada." });
+          break;
         case "resolve":
           events.push({ kind: "event", text: "Conversa marcada como resolvida." });
           break;

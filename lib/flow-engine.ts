@@ -21,6 +21,7 @@ export type FlowEffect =
       generateSummary: boolean;
     }
   | { type: "send_csat" }
+  | { type: "set_unit"; unitId: string }
   | { type: "wait"; ms: number; resumeNodeId: string }
   | { type: "resolve" }
   | { type: "guard_triggered"; nodeId: string };
@@ -369,6 +370,11 @@ export async function advanceFlow(params: {
 
       case "csat":
         effects.push({ type: "send_csat" });
+        current = findNode(def, nextNodeId(def, node.id));
+        break;
+
+      case "transfer_unit":
+        if (d.unitId?.trim()) effects.push({ type: "set_unit", unitId: d.unitId.trim() });
         current = findNode(def, nextNodeId(def, node.id));
         break;
 

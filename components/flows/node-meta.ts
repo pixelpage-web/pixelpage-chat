@@ -1,4 +1,5 @@
 import {
+  Building2,
   Clock,
   GitBranch,
   HelpCircle,
@@ -116,6 +117,16 @@ export const nodeMeta: Record<FlowNodeType, NodeMeta> = {
       "Envia automaticamente uma mensagem pedindo que o cliente avalie o atendimento de 1 a 5. As notas aparecem nos relatórios.",
     inPalette: true,
   },
+  transfer_unit: {
+    type: "transfer_unit",
+    label: "Transferir para unidade",
+    icon: Building2,
+    accent: "#0EA5E9",
+    soft: "rgba(14, 165, 233, 0.15)",
+    description:
+      "Move esta conversa para uma unidade/filial. A equipe vinculada àquela unidade passa a enxergá-la no inbox.",
+    inPalette: true,
+  },
   wait: {
     type: "wait",
     label: "Aguardar",
@@ -146,6 +157,7 @@ export const paletteOrder: FlowNodeType[] = [
   "handoff",
   "tag",
   "csat",
+  "transfer_unit",
   "wait",
   "end",
 ];

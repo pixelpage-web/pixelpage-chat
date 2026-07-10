@@ -26,6 +26,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
 import { Switch } from "@/components/ui/switch";
 import { SuggestionForm } from "@/components/suggestion-form";
+import { UnitsCard } from "@/components/settings/units-card";
 import type { Json, Role } from "@/types/database";
 
 const notificationTypes = [
@@ -424,6 +425,9 @@ export function SettingsView({
             </div>
           )}
         </Card>
+
+        {/* Unidades (roteamento de conversas por local) */}
+        {isOwner && <UnitsCard orgId={orgId} members={members} />}
 
         {/* Ajuda e sugestões */}
         <Card>

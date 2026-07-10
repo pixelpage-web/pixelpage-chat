@@ -225,6 +225,7 @@ export type ConversationRow = {
   ai_summary: Json | null;
   last_message_at: string;
   unread_count: number;
+  unit_id: string | null;
   created_at: string;
 };
 
@@ -340,6 +341,7 @@ export type CsatResponseRow = {
   conversation_id: string | null;
   contact_id: string | null;
   agent_id: string | null;
+  unit_id: string | null;
   score: number;
   created_at: string;
 };
@@ -685,6 +687,24 @@ export type TeamInviteRow = {
 };
 
 // ----------------------------------------------------------------------------
+// 0033 — Unidades/filiais (roteamento de conversas por local)
+// ----------------------------------------------------------------------------
+
+export type OrgUnitRow = {
+  id: string;
+  org_id: string;
+  name: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type TeamMemberUnitRow = {
+  profile_id: string;
+  unit_id: string;
+  created_at: string;
+};
+
+// ----------------------------------------------------------------------------
 // 0022 — Sistema de Indicações
 // ----------------------------------------------------------------------------
 
@@ -849,6 +869,9 @@ export type Database = {
       team_members: TableShape<TeamMemberRow>;
       team_member_permissions: TableShape<TeamMemberPermissionsRow>;
       team_invites: TableShape<TeamInviteRow>;
+      // 0033
+      org_units: TableShape<OrgUnitRow>;
+      team_member_units: TableShape<TeamMemberUnitRow>;
       // 0022
       referral_links: TableShape<ReferralLinkRow>;
       referrals: TableShape<ReferralRow>;

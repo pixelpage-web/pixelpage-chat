@@ -15,6 +15,22 @@ import type { CsatResponseRow } from "@/types/database";
  * agente, taxa de resposta e últimas avaliações.
  */
 
+/** 5 estrelas visuais (preenchidas até a nota, arredondada). Nunca carinhas. */
+function StarRating({ score, size = "h-3.5 w-3.5" }: { score: number; size?: string }) {
+  const rounded = Math.round(score);
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${score} de 5 estrelas`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`${size} ${n <= rounded ? "fill-lime text-lime" : "text-line-strong"}`}
+          aria-hidden
+        />
+      ))}
+    </span>
+  );
+}
+
 export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: number }) {
   const t = useT();
   const [loading, setLoading] = useState(true);
@@ -22,6 +38,8 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
   const [sentCount, setSentCount] = useState(0);
   const [contactNames, setContactNames] = useState<Record<string, string>>({});
   const [agentNames, setAgentNames] = useState<Record<string, string>>({});
+  const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
+  const [unitFilter, setUnitFilter] = useState<string | "all">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -29,7 +47,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
       const supabase = createClient();
       const since = new Date(Date.now() - periodDays * 86400_000).toISOString();
 
-      const [respRes, sentRes, contactRes, teamRes] = await Promise.all([
+      const [respRes, sentRes, contactRes, teamRes, unitsRes] = await Promise.all([
         supabase
           .from("csat_responses")
           .select("*")
@@ -45,6 +63,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
           .gte("csat_sent_at", since),
         supabase.from("contacts").select("id, name, phone").eq("org_id", orgId),
         supabase.from("profiles").select("id, name").eq("org_id", orgId),
+        supabase.from("org_units").select("id, name").eq("org_id", orgId).order("name"),
       ]);
 
       if (respRes.error) {
@@ -53,6 +72,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
       }
       setResponses(respRes.data ?? []);
       setSentCount(sentRes.count ?? 0);
+      setUnits(unitsRes.data ?? []);
       setContactNames(
         Object.fromEntries(
           (contactRes.data ?? []).map((c) => [c.id, c.name || formatPhone(c.phone)])
@@ -72,15 +92,20 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
     void load();
   }, [load]);
 
+  const filtered = useMemo(
+    () => (unitFilter === "all" ? responses : responses.filter((r) => r.unit_id === unitFilter)),
+    [responses, unitFilter]
+  );
+
   const average = useMemo(() => {
-    if (responses.length === 0) return null;
-    return responses.reduce((sum, r) => sum + r.score, 0) / responses.length;
-  }, [responses]);
+    if (filtered.length === 0) return null;
+    return filtered.reduce((sum, r) => sum + r.score, 0) / filtered.length;
+  }, [filtered]);
 
   /** Evolução da nota: média por dia (só dias com resposta). */
   const timeline = useMemo(() => {
     const byDay = new Map<string, { sum: number; n: number }>();
-    for (const r of responses) {
+    for (const r of filtered) {
       const day = r.created_at.slice(0, 10);
       const cur = byDay.get(day) ?? { sum: 0, n: 0 };
       cur.sum += r.score;
@@ -90,11 +115,11 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
     return [...byDay.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([day, { sum, n }]) => ({ day, avg: sum / n }));
-  }, [responses]);
+  }, [filtered]);
 
   const byAgent = useMemo(() => {
     const map = new Map<string, { sum: number; n: number }>();
-    for (const r of responses) {
+    for (const r of filtered) {
       const key = r.agent_id ?? "__bot__";
       const cur = map.get(key) ?? { sum: 0, n: 0 };
       cur.sum += r.score;
@@ -112,10 +137,10 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
         total: n,
       }))
       .sort((a, b) => b.avg - a.avg);
-  }, [responses, agentNames, t]);
+  }, [filtered, agentNames, t]);
 
-  const responseRate = sentCount > 0 ? (responses.length / sentCount) * 100 : null;
-  const last10 = useMemo(() => [...responses].reverse().slice(0, 10), [responses]);
+  const responseRate = sentCount > 0 ? (filtered.length / sentCount) * 100 : null;
+  const last10 = useMemo(() => [...filtered].reverse().slice(0, 10), [filtered]);
 
   // Polilinha do gráfico (SVG responsivo via viewBox)
   const chart = useMemo(() => {
@@ -157,17 +182,36 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
 
   return (
     <div className="space-y-4">
+      {/* Filtro por unidade — só aparece quando a org tem unidades cadastradas */}
+      {units.length > 0 && (
+        <select
+          value={unitFilter}
+          onChange={(e) => setUnitFilter(e.target.value)}
+          className="focus-ring h-8 w-full max-w-xs rounded-md border border-line bg-surface px-2 text-xs text-txt-mut"
+          aria-label={t("Filtrar por unidade")}
+        >
+          <option value="all">{t("Todas as unidades")}</option>
+          {units.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </select>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-3">
         {/* Nota média geral */}
         <Card className="sm:col-span-1">
           <p className="text-xs font-medium text-txt-mut">{t("Nota média geral")}</p>
-          <p className="mt-2 font-display text-4xl font-semibold text-lime">
-            {average !== null ? average.toFixed(1) : "—"}{" "}
-            <span aria-hidden>⭐</span>
-          </p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <p className="font-display text-4xl font-semibold text-lime">
+              {average !== null ? average.toFixed(1) : "—"}
+            </p>
+            {average !== null && <StarRating score={average} size="h-4 w-4" />}
+          </div>
           <p className="mt-1 text-[11px] text-txt-dim">
-            {responses.length}{" "}
-            {responses.length === 1 ? t("avaliação") : t("avaliações")} {t("no período")}
+            {filtered.length}{" "}
+            {filtered.length === 1 ? t("avaliação") : t("avaliações")} {t("no período")}
           </p>
         </Card>
 
@@ -182,7 +226,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
               <p className="text-[11px] text-txt-dim">{t("enviadas")}</p>
             </div>
             <div>
-              <p className="font-display text-2xl font-semibold">{responses.length}</p>
+              <p className="font-display text-2xl font-semibold">{filtered.length}</p>
               <p className="text-[11px] text-txt-dim">{t("respondidas")}</p>
             </div>
             <div>
@@ -284,8 +328,11 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
                 {byAgent.map((row) => (
                   <tr key={row.agentId} className="border-t border-line">
                     <td className="py-2">{row.name}</td>
-                    <td className="py-2 text-right font-semibold text-lime">
-                      {row.avg.toFixed(1)} ⭐
+                    <td className="py-2 text-right">
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-lime">
+                        {row.avg.toFixed(1)}
+                        <StarRating score={row.avg} />
+                      </span>
                     </td>
                     <td className="py-2 text-right text-txt-mut">{row.total}</td>
                   </tr>
@@ -311,9 +358,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
                     {r.contact_id ? (contactNames[r.contact_id] ?? "—") : "—"}
                   </span>
                   <span className="ml-3 flex shrink-0 items-center gap-2">
-                    <span className="font-semibold text-lime">
-                      {r.score} {"⭐".repeat(r.score)}
-                    </span>
+                    <StarRating score={r.score} />
                     <span className="text-[10px] text-txt-dim">{timeAgo(r.created_at)}</span>
                   </span>
                 </li>

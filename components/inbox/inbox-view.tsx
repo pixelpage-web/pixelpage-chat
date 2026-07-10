@@ -13,7 +13,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConversationList } from "./conversation-list";
 import { MessageThread } from "./message-thread";
 import { ContactPanel, type ContactCsatStats } from "./contact-panel";
-import type { Json } from "@/types/database";
+import type { Json, Role } from "@/types/database";
 import type {
   CannedResponse,
   ConnectionSummary,
@@ -25,6 +25,7 @@ import type {
   MessageRow,
   QuickTemplate,
   TeamMember,
+  UnitSummary,
 } from "./types";
 
 export function InboxView({
@@ -32,11 +33,13 @@ export function InboxView({
   userId,
   readOnly,
   seedEnabled,
+  role,
 }: {
   orgId: string;
   userId: string;
   readOnly: boolean;
   seedEnabled: boolean;
+  role: Role;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const t = useT();
@@ -58,6 +61,8 @@ export function InboxView({
   const [templates, setTemplates] = useState<QuickTemplate[]>([]);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [attaching, setAttaching] = useState(false);
+  const [orgUnits, setOrgUnits] = useState<UnitSummary[]>([]);
+  const [unitFilter, setUnitFilter] = useState<string | "all">("all");
   // Nome dos fluxos (indicador "Fluxo ativo") e CSAT por contato
   const [flowNames, setFlowNames] = useState<Record<string, string>>({});
   const [contactCsat, setContactCsat] = useState<Record<string, ContactCsatStats>>({});
@@ -76,7 +81,7 @@ export function InboxView({
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [convRes, contactRes, teamRes, connRes, tplRes, flowRes, cannedRes, labelsRes] = await Promise.all([
+      const [convRes, contactRes, teamRes, connRes, tplRes, flowRes, cannedRes, labelsRes, unitsRes] = await Promise.all([
         supabase
           .from("conversations")
           .select("*")
@@ -106,7 +111,14 @@ export function InboxView({
           .select("id, title, color, description, show_on_sidebar")
           .eq("org_id", orgId)
           .order("title"),
+        supabase
+          .from("org_units")
+          .select("id, name")
+          .eq("org_id", orgId)
+          .eq("is_active", true)
+          .order("name"),
       ]);
+      setOrgUnits(unitsRes.data ?? []);
 
       if (convRes.error || contactRes.error || teamRes.error) {
         toast.error(t("Não foi possível carregar o inbox. Recarregue a página."));
@@ -305,7 +317,9 @@ export function InboxView({
           // Ponte otimista: zera o badge do nav (AppShell) na hora, sem esperar
           // o round trip do realtime (DB write → WAL → broadcast → refetch).
           decrementUnread(1);
-          void supabase.rpc("mark_conversation_read", { p_conversation_id: id });
+          supabase.rpc("mark_conversation_read", { p_conversation_id: id }).then(({ error }) => {
+            if (error) console.error("Falha ao marcar conversa como lida:", error);
+          });
         }
 
         // Score CSAT do contato (média de todas as avaliações dele)
@@ -647,6 +661,10 @@ export function InboxView({
           convLabels={convLabels}
           labelFilter={labelFilter}
           onLabelFilterChange={setLabelFilter}
+          orgUnits={orgUnits}
+          unitFilter={unitFilter}
+          onUnitFilterChange={setUnitFilter}
+          canFilterByUnit={role === "owner" || role === "admin"}
           emptyAction={
             seedEnabled ? (
               <Button

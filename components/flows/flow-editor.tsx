@@ -55,7 +55,7 @@ import {
 } from "@/lib/flow-types";
 import type { FlowRow, Json } from "@/types/database";
 import { FlowNodeRenderer, type EditorNodeData } from "./flow-node";
-import { NodeConfigPanel, type TeamOption } from "./node-config-panel";
+import { NodeConfigPanel, type TeamOption, type UnitOption } from "./node-config-panel";
 import { FlowSimulator } from "./flow-simulator";
 import { nodeMeta, paletteOrder } from "./node-meta";
 
@@ -162,10 +162,12 @@ function EditorInner({
   flow,
   initialDefinition,
   team,
+  units,
 }: {
   flow: FlowRow;
   initialDefinition: FlowDefinition;
   team: TeamOption[];
+  units: UnitOption[];
 }) {
   const t = useT();
   const supabase = useMemo(() => createClient(), []);
@@ -591,6 +593,7 @@ function EditorInner({
               nodeType={(selectedNode.type ?? "message") as FlowNodeType}
               data={selectedNode.data}
               team={team}
+              units={units}
               onChange={(patch) => updateNodeData(selectedNode.id, patch)}
               onDelete={() => deleteNode(selectedNode.id)}
               onClose={() => setSelectedId(null)}
@@ -605,9 +608,11 @@ function EditorInner({
 export function FlowEditor({
   flow,
   team,
+  units,
 }: {
   flow: FlowRow;
   team: TeamOption[];
+  units: UnitOption[];
 }) {
   const t = useT();
   const definition = useMemo(() => {
@@ -636,7 +641,7 @@ export function FlowEditor({
 
       <div className="hidden h-full md:block">
         <ReactFlowProvider>
-          <EditorInner flow={flow} initialDefinition={definition} team={team} />
+          <EditorInner flow={flow} initialDefinition={definition} team={team} units={units} />
         </ReactFlowProvider>
       </div>
     </>

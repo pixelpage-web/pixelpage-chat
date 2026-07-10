@@ -119,6 +119,7 @@ export default async function InboxPage() {
           userId={session.user.id}
           readOnly={readOnly}
           seedEnabled={seedEnabled}
+          role={session.profile.role}
         />
       </div>
     </div>

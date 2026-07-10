@@ -194,6 +194,12 @@ async function applyFlowEffects(params: {
       case "send_csat":
         await sendCsatSurvey(admin, connection, conversation, contactPhone);
         break;
+      case "set_unit":
+        await admin
+          .from("conversations")
+          .update({ unit_id: effect.unitId })
+          .eq("id", conversation.id);
+        break;
       case "wait":
         await admin.from("scheduled_jobs").insert({
           org_id: conversation.org_id,

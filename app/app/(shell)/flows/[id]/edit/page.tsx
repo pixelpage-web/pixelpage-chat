@@ -20,9 +20,15 @@ export default async function FlowEditPage({
   const supabase = await createServerSupabase();
 
   // RLS garante que o fluxo pertence à organização do usuário
-  const [{ data: flow }, { data: team }] = await Promise.all([
+  const [{ data: flow }, { data: team }, { data: units }] = await Promise.all([
     supabase.from("flows").select("*").eq("id", id).maybeSingle(),
     supabase.from("profiles").select("id, name").eq("org_id", orgId),
+    supabase
+      .from("org_units")
+      .select("id, name")
+      .eq("org_id", orgId)
+      .eq("is_active", true)
+      .order("name"),
   ]);
 
   if (!flow) notFound();
@@ -31,6 +37,7 @@ export default async function FlowEditPage({
     <FlowEditor
       flow={flow}
       team={(team ?? []).map((m) => ({ id: m.id, name: m.name || "Sem nome" }))}
+      units={units ?? []}
     />
   );
 }

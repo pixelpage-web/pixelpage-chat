@@ -82,6 +82,7 @@ export async function maybeCaptureCsatResponse(
     contact_id: string;
     assigned_to: string | null;
     csat_sent_at: string | null;
+    unit_id: string | null;
   },
   contactPhone: string,
   incomingText: string
@@ -108,6 +109,7 @@ export async function maybeCaptureCsatResponse(
     conversation_id: conversation.id,
     contact_id: conversation.contact_id,
     agent_id: conversation.assigned_to,
+    unit_id: conversation.unit_id,
     score,
   });
 

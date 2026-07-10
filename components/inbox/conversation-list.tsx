@@ -25,6 +25,7 @@ import type {
   InboxFilter,
   LabelRow,
   MessagePreview,
+  UnitSummary,
 } from "./types";
 
 const filters: { value: InboxFilter; label: string }[] = [
@@ -78,6 +79,10 @@ export function ConversationList({
   convLabels = {},
   labelFilter,
   onLabelFilterChange,
+  orgUnits = [],
+  unitFilter = "all",
+  onUnitFilterChange,
+  canFilterByUnit = false,
 }: {
   loading: boolean;
   conversations: ConversationRow[];
@@ -96,6 +101,10 @@ export function ConversationList({
   convLabels?: Record<string, string[]>;
   labelFilter?: string | null;
   onLabelFilterChange?: (id: string | null) => void;
+  orgUnits?: UnitSummary[];
+  unitFilter?: string | "all";
+  onUnitFilterChange?: (id: string | "all") => void;
+  canFilterByUnit?: boolean;
 }) {
   const t = useT();
   const [search, setSearch] = useState("");
@@ -111,6 +120,7 @@ export function ConversationList({
         return false;
       if (labelFilter && !(convLabels[c.id] ?? []).includes(labelFilter))
         return false;
+      if (unitFilter !== "all" && c.unit_id !== unitFilter) return false;
       if (term) {
         const contact = contacts[c.contact_id];
         const name = contact?.name?.toLowerCase() ?? "";
@@ -119,7 +129,7 @@ export function ConversationList({
       }
       return true;
     });
-  }, [conversations, contacts, filter, search, userId, connectionFilter, labelFilter, convLabels]);
+  }, [conversations, contacts, filter, search, userId, connectionFilter, labelFilter, convLabels, unitFilter]);
 
   const openCount = useMemo(
     () => conversations.filter((c) => c.status === "open" && c.unread_count > 0).length,
@@ -208,6 +218,23 @@ export function ConversationList({
             {connections.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label} {c.phone_display ? `(${c.phone_display})` : ""}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* Filtro por unidade — só pra dono/admin, quando existem unidades */}
+        {canFilterByUnit && orgUnits.length > 0 && onUnitFilterChange && (
+          <select
+            value={unitFilter}
+            onChange={(e) => onUnitFilterChange(e.target.value)}
+            className="focus-ring mt-2 h-8 w-full rounded-md border border-line bg-surface px-2 text-xs text-txt-mut"
+            aria-label={t("Filtrar por unidade")}
+          >
+            <option value="all">{t("Todas as unidades")}</option>
+            {orgUnits.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
               </option>
             ))}
           </select>

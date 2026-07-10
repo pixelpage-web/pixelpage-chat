@@ -20,6 +20,11 @@ export interface TeamOption {
   name: string;
 }
 
+export interface UnitOption {
+  id: string;
+  name: string;
+}
+
 function Field({
   label,
   hint,
@@ -43,6 +48,7 @@ export function NodeConfigPanel({
   nodeType,
   data,
   team,
+  units,
   onChange,
   onDelete,
   onClose,
@@ -51,6 +57,7 @@ export function NodeConfigPanel({
   nodeType: FlowNodeType;
   data: EditorNodeData;
   team: TeamOption[];
+  units: UnitOption[];
   onChange: (patch: Partial<EditorNodeData>) => void;
   onDelete: () => void;
   onClose: () => void;
@@ -359,6 +366,33 @@ export function NodeConfigPanel({
           <p className="text-xs leading-relaxed text-txt-mut">
             {t("Sem configuração — envia automaticamente a mensagem de CSAT definida nas configurações da conexão WhatsApp.")}
           </p>
+        )}
+
+        {nodeType === "transfer_unit" && (
+          <>
+            {units.length === 0 ? (
+              <p className="text-xs leading-relaxed text-txt-mut">
+                {t("Você ainda não criou nenhuma unidade. Crie unidades em Configurações → Unidades para poder usar este bloco.")}
+              </p>
+            ) : (
+              <Field
+                label={t("Unidade de destino")}
+                hint={t("A equipe vinculada a essa unidade passa a ver esta conversa no inbox.")}
+              >
+                <Select
+                  value={data.unitId ?? ""}
+                  onChange={(e) => onChange({ unitId: e.target.value || null })}
+                >
+                  <option value="">{t("Selecione uma unidade")}</option>
+                  {units.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
+          </>
         )}
 
         {nodeType === "wait" && (
