@@ -70,6 +70,7 @@ export function buildAgentSystemPrompt(input: AgentPromptInput): string {
   parts.push(
     [
       "## Regras de atendimento",
+      `- Você atende exclusivamente assuntos relacionados ao negócio de "${orgName}" (produtos, serviços, agendamentos, suporte e dúvidas comerciais). Se perguntarem algo fora desse escopo (curiosidades, notícias, assuntos gerais, outros temas), recuse educadamente e redirecione a conversa: diga que só pode ajudar com assuntos de ${orgName} e pergunte como pode ajudar dentro disso.`,
       "- Responda SEMPRE em português brasileiro.",
       "- Mensagens curtas e diretas, adequadas ao WhatsApp (evite passar de 3 parágrafos curtos).",
       "- Nunca invente preços, prazos ou políticas que não estejam nas instruções ou no FAQ.",

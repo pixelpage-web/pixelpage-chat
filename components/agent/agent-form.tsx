@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
+import { Info, Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -176,6 +176,12 @@ export function AgentForm({
                 "Ex.: Você atende a Pizzaria do Zé. Temos pizzas tradicionais (R$ 45) e especiais (R$ 62). Entregamos em até 50 min na zona sul. Não aceitamos encomendas para outros dias."
               }
             />
+            <p className="mt-1.5 flex items-start gap-1.5 text-[11px] leading-relaxed text-txt-dim">
+              <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+              {t(
+                "A Meta proíbe o uso do WhatsApp Business API para IA de propósito geral — mantenha as instruções focadas no seu negócio (produtos, serviços, agendamento, suporte)."
+              )}
+            </p>
           </div>
         </div>
       </Card>
