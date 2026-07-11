@@ -11,22 +11,17 @@ import {
   Lightbulb,
   ShieldCheck,
   Trash2,
-  UserPlus,
-  Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
-import { timeAgo } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
 import { Switch } from "@/components/ui/switch";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { UnitsCard } from "@/components/settings/units-card";
+import { TeamCard, type TeamMember } from "@/components/settings/team-card";
 import type { Json, Role } from "@/types/database";
 
 const notificationTypes = [
@@ -34,13 +29,6 @@ const notificationTypes = [
   { key: "unread_1h", label: "Mensagem sem resposta há mais de 1 hora" },
   { key: "bot_error", label: "Erro no bot IA" },
 ] as const;
-
-interface Member {
-  id: string;
-  name: string;
-  role: Role;
-  created_at: string;
-}
 
 export function SettingsView({
   userId,
@@ -58,7 +46,7 @@ export function SettingsView({
   role: Role;
   orgId: string;
   orgName: string;
-  members: Member[];
+  members: TeamMember[];
   notificationPrefs: Record<string, boolean>;
 }) {
   const t = useT();
@@ -67,8 +55,6 @@ export function SettingsView({
   const [prefs, setPrefs] = useState<Record<string, boolean>>(notificationPrefs);
   const [company, setCompany] = useState(orgName);
   const [members, setMembers] = useState(initialMembers);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"agent" | "owner">("agent");
   const [saving, setSaving] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -112,55 +98,6 @@ export function SettingsView({
       toast.error(t("Erro de conexão."));
     } finally {
       setSaving(null);
-    }
-  }
-
-  async function invite() {
-    if (!inviteEmail.trim()) return;
-    setSaving("invite");
-    try {
-      const res = await fetch("/api/team/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
-      });
-      const json = (await res.json()) as {
-        ok?: boolean;
-        member?: Member;
-        error?: string;
-      };
-      if (!res.ok || !json.member) {
-        toast.error(json.error ?? t("Não foi possível convidar."));
-        return;
-      }
-      setMembers((prev) => [
-        ...prev,
-        { ...json.member!, created_at: new Date().toISOString() },
-      ]);
-      setInviteEmail("");
-      toast.success(`${t("Convite enviado para")} ${inviteEmail.trim()}.`);
-    } catch {
-      toast.error(t("Erro de conexão ao convidar."));
-    } finally {
-      setSaving(null);
-    }
-  }
-
-  async function removeMember(member: Member) {
-    const previous = members;
-    setMembers((prev) => prev.filter((m) => m.id !== member.id));
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.from("profiles").delete().eq("id", member.id);
-      if (error) {
-        setMembers(previous);
-        toast.error(t("Não foi possível remover o membro."));
-      } else {
-        toast.success(t("Membro removido."));
-      }
-    } catch {
-      setMembers(previous);
-      toast.error(t("Erro de conexão."));
     }
   }
 
@@ -343,88 +280,7 @@ export function SettingsView({
         )}
 
         {/* Equipe */}
-        <Card>
-          <div className="flex items-start gap-3">
-            <Users className="mt-0.5 h-5 w-5 text-txt-dim" aria-hidden />
-            <div>
-              <CardTitle>{t("Equipe")}</CardTitle>
-              <CardDescription>
-                {t("Membros respondem pelo inbox. Donos também gerenciam plano, bot e integrações.")}
-              </CardDescription>
-            </div>
-          </div>
-
-          <ul className="mt-4 divide-y divide-line overflow-hidden rounded-lg border border-line">
-            {members.map((member) => (
-              <li
-                key={member.id}
-                className="flex items-center justify-between gap-3 bg-ink px-3 py-2.5"
-              >
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <Avatar name={member.name} size="sm" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {member.name || t("Sem nome")}
-                      {member.id === userId && (
-                        <span className="ml-1.5 text-xs text-txt-dim">({t("você")})</span>
-                      )}
-                    </p>
-                    <p className="text-[11px] text-txt-dim">
-                      {t("entrou")} {timeAgo(member.created_at)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Badge tone={member.role === "agent" ? "neutral" : "lime"}>
-                    {member.role === "owner"
-                      ? t("dono")
-                      : member.role === "admin"
-                        ? "admin"
-                        : t("agente")}
-                  </Badge>
-                  {isOwner && member.id !== userId && member.role !== "admin" && (
-                    <button
-                      onClick={() => void removeMember(member)}
-                      className="focus-ring rounded-md p-1.5 text-txt-dim hover:bg-danger-soft hover:text-danger"
-                      aria-label={`${t("Remover")} ${member.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          {isOwner && (
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Input
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="email@colega.com.br"
-                className="flex-1"
-              />
-              <Select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value === "owner" ? "owner" : "agent")}
-                className="sm:w-32"
-              >
-                <option value="agent">{t("Agente")}</option>
-                <option value="owner">{t("Dono")}</option>
-              </Select>
-              <Button
-                onClick={() => void invite()}
-                loading={saving === "invite"}
-                variant="secondary"
-                disabled={!inviteEmail.trim()}
-              >
-                <UserPlus className="h-4 w-4" aria-hidden />
-                {t("Convidar")}
-              </Button>
-            </div>
-          )}
-        </Card>
+        <TeamCard userId={userId} isOwner={isOwner} members={members} setMembers={setMembers} />
 
         {/* Unidades (roteamento de conversas por local) */}
         {isOwner && <UnitsCard orgId={orgId} members={members} />}

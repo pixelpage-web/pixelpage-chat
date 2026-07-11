@@ -97,23 +97,13 @@ export default async function ShellLayout({
     aiLimit = plan?.ai_messages_limit ?? 0;
   }
 
-  // Permissões granulares para membros da equipe (agent/manager)
-  // owner e admin têm acesso total — não buscar
-  let teamPermissions: TeamMemberPermissionsRow | null = null;
-  const role = session.profile.role;
-  if (role === "agent" || role === "manager") {
-    const adminClient = createAdminClient();
-    const { data: tm } = await adminClient
-      .from("team_members")
-      .select("team_member_permissions(*)")
-      .eq("org_id", orgId)
-      .eq("user_id", session.user.id)
-      .eq("status", "active")
-      .maybeSingle();
-    const permsArr = tm?.team_member_permissions;
-    // supabase-js retorna array quando usando select aninhado 1:1 via FK
-    teamPermissions = (Array.isArray(permsArr) ? permsArr[0] : permsArr) as TeamMemberPermissionsRow | null ?? null;
-  }
+  // Permissões granulares por membro dependiam de `team_members`, sistema
+  // legado sem RLS e sem dado real em produção — /app/equipe e Configurações
+  // agora rodam 100% sobre `profiles` (sem granularidade de permissão por
+  // enquanto). Mantido como `null` (= acesso total) pra não quebrar o filtro
+  // de nav em components/app-shell.tsx, e pra evitar uma query morta em todo
+  // page load.
+  const teamPermissions: TeamMemberPermissionsRow | null = null;
 
   const data: ShellData = {
     userId: session.user.id,
