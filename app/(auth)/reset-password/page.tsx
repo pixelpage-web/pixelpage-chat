@@ -9,7 +9,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
+import { Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   isValidPassword,
   passwordStrength,
@@ -141,9 +142,8 @@ export default function ResetPasswordPage() {
           <Label htmlFor="password" hint={t("mínimo 8 caracteres, 1 número, 1 maiúscula")}>
             {t("Nova senha")}
           </Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             required
             value={password}
@@ -177,9 +177,8 @@ export default function ResetPasswordPage() {
 
         <div>
           <Label htmlFor="confirm-password">{t("Confirmar nova senha")}</Label>
-          <Input
+          <PasswordInput
             id="confirm-password"
-            type="password"
             autoComplete="new-password"
             required
             value={confirmPassword}

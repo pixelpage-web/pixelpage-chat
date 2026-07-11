@@ -109,7 +109,7 @@ export default function AuthLayout({
         </div>
 
         <p className="relative z-10 mt-8 hidden text-xs text-txt-dim lg:block">
-          PixelPage Chat — Tech Provider oficial Meta
+          © 2026 PixelPage Chat. Todos os direitos reservados.
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export default function AuthLayout({
           <div className="w-full max-w-sm">
             {children}
             <p className="mt-8 text-center text-xs text-txt-dim lg:hidden">
-              PixelPage Chat — Tech Provider oficial Meta
+              © 2026 PixelPage Chat. Todos os direitos reservados.
             </p>
           </div>
         </div>

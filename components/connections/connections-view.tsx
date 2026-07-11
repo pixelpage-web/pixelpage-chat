@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -70,6 +70,7 @@ export interface WebhookInfo {
 }
 
 export function ConnectionsView({
+  orgId,
   initialConnections,
   connectionsLimit,
   qrEnabled,
@@ -77,6 +78,7 @@ export function ConnectionsView({
   limitOverride = false,
   webhookInfo = {},
 }: {
+  orgId: string;
   initialConnections: WhatsappConnectionRow[];
   /** null = plano sem limite de conexões */
   connectionsLimit: number | null;
@@ -90,6 +92,48 @@ export function ConnectionsView({
   const router = useRouter();
   const t = useT();
   const [connections, setConnections] = useState(initialConnections);
+
+  // Realtime: status da conexão muda (QR escaneado, sessão caiu etc.) sem
+  // precisar de F5 — a tela ficava presa em "nenhum número conectado" até
+  // reload manual porque não havia nenhum listener aqui (router.refresh() no
+  // onConnected do QrConnectModal atualiza os dados do server component, mas
+  // não resincroniza o useState local, que só lê initialConnections na 1ª
+  // montagem).
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`connections-${orgId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "whatsapp_connections",
+          filter: `org_id=eq.${orgId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as WhatsappConnectionRow;
+            setConnections((prev) =>
+              prev.some((c) => c.id === row.id) ? prev : [...prev, row]
+            );
+          } else if (payload.eventType === "UPDATE") {
+            const row = payload.new as WhatsappConnectionRow;
+            setConnections((prev) =>
+              prev.map((c) => (c.id === row.id ? { ...c, ...row } : c))
+            );
+          } else if (payload.eventType === "DELETE") {
+            const oldRow = payload.old as { id: string };
+            setConnections((prev) => prev.filter((c) => c.id !== oldRow.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [orgId]);
   const [qrOpen, setQrOpen] = useState(false);
   // Modal de aceite obrigatório antes de abrir o QR Code (WhatsApp Web não oficial)
   const [consentOpen, setConsentOpen] = useState(false);
@@ -295,6 +339,9 @@ export function ConnectionsView({
                   <CardDescription>
                     {t("Licenciada pela Meta — verificação oficial, sem risco de ban por volume.")}
                   </CardDescription>
+                  <p className="mt-1 text-[11px] text-txt-dim">
+                    {t("PixelPage Chat é Tech Provider oficial Meta")}
+                  </p>
                 </div>
               </div>
 

@@ -8,6 +8,7 @@ import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { CaptchaWidget } from "@/components/captcha-widget";
 import { GoogleButton } from "../google-button";
 
@@ -80,9 +81,8 @@ function LoginForm() {
         </div>
         <div>
           <Label htmlFor="password">{t("Senha")}</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}

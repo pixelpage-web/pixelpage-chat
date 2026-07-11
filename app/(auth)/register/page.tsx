@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type InputHTMLAttributes } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, XCircle } from "lucide-react";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
@@ -54,6 +54,41 @@ function IconInput({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/** IconInput + botão de mostrar/ocultar senha (ícone de status fica à esquerda do olho). */
+function IconPasswordInput({
+  status,
+  className,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { status: FieldStatus }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative">
+      <Input
+        {...props}
+        type={visible ? "text" : "password"}
+        className={cn("pr-16", className)}
+      />
+      {status !== "idle" && (
+        <div className="pointer-events-none absolute right-9 top-1/2 -translate-y-1/2">
+          {status === "valid" && <CheckCircle2 className="h-4 w-4 text-ok" aria-hidden />}
+          {status === "invalid" && <XCircle className="h-4 w-4 text-danger" aria-hidden />}
+          {status === "pending" && (
+            <Loader2 className="h-4 w-4 animate-spin text-txt-dim" aria-hidden />
+          )}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 text-txt-dim transition-colors hover:text-txt"
+        aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+      >
+        {visible ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+      </button>
     </div>
   );
 }
@@ -394,7 +429,7 @@ export default function RegisterPage() {
                 status={statusOf(touched.name, name, nameValid)}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => setTouched((s) => ({ ...s, name: true }))}
-                placeholder="Maria Silva"
+                placeholder="Ana Souza"
               />
               {touched.name && !nameValid && (
                 <FieldError>{t("Informe seu nome completo.")}</FieldError>
@@ -411,7 +446,7 @@ export default function RegisterPage() {
                 status={statusOf(touched.establishmentName, establishmentName, establishmentNameValid)}
                 onChange={(e) => setEstablishmentName(e.target.value)}
                 onBlur={() => setTouched((s) => ({ ...s, establishmentName: true }))}
-                placeholder="Pizzaria do Zé"
+                placeholder="Mercado Bom Preço"
               />
               {touched.establishmentName && !establishmentNameValid && (
                 <FieldError>{t("Informe o nome do seu estabelecimento.")}</FieldError>
@@ -494,9 +529,8 @@ export default function RegisterPage() {
               <Label htmlFor="password" hint={t("mínimo 8 caracteres, 1 número, 1 maiúscula")}>
                 {t("Senha")}
               </Label>
-              <IconInput
+              <IconPasswordInput
                 id="password"
-                type="password"
                 autoComplete="new-password"
                 required
                 value={password}
@@ -530,9 +564,8 @@ export default function RegisterPage() {
 
             <div>
               <Label htmlFor="confirm-password">{t("Confirmar senha")}</Label>
-              <IconInput
+              <IconPasswordInput
                 id="confirm-password"
-                type="password"
                 autoComplete="new-password"
                 required
                 value={confirmPassword}

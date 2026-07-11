@@ -75,6 +75,7 @@ export default async function ConnectionsPage() {
 
   return (
     <ConnectionsView
+      orgId={orgId}
       initialConnections={connections ?? []}
       connectionsLimit={connectionsLimit}
       hasMetaApi={hasMetaApi}
