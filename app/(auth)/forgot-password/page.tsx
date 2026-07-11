@@ -1,21 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, MailCheck } from "lucide-react";
+import { toast } from "sonner";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { CaptchaWidget } from "@/components/captcha-widget";
 
 export default function ForgotPasswordPage() {
   const t = useT();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const turnstileRef = useRef<TurnstileInstance>(undefined);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!captchaToken) {
+      toast.error(t("Complete a verificação de segurança para continuar."));
+      return;
+    }
     setLoading(true);
     try {
       const supabase = createClient();
@@ -27,12 +36,15 @@ export default function ForgotPasswordPage() {
       // consegue ler, via detectSessionInUrl do próprio supabase-js.
       await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
+        captchaToken,
       });
     } catch {
       // Segue para a tela de confirmação de qualquer forma — ver comentário acima
     } finally {
       setLoading(false);
       setSent(true);
+      turnstileRef.current?.reset();
+      setCaptchaToken("");
     }
   }
 
@@ -82,6 +94,11 @@ export default function ForgotPasswordPage() {
             autoFocus
           />
         </div>
+        <CaptchaWidget
+          ref={turnstileRef}
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken("")}
+        />
         <Button type="submit" className="w-full" loading={loading}>
           <CheckCircle2 className="h-4 w-4" aria-hidden />
           {t("Enviar link de redefinição")}

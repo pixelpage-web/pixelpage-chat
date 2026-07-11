@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { CaptchaWidget } from "@/components/captcha-widget";
 import { GoogleButton } from "../google-button";
 import {
   isValidCPF,
@@ -96,6 +98,8 @@ export default function RegisterPage() {
     message?: string;
   }>({ status: "idle" });
   const cpfTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const turnstileRef = useRef<TurnstileInstance>(undefined);
 
   useEffect(() => {
     return () => {
@@ -185,6 +189,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!captchaToken) {
+      toast.error(t("Complete a verificação de segurança para continuar."));
+      return;
+    }
+
     setLoading(true);
     try {
       const check = await checkRegistration(cpf, phone);
@@ -213,6 +222,7 @@ export default function RegisterPage() {
             ...(trimmedReferralCode ? { referral_code: trimmedReferralCode } : {}),
           },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/onboarding`,
+          captchaToken,
         },
       });
 
@@ -222,6 +232,8 @@ export default function RegisterPage() {
             ? t("Este email já tem uma conta. Faça login.")
             : t("Não foi possível criar a conta. Tente novamente.")
         );
+        turnstileRef.current?.reset();
+        setCaptchaToken("");
         return;
       }
 
@@ -236,6 +248,8 @@ export default function RegisterPage() {
       setResendCooldown(60);
     } catch {
       toast.error(t("Erro de conexão. Verifique sua internet e tente novamente."));
+      turnstileRef.current?.reset();
+      setCaptchaToken("");
     } finally {
       setLoading(false);
     }
@@ -544,6 +558,12 @@ export default function RegisterPage() {
                 placeholder="ab12cd34"
               />
             </div>
+
+            <CaptchaWidget
+              ref={turnstileRef}
+              onVerify={setCaptchaToken}
+              onExpire={() => setCaptchaToken("")}
+            />
 
             <Button type="submit" className="w-full" loading={loading}>
               {t("Criar conta grátis")}

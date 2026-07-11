@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { CaptchaWidget } from "@/components/captcha-widget";
 import { GoogleButton } from "../google-button";
 
 function LoginForm() {
@@ -19,28 +20,39 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const turnstileRef = useRef<TurnstileInstance>(undefined);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!captchaToken) {
+      toast.error(t("Complete a verificação de segurança para continuar."));
+      return;
+    }
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, captchaToken }),
       });
-      if (error) {
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
         toast.error(
-          error.message === "Invalid login credentials"
-            ? t("Email ou senha incorretos.")
+          json.error
+            ? t(json.error)
             : t("Não foi possível entrar. Tente novamente.")
         );
+        turnstileRef.current?.reset();
+        setCaptchaToken("");
         return;
       }
       router.replace(next);
       router.refresh();
     } catch {
       toast.error(t("Erro de conexão. Verifique sua internet e tente novamente."));
+      turnstileRef.current?.reset();
+      setCaptchaToken("");
     } finally {
       setLoading(false);
     }
@@ -84,6 +96,11 @@ function LoginForm() {
             {t("Esqueci minha senha")}
           </Link>
         </div>
+        <CaptchaWidget
+          ref={turnstileRef}
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken("")}
+        />
         <Button type="submit" className="w-full" loading={loading}>
           {t("Entrar")}
         </Button>
