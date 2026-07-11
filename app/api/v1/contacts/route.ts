@@ -8,6 +8,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * POST /api/v1/contacts { phone, name?, tags?, notes? } → cria/atualiza
  */
 
+/**
+ * Escapa os caracteres reservados da sintaxe de filtro do PostgREST (usada
+ * por `.or()`) antes de interpolar valor de usuário — `,` separa condições e
+ * `()` delimita grupos; sem isso, um `search` como "x,phone.eq.55..." poderia
+ * injetar uma condição extra na query.
+ */
+function escapeOrFilterValue(value: string): string {
+  return value.replace(/[\\,()]/g, (c) => `\\${c}`);
+}
+
 export async function GET(request: Request) {
   const guard = await guardApiV1(request);
   if (!guard.ok) return guard.response;
@@ -29,7 +39,10 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false })
     .range(from, to);
   if (tag) query = query.contains("tags", [tag.toLowerCase()]);
-  if (search) query = query.or(`name.ilike.%${search}%,phone.like.%${search}%`);
+  if (search) {
+    const escaped = escapeOrFilterValue(search);
+    query = query.or(`name.ilike.%${escaped}%,phone.like.%${escaped}%`);
+  }
 
   const { data, count, error } = await query;
   if (error) {

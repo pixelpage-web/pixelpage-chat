@@ -122,7 +122,14 @@ export async function POST(request: Request) {
   const event = typeof body.event === "string" ? body.event : "";
   const data = asObj(body.data);
 
-  console.log(`[cakto-webhook] evento=${event} data=${JSON.stringify(data)}`);
+  // Log só com campos não-sensíveis — nunca o payload inteiro (data.customer
+  // traz email/nome do cliente).
+  const logProductId = asObj(data.product).id;
+  const logSubId = asObj(data.subscription).id;
+  const logStatus = typeof data.status === "string" ? data.status : "n/d";
+  console.log(
+    `[cakto-webhook] evento=${event} product_id=${typeof logProductId === "string" ? logProductId : "n/d"} subscription_id=${typeof logSubId === "string" ? logSubId : "n/d"} status=${logStatus}`
+  );
 
   // purchase_approved é redundante com subscription_created — só loga
   if (event === "purchase_approved") {
