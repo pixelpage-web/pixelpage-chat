@@ -32,14 +32,16 @@ export default async function ConnectionsPage() {
       orgHasMetaApi(orgId),
     ]);
 
-  let connectionsLimit = 1;
+  let connectionsLimit: number | null = 1;
   if (subscription?.plan_id) {
     const { data: plan } = await supabase
       .from("plans")
       .select("connections_limit")
       .eq("id", subscription.plan_id)
       .maybeSingle();
-    connectionsLimit = plan?.connections_limit ?? 1;
+    // null em connections_limit = plano sem limite; só cai pro default 1 se o
+    // plano em si não foi encontrado (não confundir "sem limite" com "sem plano").
+    connectionsLimit = plan ? plan.connections_limit : 1;
   }
 
   const evolutionCfg = await getEvolutionConfig();

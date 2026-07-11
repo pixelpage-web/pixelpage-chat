@@ -78,7 +78,8 @@ export function ConnectionsView({
   webhookInfo = {},
 }: {
   initialConnections: WhatsappConnectionRow[];
-  connectionsLimit: number;
+  /** null = plano sem limite de conexões */
+  connectionsLimit: number | null;
   qrEnabled: boolean;
   hasMetaApi: boolean;
   /** Super Admin: ignora o limite de conexões do plano (exibe badge) */
@@ -188,7 +189,7 @@ export function ConnectionsView({
     }
   }
 
-  const overLimit = connections.length >= connectionsLimit;
+  const overLimit = connectionsLimit !== null && connections.length >= connectionsLimit;
   const canAddMore = !overLimit || limitOverride;
 
   return (
@@ -201,7 +202,8 @@ export function ConnectionsView({
               {limitOverride && overLimit && <FeatureBadge requiredPlan={t("superior")} />}
             </div>
             <p className="mt-0.5 text-sm text-txt-mut">
-              {connections.length} {t("de")} {connectionsLimit}{" "}
+              {connections.length} {t("de")}{" "}
+              {connectionsLimit === null ? t("ilimitado") : connectionsLimit}{" "}
               {connectionsLimit === 1 ? t("conexão") : t("conexões")} {t("do seu plano")}
             </p>
           </div>

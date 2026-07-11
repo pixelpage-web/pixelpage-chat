@@ -304,7 +304,7 @@ export function BillingView({
             <UsageBar
               label="Conexões WhatsApp"
               used={connectionsCount}
-              limit={currentPlan?.connections_limit ?? 1}
+              limit={currentPlan?.connections_limit ?? null}
             />
             <UsageBar
               label="Membros da equipe"
