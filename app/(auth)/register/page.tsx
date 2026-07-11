@@ -429,7 +429,6 @@ export default function RegisterPage() {
                 status={statusOf(touched.name, name, nameValid)}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => setTouched((s) => ({ ...s, name: true }))}
-                placeholder="Ana Souza"
               />
               {touched.name && !nameValid && (
                 <FieldError>{t("Informe seu nome completo.")}</FieldError>
@@ -446,7 +445,6 @@ export default function RegisterPage() {
                 status={statusOf(touched.establishmentName, establishmentName, establishmentNameValid)}
                 onChange={(e) => setEstablishmentName(e.target.value)}
                 onBlur={() => setTouched((s) => ({ ...s, establishmentName: true }))}
-                placeholder="Mercado Bom Preço"
               />
               {touched.establishmentName && !establishmentNameValid && (
                 <FieldError>{t("Informe o nome do seu estabelecimento.")}</FieldError>
@@ -464,7 +462,6 @@ export default function RegisterPage() {
                 status={statusOf(touched.email, email, emailValid)}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => setTouched((s) => ({ ...s, email: true }))}
-                placeholder="voce@empresa.com.br"
               />
               {touched.email && !emailValid && (
                 <FieldError>{t("Informe um email válido.")}</FieldError>
@@ -485,7 +482,6 @@ export default function RegisterPage() {
                   setTouched((s) => ({ ...s, phone: true }));
                   scheduleCpfAvailabilityCheck();
                 }}
-                placeholder="+55 (11) 9 1234-5678"
               />
               {touched.phone && phone.replace(/\D/g, "").replace(/^55/, "").length > 0 && !phoneValid && (
                 <FieldError>{t("Telefone inválido.")}</FieldError>
@@ -510,7 +506,6 @@ export default function RegisterPage() {
                   setTouched((s) => ({ ...s, cpf: true }));
                   scheduleCpfAvailabilityCheck();
                 }}
-                placeholder="000.000.000-00"
               />
               {touched.cpf && cpf.length > 0 && !cpfFormatValid && (
                 <FieldError>{t("CPF inválido.")}</FieldError>
@@ -588,7 +583,6 @@ export default function RegisterPage() {
                 autoComplete="off"
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value)}
-                placeholder="ab12cd34"
               />
             </div>
 

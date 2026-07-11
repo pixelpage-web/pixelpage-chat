@@ -6,11 +6,18 @@ import { CheckCircle2, Loader2, QrCode, RefreshCw, Smartphone } from "lucide-rea
 import { useT } from "@/lib/i18n";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { Input, Label } from "@/components/ui/input";
+
+const LABEL_MAX_LENGTH = 30;
 
 /**
  * Modal de conexão via QR Code (Evolution API).
- * Cria/reativa a instância e faz polling do estado a cada 2s,
- * exibindo o QR ao vivo até a leitura pelo celular.
+ * Numa conexão nova, pede um nome de identificação antes de tudo (ex:
+ * "Vendas", "Suporte") — essencial pra distinguir conexões quando a org
+ * tem mais de um número. Numa reconexão (existingConnectionId), pula essa
+ * etapa: a conexão já tem nome.
+ * Depois disso, cria/reativa a instância e faz polling do estado a cada
+ * 2s, exibindo o QR ao vivo até a leitura pelo celular.
  */
 export function QrConnectModal({
   open,
@@ -27,9 +34,10 @@ export function QrConnectModal({
   const t = useT();
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [qr, setQr] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"starting" | "waiting" | "connected" | "error">(
-    "starting"
-  );
+  const [label, setLabel] = useState("");
+  const [phase, setPhase] = useState<
+    "naming" | "starting" | "waiting" | "connected" | "error"
+  >(existingConnectionId ? "starting" : "naming");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -75,59 +83,114 @@ export function QrConnectModal({
     [onConnected, stopPolling, t]
   );
 
+  /** Cria a instância (conexão nova, com o nome informado) ou reativa uma existente. */
+  const startSession = useCallback(
+    (connName?: string) => {
+      setPhase("starting");
+      let cancelled = false;
+
+      void (async () => {
+        try {
+          let connId = existingConnectionId ?? null;
+          const res = await fetch("/api/whatsapp/qr", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              connId
+                ? { action: "reconnect", connection_id: connId }
+                : { action: "create", label: connName }
+            ),
+          });
+          const json = (await res.json()) as { connection_id?: string; error?: string };
+          if (!res.ok) {
+            if (!cancelled) {
+              setPhase("error");
+              setErrorMsg(json.error ?? t("Erro de conexão."));
+            }
+            return;
+          }
+          connId = connId ?? json.connection_id ?? null;
+          if (!connId || cancelled) return;
+          setConnectionId(connId);
+          void poll(connId);
+          timerRef.current = setInterval(() => void poll(connId as string), 2000);
+        } catch {
+          if (!cancelled) {
+            setPhase("error");
+            setErrorMsg(t("Erro de conexão."));
+          }
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    },
+    [existingConnectionId, poll, t]
+  );
+
   useEffect(() => {
     if (!open) {
       stopPolling();
       setConnectionId(null);
       setQr(null);
-      setPhase("starting");
+      setLabel("");
+      setPhase(existingConnectionId ? "starting" : "naming");
       setErrorMsg(null);
       setPhone(null);
       return;
     }
 
-    let cancelled = false;
-    void (async () => {
-      try {
-        let connId = existingConnectionId ?? null;
-        const res = await fetch("/api/whatsapp/qr", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            connId ? { action: "reconnect", connection_id: connId } : { action: "create" }
-          ),
-        });
-        const json = (await res.json()) as { connection_id?: string; error?: string };
-        if (!res.ok) {
-          if (!cancelled) {
-            setPhase("error");
-            setErrorMsg(json.error ?? t("Erro de conexão."));
-          }
-          return;
-        }
-        connId = connId ?? json.connection_id ?? null;
-        if (!connId || cancelled) return;
-        setConnectionId(connId);
-        void poll(connId);
-        timerRef.current = setInterval(() => void poll(connId as string), 2000);
-      } catch {
-        if (!cancelled) {
-          setPhase("error");
-          setErrorMsg(t("Erro de conexão."));
-        }
-      }
-    })();
+    // Reconexão: sem nome pra pedir, começa direto. Conexão nova: fica em
+    // "naming" até o usuário confirmar (ver handleConfirmName).
+    if (existingConnectionId) {
+      const cleanup = startSession();
+      return () => {
+        cleanup();
+        stopPolling();
+      };
+    }
 
-    return () => {
-      cancelled = true;
-      stopPolling();
-    };
+    return () => stopPolling();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, existingConnectionId]);
+
+  function handleConfirmName(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    startSession(trimmed);
+  }
 
   return (
     <Modal open={open} onClose={onClose} title={t("Conectar via QR Code")}>
       <div className="flex flex-col items-center text-center">
+        {phase === "naming" && (
+          <form onSubmit={handleConfirmName} className="w-full py-2 text-left">
+            <p className="text-center text-sm leading-relaxed text-txt-mut">
+              {t("Dê um nome pra essa conexão — ajuda a identificar qual número é qual quando você tiver mais de um.")}
+            </p>
+            <div className="mt-4">
+              <Label htmlFor="qr-connection-name">{t("Nome desta conexão")}</Label>
+              <Input
+                id="qr-connection-name"
+                required
+                autoFocus
+                maxLength={LABEL_MAX_LENGTH}
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder={t("Ex: Vendas, Suporte, Atendimento...")}
+              />
+              <p className="mt-1 text-right text-[11px] text-txt-dim">
+                {label.length}/{LABEL_MAX_LENGTH}
+              </p>
+            </div>
+            <Button type="submit" className="mt-1 w-full" disabled={!label.trim()}>
+              {t("Continuar")}
+            </Button>
+          </form>
+        )}
+
         {phase === "starting" && (
           <div className="flex flex-col items-center gap-3 py-10">
             <Loader2 className="h-8 w-8 animate-spin text-lime" aria-hidden />
@@ -178,9 +241,9 @@ export function QrConnectModal({
               variant="secondary"
               size="sm"
               onClick={() => {
-                setPhase("starting");
                 setErrorMsg(null);
                 if (connectionId) {
+                  setPhase("starting");
                   void fetch("/api/whatsapp/qr", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

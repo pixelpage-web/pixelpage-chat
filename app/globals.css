@@ -3,16 +3,40 @@
 @tailwind utilities;
 
 @layer base {
-  html {
+  /*
+   * Variáveis do redesign (passo 1) — hoje só a sidebar (app-shell.tsx)
+   * usa isso de fato, via os tokens "theme-*" do tailwind.config.ts. O
+   * resto do app ainda roda nos tokens antigos (ink/surface/txt), fixos
+   * em dark, que continuam abaixo sem mudança.
+   */
+  :root {
+    --bg: #fffafa;
+    --surface: #f5f0ef;
+    --text: #0d0101;
+    --text-muted: #6b6360;
+    --border: #e8e0de;
+    --brand: #ff5d00;
+    color-scheme: light;
+  }
+
+  .dark {
+    --bg: #0d0101;
+    --surface: #1a0a00;
+    --text: #fffafa;
+    --text-muted: #a09490;
+    --border: #2a1500;
+    --brand: #ff5d00;
     color-scheme: dark;
   }
 
   body {
-    @apply bg-ink text-txt antialiased;
+    background-color: var(--bg);
+    color: var(--text);
+    @apply antialiased;
   }
 
   ::selection {
-    @apply bg-lime text-white;
+    @apply bg-brand text-white;
   }
 
   /* Scrollbar discreta, estilo ferramenta profissional */
@@ -49,9 +73,10 @@
     background-size: 400px 100%;
   }
 
-  /* Foco visível consistente */
+  /* Foco visível consistente — cor de marca (brand), não mais o lime antigo */
   .focus-ring {
-    @apply outline-none focus-visible:ring-2 focus-visible:ring-lime/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2;
+    --tw-ring-offset-color: var(--bg);
   }
 }
 

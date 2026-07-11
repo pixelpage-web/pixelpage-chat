@@ -2,12 +2,17 @@ import type { Config } from "tailwindcss";
 
 /**
  * Design tokens da PixelPage Chat.
- * Identidade: fundo escuro profundo, superfícies elevadas neutras,
- * acento verde elétrico (#5DD62C) em CTAs/estados ativos.
- * Obs.: o token se chama "lime" (nome técnico interno) — os valores
- * foram atualizados para o verde elétrico da nova identidade visual.
  *
- * Tokens "panel" e "forest" são exclusivos do painel admin (/admin).
+ * MIGRAÇÃO EM ANDAMENTO (redesign, passo 1/N): a identidade está
+ * mudando de verde elétrico (#5DD62C, token "lime") para laranja
+ * (#FF5D00, token "brand"). Os tokens antigos (ink/surface/line/lime/txt)
+ * continuam ativos e em uso na maioria dos componentes — eles só serão
+ * migrados/removidos nos próximos passos. Os tokens novos ("brand",
+ * "dark-*"/"light-*", "theme-*") já existem e hoje só a sidebar
+ * (components/app-shell.tsx) os usa de fato.
+ *
+ * Tokens "panel" e "forest" são exclusivos do painel admin (/admin) —
+ * fora do escopo deste redesign por ora.
  */
 const config: Config = {
   content: [
@@ -80,10 +85,32 @@ const config: Config = {
           soft: "rgba(93, 214, 44, 0.10)",
           glow: "rgba(93, 214, 44, 0.22)",
         },
+
+        // ── Nova identidade (redesign, passo 1) ────────────────────────
+        // Valores fixos da paleta — usados nas próprias variáveis CSS
+        // abaixo e em qualquer lugar que precise do tom exato independente
+        // do tema ativo.
+        brand: "#FF5D00",
+        "dark-bg": "#0D0101",
+        "dark-surface": "#1a0a00",
+        "light-bg": "#FFFAFA",
+        "light-surface": "#F5F0EF",
+        // Tokens que respondem ao toggle claro/escuro (var(--x) definida em
+        // globals.css) — usar estes (não os "dark-"/"light-" fixos acima)
+        // em qualquer componente que precise se adaptar ao tema.
+        "theme-bg": "var(--bg)",
+        "theme-surface": "var(--surface)",
+        "theme-text": "var(--text)",
+        "theme-text-muted": "var(--text-muted)",
+        "theme-border": "var(--border)",
       },
       fontFamily: {
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        // Onest é a única fonte do projeto — display e sans apontam pra
+        // mesma variável (ver app/layout.tsx). Mantidos os dois nomes de
+        // classe (font-display/font-sans) só pra não exigir troca de
+        // className em nenhum componente existente.
+        display: ["var(--font-onest)", "system-ui", "sans-serif"],
+        sans: ["var(--font-onest)", "system-ui", "sans-serif"],
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       borderRadius: {

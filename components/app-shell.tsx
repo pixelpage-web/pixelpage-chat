@@ -33,6 +33,7 @@ import { SystemNotifications } from "@/components/system-notifications";
 import { SupportButton } from "@/components/support-button";
 import { InboxNotifications } from "@/components/inbox-notifications";
 import { GlobalSearch } from "@/components/global-search";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NAV_PERMISSION_MAP } from "@/lib/permissions";
 import type { Role, SubscriptionStatus, SystemNotificationRow, TeamMemberPermissionsRow } from "@/types/database";
 
@@ -361,11 +362,17 @@ export function AppShell({
       <TrialBanner data={data} />
       <StatusBanners data={data} />
       <div className="flex min-h-0 flex-1">
-        {/* Sidebar com ícones + labels — desktop */}
-        <aside className="hidden w-52 shrink-0 flex-col border-r border-line bg-surface py-4 md:flex">
-          <Link href="/app/inbox" aria-label={t("Início")} className="mb-5 px-4">
-            <Logo />
-          </Link>
+        {/* Sidebar com ícones + labels — desktop. Migrada pros tokens novos
+            (theme-x e brand) como parte do passo 1 do redesign — é a única
+            parte do app que já responde ao ThemeToggle; o resto continua
+            nos tokens antigos (ink/surface/lime) até os próximos passos. */}
+        <aside className="hidden w-52 shrink-0 flex-col border-r border-theme-border bg-theme-surface py-4 md:flex">
+          <div className="mb-5 flex items-center justify-between px-4">
+            <Link href="/app/inbox" aria-label={t("Início")}>
+              <Logo />
+            </Link>
+            <ThemeToggle />
+          </div>
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
             {visibleNavItems.map((item) => {
               const active = pathname.startsWith(item.href);
@@ -377,14 +384,14 @@ export function AppShell({
                   className={cn(
                     "focus-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                     active
-                      ? "bg-lime-soft font-medium text-lime"
-                      : "text-txt-mut hover:bg-surface-hover hover:text-txt"
+                      ? "bg-brand/10 font-medium text-brand"
+                      : "text-theme-text-muted hover:bg-theme-text/5 hover:text-theme-text"
                   )}
                 >
                   <item.icon className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="flex-1">{t(item.label)}</span>
                   {isInbox && unreadCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-lime px-1.5 text-[10px] font-bold text-white">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
@@ -396,14 +403,14 @@ export function AppShell({
             {/* Notificações in-app */}
             {data.orgId && (
               <div className="flex items-center justify-between rounded-lg px-3 py-2">
-                <span className="text-xs text-txt-dim">{t("Notificações")}</span>
+                <span className="text-xs text-theme-text-muted">{t("Notificações")}</span>
                 <InboxNotifications userId={data.userId} orgId={data.orgId} />
               </div>
             )}
             {(data.role === "admin" || data.role === "superadmin") && (
               <Link
                 href="/admin"
-                className="focus-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber transition-colors hover:bg-surface-hover"
+                className="focus-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber transition-colors hover:bg-theme-text/5"
               >
                 <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
                 {t("Painel admin")}
@@ -412,7 +419,7 @@ export function AppShell({
             <button
               onClick={handleLogout}
               title={data.userEmail}
-              className="focus-ring flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-txt-dim transition-colors hover:bg-surface-hover hover:text-danger"
+              className="focus-ring flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-theme-text-muted transition-colors hover:bg-theme-text/5 hover:text-danger"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               {t("Sair")}

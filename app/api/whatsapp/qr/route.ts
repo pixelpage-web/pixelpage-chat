@@ -16,11 +16,17 @@ import {
 
 /**
  * Conexão WhatsApp via QR Code (Evolution API).
- * POST { action: 'create' }                         → cria instância + conexão
+ * POST { action: 'create', label? }                 → cria instância + conexão
  * POST { action: 'reconnect', connection_id }       → reativa sessão caída
  * POST { action: 'logout'|'delete', connection_id } → desconecta / exclui
  * GET  ?connection_id=                              → estado + QR ao vivo
  */
+
+// Só usado quando o cliente não manda um nome (não deveria acontecer via UI,
+// que exige preenchimento — existe como rede de segurança). Também serve de
+// marcador: se o label ainda for exatamente este no momento da conexão, é
+// porque a conexão nunca teve nome próprio (legado, antes desta feature).
+const DEFAULT_QR_LABEL = "WhatsApp (QR Code)";
 
 function webhookUrl(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -45,9 +51,13 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { action?: string; connection_id?: string };
+  let body: { action?: string; connection_id?: string; label?: string };
   try {
-    body = (await request.json()) as { action?: string; connection_id?: string };
+    body = (await request.json()) as {
+      action?: string;
+      connection_id?: string;
+      label?: string;
+    };
   } catch {
     return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
   }
@@ -80,6 +90,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const label = (body.label ?? "").trim().slice(0, 30) || DEFAULT_QR_LABEL;
+
     const instanceName = `zari_${orgId.slice(0, 8)}_${randomBytes(3).toString("hex")}`;
     const created = await createEvolutionInstance(instanceName, webhookUrl());
     if (!created.ok) {
@@ -93,7 +105,7 @@ export async function POST(request: Request) {
       .from("whatsapp_connections")
       .insert({
         org_id: orgId,
-        label: "WhatsApp (QR Code)",
+        label,
         connection_type: "qr_code",
         evolution_instance_id: instanceName,
         evolution_instance_token: created.token,
@@ -216,13 +228,21 @@ export async function GET(request: Request) {
   if (state === "open" && connection.status !== "connected") {
     const owner = await fetchEvolutionOwner(connection.evolution_instance_id);
     const admin = createAdminClient();
+    // O nome que o usuário deu na etapa de nomeação (label) prevalece sempre.
+    // Só cai pro nome de perfil do WhatsApp se a conexão nunca teve nome
+    // próprio (label ainda no valor genérico — conexões criadas antes desta
+    // feature existir).
+    const label =
+      connection.label === DEFAULT_QR_LABEL
+        ? (owner.profileName ?? connection.label)
+        : connection.label;
     await admin
       .from("whatsapp_connections")
       .update({
         status: "connected",
         connected_at: new Date().toISOString(),
         phone_display: owner.phone,
-        label: owner.profileName ?? connection.label,
+        label,
       })
       .eq("id", connection.id);
     return NextResponse.json({
