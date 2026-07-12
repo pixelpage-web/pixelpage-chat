@@ -9,25 +9,25 @@
    * resto do app ainda roda nos tokens antigos (ink/surface/txt), fixos
    * em dark, que continuam abaixo sem mudança.
    *
-   * MUDANÇA: marca passou de laranja (#FF5D00) pra verde-neon (#00FF41) —
-   * direção confirmada, laranja abandonado. .dark reflete a paleta nova
-   * (referência é um design 100% dark); :root (modo claro) manteve a
-   * estrutura anterior, só a cor de marca e os tokens novos acompanharam.
+   * Projeto não tem modo claro tradicional (fundo branco) — :root é um
+   * segundo tema escuro ("escuro suavizado", estilo GitHub dark: azul-
+   * acinzentado + verde #39D353), não um modo light de verdade. O toggle
+   * alterna entre "preto profundo" (.dark) e este.
    */
   :root {
-    --bg: #fffafa;
-    --surface: #f5f0ef;
-    --surface-2: #ececea;
-    --border: #e8e0de;
-    --border-muted: #ddd3d1;
-    --text: #0d0101;
-    --text-muted: #6b6360;
-    --text-subtle: #9a908d;
-    --brand: #00c853;
-    --brand-dim: rgba(0, 200, 83, 0.12);
-    --brand-border: rgba(0, 200, 83, 0.25);
-    --brand-glow: rgba(0, 200, 83, 0.2);
-    color-scheme: light;
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-2: #1c2128;
+    --border: #21262d;
+    --border-muted: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-subtle: #484f58;
+    --brand: #39d353;
+    --brand-dim: rgba(57, 211, 83, 0.12);
+    --brand-border: rgba(57, 211, 83, 0.25);
+    --brand-glow: rgba(57, 211, 83, 0.2);
+    color-scheme: dark;
   }
 
   .dark {
