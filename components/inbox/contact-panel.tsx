@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   Ban,
   Calendar,
   Check,
@@ -15,6 +16,7 @@ import {
   Plus,
   RefreshCw,
   Tag,
+  Trash2,
   User,
   X,
 } from "lucide-react";
@@ -24,6 +26,7 @@ import { cn, formatFullDate, formatPhone, timeAgo } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
 import { ContactNotes } from "./contact-notes";
 import type { ContactRow, ConversationRow, TeamMember } from "./types";
 
@@ -60,6 +63,7 @@ export function ContactPanel({
   onUpdateContact,
   onToggleBlock,
   onExportHistory,
+  onDeleteContact,
 }: {
   contact: ContactRow;
   conversation: ConversationRow;
@@ -70,12 +74,14 @@ export function ContactPanel({
   onUpdateContact: (patch: Partial<ContactRow>) => void;
   onToggleBlock: () => void;
   onExportHistory: () => void;
+  onDeleteContact: () => void;
 }) {
   const t = useT();
   const supabase = useMemo(() => createClient(), []);
 
   const [tab, setTab] = useState<TabId>("info");
   const [newTag, setNewTag] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Edição inline — nome
   const [editingName, setEditingName] = useState(false);
@@ -405,6 +411,15 @@ export function ContactPanel({
               {t("Exportar")}
             </Button>
           </div>
+          <Button
+            size="sm"
+            variant="danger"
+            className="mt-2 w-full"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5" aria-hidden />
+            {t("Excluir contato")}
+          </Button>
           {contact.blocked && (
             <p className="mt-2 rounded-md bg-danger-soft px-2.5 py-1.5 text-[11px] text-danger">
               {t("Contato bloqueado — novas mensagens dele são ignoradas.")}
@@ -654,6 +669,41 @@ export function ContactPanel({
           )}
         </div>
       )}
+
+      {/* Confirmação de exclusão — irreversível */}
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title={t("Excluir contato")}
+      >
+        <div className="flex items-start gap-2.5">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-danger" aria-hidden />
+          <p className="text-sm leading-relaxed text-txt-mut">
+            {t(
+              "Isso excluirá o contato e todas as conversas e mensagens associadas. Esta ação não pode ser desfeita."
+            )}
+          </p>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={() => setDeleteOpen(false)}
+          >
+            {t("Cancelar")}
+          </Button>
+          <Button
+            variant="danger"
+            className="flex-1"
+            onClick={() => {
+              setDeleteOpen(false);
+              onDeleteContact();
+            }}
+          >
+            {t("Excluir permanentemente")}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

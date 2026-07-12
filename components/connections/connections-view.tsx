@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Inbox,
+  Loader2,
   Lock,
   QrCode,
   RefreshCw,
@@ -30,6 +31,9 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FeatureBadge } from "@/components/ui/feature-badge";
+import { Modal } from "@/components/ui/modal";
+import { Ticker } from "@/components/ui/Ticker";
+import { IconBadge } from "@/components/ui/IconBadge";
 import { QrConnectModal } from "@/components/whatsapp/qr-connect-modal";
 import { QrConsentModal } from "./qr-consent-modal";
 import { CsatSettingsModal } from "./csat-settings-modal";
@@ -139,6 +143,7 @@ export function ConnectionsView({
   const [consentOpen, setConsentOpen] = useState(false);
   const [reconnectId, setReconnectId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [logoutConfirmId, setLogoutConfirmId] = useState<string | null>(null);
   const [csatConnectionId, setCsatConnectionId] = useState<string | null>(null);
   const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
 
@@ -259,14 +264,12 @@ export function ConnectionsView({
             {/* QR Code (Evolution API) */}
             <Card
               className={cn(
-                "group relative transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop",
+                "group relative",
                 !qrEnabled && "opacity-70"
               )}
             >
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-lime-soft transition-transform duration-200 group-hover:scale-105">
-                  <QrCode className="h-5 w-5 text-lime" aria-hidden />
-                </div>
+                <IconBadge icon={QrCode} />
                 <div>
                   <CardTitle>QR Code</CardTitle>
                   <CardDescription>
@@ -314,7 +317,7 @@ export function ConnectionsView({
                 sem plano Pro, CTA para conectar, ou resumo quando já ativo. */}
             <Card
               className={cn(
-                "relative overflow-hidden border-lime/20 transition-all duration-200 hover:-translate-y-0.5 hover:border-lime/40 hover:shadow-glow",
+                "relative overflow-hidden",
                 !hasMetaApi && "opacity-90"
               )}
             >
@@ -325,9 +328,7 @@ export function ConnectionsView({
               />
 
               <div className="relative flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ok-soft">
-                  <ShieldCheck className="h-5 w-5 text-ok" aria-hidden />
-                </div>
+                <IconBadge icon={ShieldCheck} />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle>{t("API Oficial Meta")}</CardTitle>
@@ -438,6 +439,11 @@ export function ConnectionsView({
           </Card>
         )}
 
+        {/* Divisor (item B) */}
+        <div className="-mx-4 sm:-mx-6">
+          <Ticker />
+        </div>
+
         {/* Lista de conexões */}
         {connections.length === 0 ? (
           <EmptyState
@@ -453,9 +459,7 @@ export function ConnectionsView({
                 <Card key={conn.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-ok-soft">
-                        <Smartphone className="h-5 w-5 text-ok" aria-hidden />
-                      </div>
+                      <IconBadge icon={Smartphone} size="sm" />
                       <div>
                         <p className="text-sm font-semibold">{conn.label}</p>
                         <p className="text-xs text-txt-dim">
@@ -498,7 +502,7 @@ export function ConnectionsView({
                           size="sm"
                           variant="ghost"
                           loading={busyId === conn.id}
-                          onClick={() => void qrAction(conn, "logout")}
+                          onClick={() => setLogoutConfirmId(conn.id)}
                         >
                           {t("Desconectar sessão")}
                         </Button>
@@ -646,6 +650,51 @@ export function ConnectionsView({
           router.refresh();
         }}
       />
+
+      {/* Confirmação antes de desconectar — as conversas somem do Inbox
+          (arquivadas, não excluídas) e voltam sozinhas se reconectar */}
+      <Modal
+        open={!!logoutConfirmId}
+        onClose={() => setLogoutConfirmId(null)}
+        title={t("Desconectar sessão")}
+      >
+        <div className="flex items-start gap-2.5">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber" aria-hidden />
+          <p className="text-sm leading-relaxed text-txt-mut">
+            {t(
+              "Ao desconectar, todas as mensagens desta conexão serão removidas do Inbox. Os contatos serão mantidos. Deseja continuar?"
+            )}
+          </p>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={() => setLogoutConfirmId(null)}
+          >
+            {t("Cancelar")}
+          </Button>
+          {/* Botão custom (não usa o <Button> compartilhado) — os variants
+              dele já trazem bg-lime/border-lime, que colidiriam com o
+              laranja pedido aqui já que cn() é só clsx, sem merge de
+              utilities conflitantes. */}
+          <button
+            type="button"
+            disabled={busyId === logoutConfirmId}
+            onClick={() => {
+              const connection = connections.find((c) => c.id === logoutConfirmId);
+              setLogoutConfirmId(null);
+              if (connection) void qrAction(connection, "logout");
+            }}
+            className="focus-ring inline-flex h-10 flex-1 select-none items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {busyId === logoutConfirmId && (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            )}
+            {t("Desconectar e limpar")}
+          </button>
+        </div>
+      </Modal>
 
       {/* Configuração de CSAT por conexão */}
       {csatConnectionId &&

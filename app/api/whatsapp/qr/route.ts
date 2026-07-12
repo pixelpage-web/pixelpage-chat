@@ -166,6 +166,15 @@ export async function POST(request: Request) {
       .from("whatsapp_connections")
       .update({ status: "disconnected" })
       .eq("id", connection.id);
+    // Arquiva (não exclui) as conversas dessa conexão — somem do Inbox na
+    // hora via realtime, mas o histórico fica intacto e volta sozinho se
+    // reconectar (ver GET abaixo). Sessão cai por motivo banal e temporário
+    // com frequência (celular sem sinal, bateria etc.) — apagar de verdade
+    // aqui destruiria histórico de conversa por causa de uma queda comum.
+    await supabase
+      .from("conversations")
+      .update({ archived: true })
+      .eq("connection_id", connection.id);
     return NextResponse.json({ ok: true });
   }
 
@@ -245,6 +254,12 @@ export async function GET(request: Request) {
         label,
       })
       .eq("id", connection.id);
+    // Desarquiva as conversas que sumiram do Inbox no último logout dessa
+    // mesma conexão — reconectar retoma o histórico de onde parou.
+    await admin
+      .from("conversations")
+      .update({ archived: false })
+      .eq("connection_id", connection.id);
     return NextResponse.json({
       status: "connected",
       qr: null,

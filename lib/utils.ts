@@ -82,3 +82,22 @@ export function formatCompact(n: number): string {
     maximumFractionDigits: 1,
   }).format(n);
 }
+
+/**
+ * Cor determinística por ID de conexão WhatsApp — mesmo ID sempre gera o
+ * mesmo hue, sem precisar guardar cor nenhuma no banco. Usado pra
+ * distinguir visualmente conexões no inbox quando a org tem mais de um
+ * número (badge na lista, "via X" no header/composer).
+ */
+export function connectionHue(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
+}
+
+/** hsla() com a mesma cor determinística — background translúcido (badge) ou sólido (texto/dot). */
+export function connectionColor(id: string, alpha = 1): string {
+  return `hsla(${connectionHue(id)}, 70%, 55%, ${alpha})`;
+}

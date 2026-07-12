@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { KeyboardShortcutsButton } from "./keyboard-shortcuts";
 import { useT } from "@/lib/i18n";
-import { cn, formatConversationTime, formatPhone } from "@/lib/utils";
+import { cn, connectionColor, formatConversationTime, formatPhone } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { ConversationSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -108,6 +108,14 @@ export function ConversationList({
 }) {
   const t = useT();
   const [search, setSearch] = useState("");
+
+  // Só faz sentido identificar a conexão no card quando há mais de uma —
+  // com um único número, "via X" em toda conversa é ruído sem função.
+  const showConnectionBadge = connections.length > 1;
+  const connectionsById = useMemo(
+    () => Object.fromEntries(connections.map((c) => [c.id, c])),
+    [connections]
+  );
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -306,6 +314,23 @@ export function ConversationList({
                           {formatConversationTime(conv.last_message_at)}
                         </span>
                       </div>
+                      {showConnectionBadge && connectionsById[conv.connection_id ?? ""] && (
+                        <span
+                          className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] leading-none"
+                          style={{
+                            backgroundColor: connectionColor(conv.connection_id!, 0.14),
+                          }}
+                        >
+                          <span
+                            className="h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: connectionColor(conv.connection_id!) }}
+                            aria-hidden
+                          />
+                          <span className="truncate text-txt-mut">
+                            {connectionsById[conv.connection_id ?? ""].label}
+                          </span>
+                        </span>
+                      )}
                       <div className="mt-0.5 flex items-center justify-between gap-2">
                         <span className="flex min-w-0 items-center gap-1.5 text-xs text-txt-mut">
                           {preview && previewPrefix(preview)}

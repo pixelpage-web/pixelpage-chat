@@ -22,6 +22,7 @@ import {
   UserCog,
   Users,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { differenceInCalendarDays } from "date-fns";
@@ -116,23 +117,67 @@ function ImpersonationBanner({ orgName }: { orgName: string }) {
   );
 }
 
-const navItems = [
-  { href: "/app/inbox", label: "Inbox", icon: Inbox },
-  { href: "/app/contacts", label: "Contatos", icon: Users },
-  { href: "/app/campaigns", label: "Campanhas", icon: Megaphone },
-  { href: "/app/agent", label: "Agente IA", icon: Bot },
-  { href: "/app/flows", label: "Fluxos", icon: GitBranch },
-  { href: "/app/automations", label: "Automações", icon: Zap },
-  { href: "/app/connections", label: "Conexões", icon: Smartphone },
-  { href: "/app/integrations", label: "Integrações", icon: Plug2 },
-  { href: "/app/reports", label: "Relatórios", icon: BarChart3 },
-  { href: "/app/billing", label: "Assinatura", icon: CreditCard },
-  { href: "/app/indicacoes", label: "Indicações", icon: Gift },
-  { href: "/app/docs", label: "Documentação", icon: BookOpen },
-  { href: "/app/help", label: "Central de Ajuda", icon: LifeBuoy },
-  { href: "/app/equipe", label: "Equipe", icon: UserCog, ownerOnly: true },
-  { href: "/app/settings", label: "Configurações", icon: Settings },
-] as const;
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  ownerOnly?: boolean;
+}
+interface NavGroup {
+  label: string | null;
+  items: NavItem[];
+}
+
+/**
+ * Itens agrupados com separadores rotulados (item F do redesign). O nav
+ * nunca teve grupos antes — divisão abaixo é uma escolha razoável por
+ * função, não algo pedido explicitamente item a item; ajustável se não
+ * for o agrupamento esperado.
+ */
+const navGroups: NavGroup[] = [
+  {
+    label: null,
+    items: [
+      { href: "/app/inbox", label: "Inbox", icon: Inbox },
+      { href: "/app/contacts", label: "Contatos", icon: Users },
+      { href: "/app/campaigns", label: "Campanhas", icon: Megaphone },
+      { href: "/app/agent", label: "Agente IA", icon: Bot },
+      { href: "/app/flows", label: "Fluxos", icon: GitBranch },
+      { href: "/app/automations", label: "Automações", icon: Zap },
+    ],
+  },
+  {
+    label: "Canais",
+    items: [
+      { href: "/app/connections", label: "Conexões", icon: Smartphone },
+      { href: "/app/integrations", label: "Integrações", icon: Plug2 },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { href: "/app/reports", label: "Relatórios", icon: BarChart3 },
+      { href: "/app/billing", label: "Assinatura", icon: CreditCard },
+      { href: "/app/indicacoes", label: "Indicações", icon: Gift },
+    ],
+  },
+  {
+    label: "Suporte",
+    items: [
+      { href: "/app/docs", label: "Documentação", icon: BookOpen },
+      { href: "/app/help", label: "Central de Ajuda", icon: LifeBuoy },
+    ],
+  },
+  {
+    label: "Conta",
+    items: [
+      { href: "/app/equipe", label: "Equipe", icon: UserCog, ownerOnly: true },
+      { href: "/app/settings", label: "Configurações", icon: Settings },
+    ],
+  },
+];
+
+const navItems: NavItem[] = navGroups.flatMap((g) => g.items);
 
 function TrialBanner({ data }: { data: ShellData }) {
   const t = useT();
@@ -332,13 +377,17 @@ export function AppShell({
   const isOwnerOrAdmin = data.role === "owner" || data.role === "admin" || data.role === "superadmin";
 
   // Para members com permissões granulares, filtra o nav; owner/admin vêem tudo menos equipe
-  const visibleNavItems = navItems.filter((item) => {
+  function isItemVisible(item: (typeof navItems)[number]) {
     if ("ownerOnly" in item && item.ownerOnly) return isOwnerOrAdmin;
     if (!data.teamPermissions) return true; // acesso total
     const permKey = NAV_PERMISSION_MAP[item.href];
     if (!permKey) return true; // docs, ajuda — sempre visível
     return data.teamPermissions[permKey as keyof TeamMemberPermissionsRow] === true;
-  });
+  }
+  const visibleNavItems = navItems.filter(isItemVisible);
+  const visibleNavGroups = navGroups
+    .map((g) => ({ ...g, items: g.items.filter(isItemVisible) }))
+    .filter((g) => g.items.length > 0);
 
   async function handleLogout() {
     try {
@@ -363,41 +412,52 @@ export function AppShell({
       <StatusBanners data={data} />
       <div className="flex min-h-0 flex-1">
         {/* Sidebar com ícones + labels — desktop. Migrada pros tokens novos
-            (theme-x e brand) como parte do passo 1 do redesign — é a única
+            (theme-x e brand) desde o passo 1 do redesign — é a única
             parte do app que já responde ao ThemeToggle; o resto continua
-            nos tokens antigos (ink/surface/lime) até os próximos passos. */}
-        <aside className="hidden w-52 shrink-0 flex-col border-r border-theme-border bg-theme-surface py-4 md:flex">
+            nos tokens antigos (ink/surface/lime) até os próximos passos.
+            Item F (verde-neon): bg própria (theme-bg, não theme-surface),
+            item ativo com borda esquerda + grupos com separador rotulado. */}
+        <aside className="hidden w-52 shrink-0 flex-col border-r border-theme-border bg-theme-bg py-4 md:flex">
           <div className="mb-5 flex items-center justify-between px-4">
             <Link href="/app/inbox" aria-label={t("Início")}>
               <Logo />
             </Link>
             <ThemeToggle />
           </div>
-          <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
-            {visibleNavItems.map((item) => {
-              const active = pathname.startsWith(item.href);
-              const isInbox = item.href === "/app/inbox";
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "focus-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                    active
-                      ? "bg-brand/10 font-medium text-brand"
-                      : "text-theme-text-muted hover:bg-theme-text/5 hover:text-theme-text"
-                  )}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" aria-hidden />
-                  <span className="flex-1">{t(item.label)}</span>
-                  {isInbox && unreadCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+          <nav className="flex-1 space-y-3 overflow-y-auto px-2">
+            {visibleNavGroups.map((group, gi) => (
+              <div key={group.label ?? `group-${gi}`} className="space-y-0.5">
+                {group.label && (
+                  <p className="label-uppercase px-3 pb-1 pt-2 text-theme-text-subtle">
+                    {t(group.label)}
+                  </p>
+                )}
+                {group.items.map((item) => {
+                  const active = pathname.startsWith(item.href);
+                  const isInbox = item.href === "/app/inbox";
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "focus-ring flex items-center gap-2.5 rounded-lg border-l-[3px] px-3 py-2 text-sm transition-colors",
+                        active
+                          ? "border-brand bg-brand/[0.08] font-medium text-brand"
+                          : "border-transparent text-theme-text-muted hover:bg-white/[0.03] hover:text-theme-text"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+                      <span className="flex-1">{t(item.label)}</span>
+                      {isInbox && unreadCount > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
           <div className="space-y-0.5 px-2 pt-2">
             {/* Notificações in-app */}
@@ -433,8 +493,10 @@ export function AppShell({
         </main>
       </div>
 
-      {/* Navegação por abas — mobile */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden">
+      {/* Navegação por abas — mobile. Mantida como tab bar (não virou rail
+          vertical só-ícones): numa tela estreita isso é melhor UX que a
+          sidebar colapsada — só as cores migraram pro tema novo. */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-theme-border bg-theme-bg md:hidden">
         {visibleNavItems.slice(0, 5).map((item) => {
           const active = pathname.startsWith(item.href);
           const isInbox = item.href === "/app/inbox";
@@ -445,13 +507,13 @@ export function AppShell({
               aria-label={t(item.label)}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px]",
-                active ? "text-lime" : "text-txt-dim"
+                active ? "text-brand" : "text-theme-text-muted"
               )}
             >
               <span className="relative">
                 <item.icon className="h-5 w-5" aria-hidden />
                 {isInbox && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime px-1 text-[9px] font-bold text-white">
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-white">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -465,7 +527,7 @@ export function AppShell({
           aria-label={t("Configurações")}
           className={cn(
             "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px]",
-            pathname.startsWith("/app/settings") ? "text-lime" : "text-txt-dim"
+            pathname.startsWith("/app/settings") ? "text-brand" : "text-theme-text-muted"
           )}
         >
           <Settings className="h-5 w-5" aria-hidden />

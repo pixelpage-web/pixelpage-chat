@@ -21,7 +21,7 @@ export function Logo({
 
   /** Símbolo em texto (fallback final e também o "P" do modo compacto). */
   const mark = (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lime font-display text-base font-bold text-white">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand font-display text-base font-bold text-black">
       P
     </div>
   );
@@ -32,7 +32,7 @@ export function Logo({
         {mark}
         {!compact && (
           <span className="font-display text-lg font-semibold tracking-tight text-txt">
-            PixelPage<span className="text-lime"> Chat</span>
+            PixelPage<span className="text-brand"> Chat</span>
           </span>
         )}
       </div>
@@ -50,7 +50,7 @@ export function Logo({
       />
       {!compact && (
         <span className="font-display text-lg font-semibold tracking-tight text-txt">
-          PixelPage<span className="text-lime"> Chat</span>
+          PixelPage<span className="text-brand"> Chat</span>
         </span>
       )}
     </div>

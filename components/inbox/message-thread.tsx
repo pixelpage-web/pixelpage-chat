@@ -35,10 +35,12 @@ import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useT } from "@/lib/i18n";
 import { timeAgo } from "@/lib/utils";
-import { cn, formatMessageTime, formatPhone } from "@/lib/utils";
+import { cn, connectionColor, formatMessageTime, formatPhone } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AudioMessage } from "./AudioMessage";
 import type {
+  ConnectionSummary,
   ContactRow,
   ConversationRow,
   LabelRow,
@@ -124,14 +126,63 @@ const senderMeta: Record<
   external: { label: "n8n", icon: Workflow },
 };
 
-function MessageBubble({ message }: { message: MessageRow }) {
+function MessageBubble({
+  message,
+  canDelete,
+  onDelete,
+}: {
+  message: MessageRow;
+  /** false quando readOnly (assinatura bloqueada) — sem exclusão nesse caso */
+  canDelete: boolean;
+  onDelete: (id: string) => void;
+}) {
   const t = useT();
   const isInbound = message.direction === "inbound";
   const meta = senderMeta[message.sender_type];
   const SenderIcon = meta.icon;
+  const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className={cn("flex", isInbound ? "justify-start" : "justify-end")}>
+    <div
+      className={cn(
+        "group flex items-center gap-1.5",
+        isInbound ? "justify-start" : "justify-end"
+      )}
+    >
+      {/* Excluir — só mensagens enviadas pela equipe/bot (outbound), nunca
+          as recebidas do cliente (também bloqueado por RLS no banco). */}
+      {canDelete && !isInbound && (
+        <span className="shrink-0">
+          {confirming ? (
+            <span className="flex items-center gap-1 rounded-md border border-danger/30 bg-danger-soft px-1.5 py-1 text-[11px] text-danger">
+              {t("Excluir?")}
+              <button
+                onClick={() => onDelete(message.id)}
+                className="focus-ring rounded p-0.5 hover:bg-danger/20"
+                aria-label={t("Confirmar exclusão")}
+              >
+                <Check className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                className="focus-ring rounded p-0.5 text-txt-dim hover:text-txt"
+                aria-label={t("Cancelar")}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setConfirming(true)}
+              className="focus-ring rounded-md p-1 text-txt-dim opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+              aria-label={t("Excluir mensagem")}
+              title={t("Excluir mensagem")}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </span>
+      )}
       <div
         className={cn(
           "max-w-[85%] rounded-2xl px-3.5 py-2 sm:max-w-[70%]",
@@ -151,7 +202,7 @@ function MessageBubble({ message }: { message: MessageRow }) {
           />
         )}
         {message.message_type === "audio" && message.media_url && (
-          <audio controls src={message.media_url} className="mb-1.5 w-56 max-w-full" />
+          <AudioMessage url={message.media_url} />
         )}
         {(message.message_type === "document" ||
           message.message_type === "video") &&
@@ -229,6 +280,7 @@ export function MessageThread({
   messages,
   loading,
   readOnly,
+  onDeleteMessage,
   team,
   userId,
   onBack,
@@ -242,6 +294,7 @@ export function MessageThread({
   attaching,
   flowName,
   connectionMode,
+  connections,
   onTakeOver,
   onPauseFlow,
   onDismissSummary,
@@ -255,6 +308,8 @@ export function MessageThread({
   messages: MessageRow[];
   loading: boolean;
   readOnly: boolean;
+  /** Exclui uma mensagem outbound (equipe/bot) — botão só aparece se !readOnly */
+  onDeleteMessage: (messageId: string) => void;
   team: TeamMember[];
   userId: string;
   onBack: () => void;
@@ -270,6 +325,8 @@ export function MessageThread({
   flowName: string | null;
   /** Modo da conexão da conversa (para o indicador "Bot ativo") */
   connectionMode: string | null;
+  /** Todas as conexões da org — pra identificar "via X" quando há mais de uma */
+  connections: ConnectionSummary[];
   /** Pausa o bot E gera o resumo por IA (botão "Assumir atendimento") */
   onTakeOver: () => void;
   /** Interrompe o fluxo ativo e passa para atendimento humano */
@@ -281,6 +338,11 @@ export function MessageThread({
   onToggleLabel: (labelId: string) => void;
 }) {
   const t = useT();
+  // Só identifica "via X" quando a org tem mais de uma conexão — com um
+  // único número, é ruído sem função (mesmo critério do filtro em
+  // ConversationList e da badge no card).
+  const showConnectionIndicator = connections.length > 1;
+  const activeConnection = connections.find((c) => c.id === conversation.connection_id) ?? null;
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -434,9 +496,27 @@ export function MessageThread({
           size="sm"
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">
-            {contact.name || formatPhone(contact.phone)}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-sm font-semibold">
+              {contact.name || formatPhone(contact.phone)}
+            </p>
+            {showConnectionIndicator && activeConnection && (
+              <span
+                className="inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                style={{ backgroundColor: connectionColor(activeConnection.id, 0.14) }}
+                title={t("Conversa recebida por esta conexão")}
+              >
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: connectionColor(activeConnection.id) }}
+                  aria-hidden
+                />
+                <span className="text-txt-mut">
+                  {t("via")} {activeConnection.label}
+                </span>
+              </span>
+            )}
+          </div>
           <p className="truncate text-[11px] text-txt-dim">
             {formatPhone(contact.phone)}
             {assignedName && ` · ${t("atribuída a")} ${assignedName}`}
@@ -649,7 +729,12 @@ export function MessageThread({
                 </span>
               </div>
               {group.items.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  canDelete={!readOnly}
+                  onDelete={onDeleteMessage}
+                />
               ))}
             </div>
           ))
@@ -891,6 +976,16 @@ export function MessageThread({
                 <Send className="h-4 w-4" />
               </button>
             </div>
+            {showConnectionIndicator && activeConnection && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-txt-dim">
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: connectionColor(activeConnection.id) }}
+                  aria-hidden
+                />
+                {t("Respondendo via")} {activeConnection.label}
+              </p>
+            )}
           </div>
             )}
           </>

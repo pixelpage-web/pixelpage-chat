@@ -1,7 +1,9 @@
 "use client";
 
 import { Bot } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
+import { Ticker } from "@/components/ui/Ticker";
 import { useT } from "@/lib/i18n";
 
 const bullets = [
@@ -10,10 +12,26 @@ const bullets = [
   "Inbox unificado para toda a equipe responder junto",
 ];
 
+// Pills flutuantes ao redor do texto do hero, só em /register (item E).
+// Posições/tempos variados pra não ficarem sincronizadas.
+const floatingTags: {
+  label: string;
+  style: React.CSSProperties;
+}[] = [
+  { label: "Atendimento 24h", style: { top: "4%", right: "4%", animationDuration: "5s", animationDelay: "0s" } },
+  { label: "Bot com IA", style: { top: "16%", left: "0%", animationDuration: "6s", animationDelay: "0.8s" } },
+  { label: "Multi-atendente", style: { top: "38%", right: "0%", animationDuration: "4.5s", animationDelay: "1.6s" } },
+  { label: "WhatsApp Oficial", style: { top: "54%", left: "2%", animationDuration: "5.5s", animationDelay: "0.4s" } },
+  { label: "Setup em minutos", style: { top: "70%", right: "6%", animationDuration: "6.5s", animationDelay: "2.2s" } },
+  { label: "Sem cartão", style: { top: "80%", left: "8%", animationDuration: "5s", animationDelay: "1.2s" } },
+];
+
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const t = useT();
+  const pathname = usePathname();
+  const isRegister = pathname === "/register";
 
   return (
     <div className="flex min-h-dvh flex-col bg-ink lg:flex-row">
@@ -43,6 +61,18 @@ export default function AuthLayout({
         <div className="relative z-10 flex items-center justify-between lg:block">
           <Logo />
         </div>
+
+        {/* Pills flutuantes (item E) — só em /register, mesma visibilidade do
+            texto do hero que elas decoram (hidden até lg) */}
+        {isRegister && (
+          <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block" aria-hidden>
+            {floatingTags.map((tag) => (
+              <span key={tag.label} className="floating-tag" style={tag.style}>
+                {t(tag.label)}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Conteúdo completo — somente lg+ */}
         <div className="relative z-10 mt-10 hidden flex-1 flex-col justify-center lg:flex">
@@ -112,6 +142,9 @@ export default function AuthLayout({
           © 2026 PixelPage Chat. Todos os direitos reservados.
         </p>
       </div>
+
+      {/* Ticker (item B) — só em /register, entre o painel de marca e o formulário */}
+      {isRegister && <Ticker />}
 
       {/* Painel direito — formulário */}
       <div className="relative flex flex-1 flex-col">

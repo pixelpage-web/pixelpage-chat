@@ -3,12 +3,13 @@ import type { Config } from "tailwindcss";
 /**
  * Design tokens da PixelPage Chat.
  *
- * MIGRAÇÃO EM ANDAMENTO (redesign, passo 1/N): a identidade está
- * mudando de verde elétrico (#5DD62C, token "lime") para laranja
- * (#FF5D00, token "brand"). Os tokens antigos (ink/surface/line/lime/txt)
- * continuam ativos e em uso na maioria dos componentes — eles só serão
- * migrados/removidos nos próximos passos. Os tokens novos ("brand",
- * "dark-*"/"light-*", "theme-*") já existem e hoje só a sidebar
+ * MIGRAÇÃO EM ANDAMENTO (redesign, passo 2/N): a identidade está
+ * mudando de verde elétrico (#5DD62C, token "lime") para verde-neon
+ * (#00FF41, token "brand" — passo anterior era laranja #FF5D00, abandonado
+ * antes de qualquer adoção ampla). Os tokens antigos (ink/surface/line/
+ * lime/txt) continuam ativos e em uso na maioria dos componentes — eles só
+ * serão migrados/removidos nos próximos passos. Os tokens novos ("brand",
+ * "bg"/"surface2"/"border-dark", "theme-*") já existem e hoje só a sidebar
  * (components/app-shell.tsx) os usa de fato.
  *
  * Tokens "panel" e "forest" são exclusivos do painel admin (/admin) —
@@ -86,23 +87,25 @@ const config: Config = {
           glow: "rgba(93, 214, 44, 0.22)",
         },
 
-        // ── Nova identidade (redesign, passo 1) ────────────────────────
-        // Valores fixos da paleta — usados nas próprias variáveis CSS
-        // abaixo e em qualquer lugar que precise do tom exato independente
-        // do tema ativo.
-        brand: "#FF5D00",
-        "dark-bg": "#0D0101",
-        "dark-surface": "#1a0a00",
-        "light-bg": "#FFFAFA",
-        "light-surface": "#F5F0EF",
+        // ── Nova identidade (redesign, passo 2 — verde-neon) ───────────
+        // Valores fixos da paleta dark de referência — usados em qualquer
+        // lugar que precise do tom exato independente do tema ativo (ex:
+        // Ticker, IconBadge, pills flutuantes).
+        brand: "#00FF41",
+        bg: "#0A0A0A",
+        surface2: "#1A1A1A",
+        "border-dark": "#1A1A1A",
         // Tokens que respondem ao toggle claro/escuro (var(--x) definida em
-        // globals.css) — usar estes (não os "dark-"/"light-" fixos acima)
-        // em qualquer componente que precise se adaptar ao tema.
+        // globals.css) — usar estes (não os fixos acima) em qualquer
+        // componente que precise se adaptar ao tema.
         "theme-bg": "var(--bg)",
         "theme-surface": "var(--surface)",
+        "theme-surface-2": "var(--surface-2)",
         "theme-text": "var(--text)",
         "theme-text-muted": "var(--text-muted)",
+        "theme-text-subtle": "var(--text-subtle)",
         "theme-border": "var(--border)",
+        "theme-border-muted": "var(--border-muted)",
       },
       fontFamily: {
         // Onest é a única fonte do projeto — display e sans apontam pra

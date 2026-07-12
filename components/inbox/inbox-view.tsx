@@ -246,7 +246,17 @@ export function InboxView({
         },
         (payload) => {
           const conv = payload.new as ConversationRow;
+          // Conexão desconectada (ou excluída) arquivou a conversa — some
+          // do Inbox na hora. Se era a conversa aberta, desseleciona
+          // (equivalente a voltar pro Inbox vazio, sem reload).
+          if (conv.archived) {
+            setConversations((prev) => prev.filter((c) => c.id !== conv.id));
+            if (selectedIdRef.current === conv.id) setSelectedId(null);
+            return;
+          }
           setConversations((prev) => {
+            // Reconectou: a conversa não estava mais no state (arquivada
+            // antes) — reaparece igual a uma conversa nova.
             const next = prev.some((c) => c.id === conv.id)
               ? prev.map((c) => (c.id === conv.id ? conv : c))
               : [conv, ...prev];
@@ -526,6 +536,55 @@ export function InboxView({
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Exclui o contato permanentemente. O DELETE em `contacts` já cascateia
+   * pra conversations → messages (e todo o resto: notas, csat etc.) via FK
+   * — não precisa apagar em passos separados. Só depois de confirmar
+   * sucesso é que a UI muda (painel fecha, conversa some da lista).
+   */
+  async function handleDeleteContact(contact: ContactRow) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("contacts").delete().eq("id", contact.id);
+      if (error) {
+        toast.error(t("Não foi possível excluir o contato."));
+        return;
+      }
+      setConversations((prev) => prev.filter((c) => c.contact_id !== contact.id));
+      setContacts((prev) => {
+        const next = { ...prev };
+        delete next[contact.id];
+        return next;
+      });
+      setContactModalOpen(false);
+      setSelectedId(null);
+      toast.success(t("Contato excluído."));
+    } catch {
+      toast.error(t("Erro de conexão."));
+    }
+  }
+
+  /**
+   * Exclui uma mensagem (só outbound — RLS já bloqueia inbound no banco).
+   * Otimista: some da UI na hora, volta se o delete falhar. Não recarrega
+   * a conversa inteira, só remove a mensagem do state local.
+   */
+  async function handleDeleteMessage(messageId: string) {
+    const previous = messages;
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("messages").delete().eq("id", messageId);
+      if (error) {
+        setMessages(previous);
+        toast.error(t("Não foi possível excluir a mensagem."));
+      }
+    } catch {
+      setMessages(previous);
+      toast.error(t("Erro de conexão."));
+    }
+  }
+
   /** Alterna uma etiqueta em uma conversa. */
   async function handleToggleLabel(conversationId: string, labelId: string) {
     const current = convLabels[conversationId] ?? [];
@@ -693,6 +752,7 @@ export function InboxView({
               messages={messages}
               loading={messagesLoading}
               readOnly={readOnly}
+              onDeleteMessage={(id) => void handleDeleteMessage(id)}
               team={team}
               userId={userId}
               orgId={orgId}
@@ -725,6 +785,7 @@ export function InboxView({
               attaching={attaching}
               flowName={selectedFlowName}
               connectionMode={selectedConnectionMode}
+              connections={connections}
               onTakeOver={() => void handleTakeOver(selected)}
               onPauseFlow={() => void handlePauseFlow(selected)}
               onDismissSummary={() => void handleDismissSummary(selected)}
@@ -753,6 +814,7 @@ export function InboxView({
               }
               onToggleBlock={() => void handleToggleBlock(selectedContact)}
               onExportHistory={() => handleExportHistory(selectedContact)}
+              onDeleteContact={() => void handleDeleteContact(selectedContact)}
             />
           </Modal>
 
@@ -770,6 +832,7 @@ export function InboxView({
               }
               onToggleBlock={() => void handleToggleBlock(selectedContact)}
               onExportHistory={() => handleExportHistory(selectedContact)}
+              onDeleteContact={() => void handleDeleteContact(selectedContact)}
             />
           </aside>
         </>
