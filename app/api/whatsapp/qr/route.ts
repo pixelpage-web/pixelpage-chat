@@ -173,7 +173,7 @@ export async function POST(request: Request) {
     // aqui destruiria histórico de conversa por causa de uma queda comum.
     await supabase
       .from("conversations")
-      .update({ archived: true })
+      .update({ archived: true, unread_count: 0 })
       .eq("connection_id", connection.id);
     return NextResponse.json({ ok: true });
   }
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
     // mas já marcamos como archived para não aparecerem no inbox.
     await supabase
       .from("conversations")
-      .update({ archived: true })
+      .update({ archived: true, unread_count: 0 })
       .eq("connection_id", connection.id);
 
     await deleteEvolutionInstance(instance);

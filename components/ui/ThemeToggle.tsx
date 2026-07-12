@@ -15,7 +15,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
       title={isDark ? "Tema claro" : "Tema escuro"}
       className={cn(
-        "focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-theme-text-muted transition-colors hover:bg-theme-text/5 hover:text-theme-text",
+        "focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-theme-text-muted transition-colors hover:bg-white/5 hover:text-theme-text",
         className
       )}
     >

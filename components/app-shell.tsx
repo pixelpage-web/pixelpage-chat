@@ -470,7 +470,7 @@ export function AppShell({
             {(data.role === "admin" || data.role === "superadmin") && (
               <Link
                 href="/admin"
-                className="focus-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber transition-colors hover:bg-theme-text/5"
+                className="focus-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber transition-colors hover:bg-white/5"
               >
                 <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
                 {t("Painel admin")}
@@ -479,7 +479,7 @@ export function AppShell({
             <button
               onClick={handleLogout}
               title={data.userEmail}
-              className="focus-ring flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-theme-text-muted transition-colors hover:bg-theme-text/5 hover:text-danger"
+              className="focus-ring flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-theme-text-muted transition-colors hover:bg-white/5 hover:text-danger"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               {t("Sair")}

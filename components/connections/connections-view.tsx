@@ -250,11 +250,16 @@ export function ConnectionsView({
               <h1 className="font-display text-lg font-semibold">{t("Conexões WhatsApp")}</h1>
               {limitOverride && overLimit && <FeatureBadge requiredPlan={t("superior")} />}
             </div>
-            <p className="mt-0.5 text-sm text-txt-mut">
-              {connections.length} {t("de")}{" "}
-              {connectionsLimit === null ? t("ilimitado") : connectionsLimit}{" "}
-              {connectionsLimit === 1 ? t("conexão") : t("conexões")} {t("do seu plano")}
-            </p>
+            {connectionsLimit === null ? (
+              <p className="mt-0.5 text-sm text-txt-mut">
+                {connections.length} {connections.length === 1 ? t("conexão ativa") : t("conexões ativas")}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-sm text-txt-mut">
+                {connections.length} {t("de")} {connectionsLimit}{" "}
+                {connectionsLimit === 1 ? t("conexão") : t("conexões")} {t("do seu plano")}
+              </p>
+            )}
           </div>
         </header>
 

@@ -15,6 +15,7 @@ export async function GET() {
     .select("id", { count: "exact", head: true })
     .eq("org_id", session.profile.org_id)
     .eq("status", "open")
+    .eq("archived", false)
     .gt("unread_count", 0);
 
   return NextResponse.json({ count: count ?? 0 });

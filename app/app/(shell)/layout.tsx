@@ -82,6 +82,7 @@ export default async function ShellLayout({
       .select("id", { count: "exact", head: true })
       .eq("org_id", orgId)
       .eq("status", "open")
+      .eq("archived", false)
       .gt("unread_count", 0),
   ]);
 

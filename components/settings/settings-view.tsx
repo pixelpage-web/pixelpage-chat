@@ -10,6 +10,7 @@ import {
   Building2,
   Lightbulb,
   ShieldCheck,
+  Sun,
   Trash2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -19,6 +20,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Switch } from "@/components/ui/switch";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { UnitsCard } from "@/components/settings/units-card";
 import { TeamCard, type TeamMember } from "@/components/settings/team-card";
@@ -170,6 +172,21 @@ export function SettingsView({
             {t("Sua conta, sua empresa e sua equipe.")}
           </p>
         </header>
+
+        {/* Aparência */}
+        <Card>
+          <div className="flex items-start gap-3">
+            <Sun className="mt-0.5 h-5 w-5 text-txt-dim" aria-hidden />
+            <div className="flex-1">
+              <CardTitle>{t("Aparência")}</CardTitle>
+              <CardDescription>{t("Escolha entre tema escuro ou claro.")}</CardDescription>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <span className="text-sm text-txt-mut">{t("Tema")}</span>
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Conta */}
         <Card>
