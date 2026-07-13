@@ -143,11 +143,24 @@ export default function AuthLayout({
         </p>
       </div>
 
-      {/* Ticker (item B) — só em /register, entre o painel de marca e o formulário */}
-      {isRegister && <Ticker />}
+      {/* Painel direito — formulário. min-w-0 é necessário: sem isso, o
+          conteúdo de largura intrínseca do Ticker (marquee com
+          width:max-content) força esta coluna flex a crescer pra caber o
+          texto inteiro, mesmo com overflow:hidden no Ticker — "overflow"
+          evita vazamento visual, mas não impede a propagação do tamanho
+          mínimo de conteúdo pelo item flex pai (flexbug #1 clássico). */}
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        {/* Ticker (item B) — só em /register, no topo da coluna do formulário.
+            Não pode ser filho direto do container flex-row acima: nesse
+            contexto ele vira um item de linha sem flex-basis controlado, e
+            como o próprio .ticker-wrap tem width:100%, esse valor vira a
+            base de flex e o navegador o estica pra tomar todo o espaço
+            horizontal restante — combinado com align-items:stretch (default),
+            também esticava pra altura inteira da viewport (bug do bloco
+            verde gigante em telas ≥1024px). Aqui dentro ele é só mais um
+            filho normal de uma coluna (flex-col), sem esse problema. */}
+        {isRegister && <Ticker />}
 
-      {/* Painel direito — formulário */}
-      <div className="relative flex flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 lg:py-10">
           <div className="w-full max-w-sm">
             {children}
