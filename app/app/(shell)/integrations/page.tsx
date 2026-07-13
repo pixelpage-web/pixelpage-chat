@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { hasFeatureAccess } from "@/lib/access";
 import { WebhookCard } from "@/components/integrations/webhook-card";
 import { ApiKeysCard } from "@/components/integrations/api-keys-card";
 import { AiModeCard } from "@/components/integrations/ai-mode-card";
@@ -17,7 +18,7 @@ export default async function IntegrationsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: webhooks }, { data: apiKeys }, { data: orgRow }, { data: secretsStatus }] =
+  const [{ data: webhooks }, { data: apiKeys }, { data: orgRow }, { data: secretsStatus }, { data: subscription }] =
     await Promise.all([
       supabase
         .from("external_webhooks")
@@ -36,10 +37,32 @@ export default async function IntegrationsPage() {
         .eq("id", orgId)
         .maybeSingle(),
       supabase.rpc("get_org_secrets_status", { p_org_id: orgId }),
+      supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle(),
     ]);
 
   const webhook = webhooks?.[0] ?? null;
   const hasAiKey = secretsStatus?.[0]?.has_ai_key ?? false;
+
+  // Simplificação de UI pro plano básico: BYOK só aparece no seletor a
+  // partir do plano Pro (Free/Starter não veem a opção). Super Admin sempre
+  // enxerga tudo (hasFeatureAccess). Não afeta orgs já em BYOK — só some o
+  // botão de TROCAR pra esse modo, o estado "conectado" continua igual se
+  // já estiver ativo.
+  let planName = "Free";
+  if (subscription?.plan_id) {
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("name")
+      .eq("id", subscription.plan_id)
+      .maybeSingle();
+    planName = plan?.name ?? "Free";
+  }
+  const isBasicPlan = planName === "Free" || planName === "Starter";
+  const byokAccess = hasFeatureAccess({
+    userEmail: session.user.email,
+    hasNormalAccess: !isBasicPlan,
+    requiredPlan: "Pro",
+  });
 
   const { data: logs } = webhook
     ? await supabase
@@ -50,7 +73,7 @@ export default async function IntegrationsPage() {
         .limit(20)
     : { data: [] };
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.zari.com.br";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.pixelpagechat.com.br";
   const isOwner =
     session.profile.role === "owner" || session.profile.role === "admin";
 
@@ -69,6 +92,7 @@ export default async function IntegrationsPage() {
           initialAiProvider={(orgRow?.ai_provider as AiProvider | null) ?? null}
           initialVerifiedAt={orgRow?.ai_byok_verified_at ?? null}
           initialHasAiKey={hasAiKey}
+          showByok={byokAccess.access}
         />
 
         <WebhookCard

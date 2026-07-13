@@ -48,6 +48,7 @@ export function SettingsView({
   orgId,
   orgName,
   orgLogoUrl,
+  showProFeatures = true,
   members: initialMembers,
   notificationPrefs,
 }: {
@@ -58,6 +59,8 @@ export function SettingsView({
   orgId: string;
   orgName: string;
   orgLogoUrl: string | null;
+  /** false = plano básico (Free/Starter) — some Unidades e White-label */
+  showProFeatures?: boolean;
   members: TeamMember[];
   notificationPrefs: Record<string, boolean>;
 }) {
@@ -295,7 +298,16 @@ export function SettingsView({
                 {t("Personalize a identidade visual e escolha o tema.")}
               </CardDescription>
 
-              {isOwner && (
+              {isOwner && !showProFeatures && (
+                <p className="mt-4 text-xs text-txt-dim">
+                  {t("Logo e nome exibido: disponível no plano Pro.")}{" "}
+                  <Link href="/app/billing" className="text-lime underline">
+                    {t("Fazer upgrade")}
+                  </Link>
+                </p>
+              )}
+
+              {isOwner && showProFeatures && (
                 <>
                   {/* Logo da empresa */}
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -494,7 +506,7 @@ export function SettingsView({
         <TeamCard userId={userId} isOwner={isOwner} members={members} setMembers={setMembers} />
 
         {/* Unidades (roteamento de conversas por local) */}
-        {isOwner && <UnitsCard orgId={orgId} members={members} />}
+        {isOwner && showProFeatures && <UnitsCard orgId={orgId} members={members} />}
 
         {/* Ajuda e sugestões */}
         <Card>

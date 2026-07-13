@@ -5,7 +5,7 @@ import type { ProfileRow } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
 
 /** Cookie que ativa o modo "ver como cliente" (somente admin). */
-export const IMPERSONATE_COOKIE = "zari_impersonate_org";
+export const IMPERSONATE_COOKIE = "pixelpage_impersonate_org";
 
 export interface SessionInfo {
   user: User;

@@ -299,7 +299,7 @@ function EditorInner({
   const onDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
-      const type = e.dataTransfer.getData("application/zari-flow") as FlowNodeType;
+      const type = e.dataTransfer.getData("application/pixelpage-flow") as FlowNodeType;
       if (!type || !nodeMeta[type]) return;
       const position = instance.screenToFlowPosition({ x: e.clientX, y: e.clientY });
       addNodeAt(type, position);
@@ -527,7 +527,7 @@ function EditorInner({
                   key={type}
                   draggable
                   onDragStart={(e) => {
-                    e.dataTransfer.setData("application/zari-flow", type);
+                    e.dataTransfer.setData("application/pixelpage-flow", type);
                     e.dataTransfer.effectAllowed = "move";
                   }}
                   onDoubleClick={() => {

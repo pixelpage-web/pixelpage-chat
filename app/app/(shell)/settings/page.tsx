@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { hasFeatureAccess } from "@/lib/access";
 import { SettingsView } from "@/components/settings/settings-view";
 
 export const dynamic = "force-dynamic";
@@ -14,14 +15,33 @@ export default async function SettingsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: org }, { data: members }] = await Promise.all([
+  const [{ data: org }, { data: members }, { data: subscription }] = await Promise.all([
     supabase.from("organizations").select("id, name, logo_url").eq("id", orgId).maybeSingle(),
     supabase
       .from("profiles")
       .select("id, name, role, created_at")
       .eq("org_id", orgId)
       .order("created_at", { ascending: true }),
+    supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle(),
   ]);
+
+  // Simplificação de UI pro plano básico: Unidades e White-label (Aparência)
+  // só aparecem a partir do Pro. Super Admin sempre enxerga tudo.
+  let planName = "Free";
+  if (subscription?.plan_id) {
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("name")
+      .eq("id", subscription.plan_id)
+      .maybeSingle();
+    planName = plan?.name ?? "Free";
+  }
+  const isBasicPlan = planName === "Free" || planName === "Starter";
+  const proAccess = hasFeatureAccess({
+    userEmail: session.user.email,
+    hasNormalAccess: !isBasicPlan,
+    requiredPlan: "Pro",
+  });
 
   return (
     <SettingsView
@@ -32,6 +52,7 @@ export default async function SettingsPage() {
       orgId={org?.id ?? orgId}
       orgName={org?.name ?? ""}
       orgLogoUrl={org?.logo_url ?? null}
+      showProFeatures={proAccess.access}
       members={members ?? []}
       notificationPrefs={
         (session.profile.notification_prefs ?? {}) as Record<string, boolean>

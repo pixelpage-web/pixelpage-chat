@@ -129,7 +129,7 @@ curl ${appUrl}/api/v1/conversations/{id}/messages \\
                 <div className="min-w-0">
                   <p className="text-sm font-medium">{key.label}</p>
                   <p className="text-[11px] text-txt-dim">
-                    zari_•••••••• · {t("criada")} {timeAgo(key.created_at)}
+                    pxp_•••••••• · {t("criada")} {timeAgo(key.created_at)}
                     {key.last_used_at
                       ? ` · ${t("usada")} ${timeAgo(key.last_used_at)}`
                       : ` · ${t("nunca usada")}`}

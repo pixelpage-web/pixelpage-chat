@@ -81,6 +81,7 @@ export function ConnectionsView({
   hasMetaApi,
   limitOverride = false,
   webhookInfo = {},
+  showWebhookMode = true,
 }: {
   orgId: string;
   initialConnections: WhatsappConnectionRow[];
@@ -92,6 +93,8 @@ export function ConnectionsView({
   limitOverride?: boolean;
   /** Status do webhook externo por connection_id (modo external_webhook) */
   webhookInfo?: Record<string, WebhookInfo>;
+  /** false = plano básico (Free/Starter) — some "Webhook" do seletor de modo */
+  showWebhookMode?: boolean;
 }) {
   const router = useRouter();
   const t = useT();
@@ -240,6 +243,7 @@ export function ConnectionsView({
 
   const overLimit = connectionsLimit !== null && connections.length >= connectionsLimit;
   const canAddMore = !overLimit || limitOverride;
+  const visibleModes = modes.filter((m) => showWebhookMode || m.value !== "external_webhook");
 
   return (
     <div className="h-full overflow-y-auto">
@@ -554,8 +558,8 @@ export function ConnectionsView({
                     <p className="mb-2 text-xs font-medium text-txt-mut">
                       {t("Modo de resposta")}
                     </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {modes.map((mode) => (
+                    <div className={cn("grid gap-2", visibleModes.length === 2 ? "grid-cols-2" : "grid-cols-3")}>
+                      {visibleModes.map((mode) => (
                         <button
                           key={mode.value}
                           onClick={() => void changeMode(conn.id, mode.value)}

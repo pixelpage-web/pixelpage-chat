@@ -93,7 +93,7 @@ async function fetchPage(url: string): Promise<string | null> {
       const res = await fetch(currentUrl, {
         signal: controller.signal,
         headers: {
-          "User-Agent": "ZariBot/1.0 (+https://pixelpagechat.com.br)",
+          "User-Agent": "PixelPageBot/1.0 (+https://pixelpagechat.com.br)",
           Accept: "text/html",
         },
         redirect: "manual",

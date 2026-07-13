@@ -262,7 +262,7 @@ const sections: DocSection[] = [
         },
       },
       {
-        term: { pt: "API keys (zari_...)", en: "API keys (zari_...)" },
+        term: { pt: "API keys (pxp_...)", en: "API keys (pxp_...)" },
         body: {
           pt: "Chaves para usar a API pública da PixelPage Chat (enviar mensagens, listar conversas e histórico). A chave aparece UMA única vez ao ser criada — guarde bem. Pode revogar a qualquer momento.",
           en: "Keys to use PixelPage Chat's public API (send messages, list conversations and history). The key is shown ONCE when created — store it safely. You can revoke it anytime.",

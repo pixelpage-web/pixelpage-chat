@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { deliverToWebhook, type ZariWebhookPayload } from "@/lib/external-webhook";
+import { deliverToWebhook, type PixelPageWebhookPayload } from "@/lib/external-webhook";
 
 /**
  * Reenvio manual de um disparo de webhook que falhou (painel admin → Logs).
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   const result = await deliverToWebhook(
     admin,
     webhook,
-    log.payload as unknown as ZariWebhookPayload
+    log.payload as unknown as PixelPageWebhookPayload
   );
 
   return NextResponse.json({

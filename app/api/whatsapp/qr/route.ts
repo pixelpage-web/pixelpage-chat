@@ -92,7 +92,7 @@ export async function POST(request: Request) {
 
     const label = (body.label ?? "").trim().slice(0, 30) || DEFAULT_QR_LABEL;
 
-    const instanceName = `zari_${orgId.slice(0, 8)}_${randomBytes(3).toString("hex")}`;
+    const instanceName = `pxp_${orgId.slice(0, 8)}_${randomBytes(3).toString("hex")}`;
     const created = await createEvolutionInstance(instanceName, webhookUrl());
     if (!created.ok) {
       return NextResponse.json(

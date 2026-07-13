@@ -13,7 +13,7 @@ export interface GeneratedKey {
 }
 
 export function generateApiKey(): GeneratedKey {
-  const plaintext = `zari_${randomBytes(24).toString("hex")}`;
+  const plaintext = `pxp_${randomBytes(24).toString("hex")}`;
   return { plaintext, hash: hashApiKey(plaintext) };
 }
 
@@ -28,7 +28,7 @@ export interface ApiKeyAuth {
 
 /**
  * Autentica uma requisição da API pública.
- * Aceita `Authorization: Bearer zari_...` ou header `X-Api-Key`.
+ * Aceita `Authorization: Bearer pxp_...` ou header `X-Api-Key`.
  */
 export async function authenticateApiKey(
   request: Request
@@ -38,7 +38,7 @@ export async function authenticateApiKey(
     ? authHeader.slice(7).trim()
     : request.headers.get("x-api-key")?.trim();
 
-  if (!key || !key.startsWith("zari_")) return null;
+  if (!key || !key.startsWith("pxp_")) return null;
 
   const admin = createAdminClient();
   const { data } = await admin

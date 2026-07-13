@@ -56,11 +56,14 @@ export function AiModeCard({
   initialAiProvider,
   initialVerifiedAt,
   initialHasAiKey,
+  showByok = true,
 }: {
   initialAiMode: AiMode;
   initialAiProvider: AiProvider | null;
   initialVerifiedAt: string | null;
   initialHasAiKey: boolean;
+  /** false = plano básico (Free/Starter) — some do seletor, mas não desmonta nada de quem já está em BYOK */
+  showByok?: boolean;
 }) {
   const t = useT();
   const [mode, setMode] = useState<AiMode>(initialAiMode);
@@ -213,7 +216,9 @@ export function AiModeCard({
       <p className="mt-4 text-xs font-medium text-txt-mut">{statusText}</p>
 
       <div className="mt-3 space-y-2.5">
-        {modeCards.map((card) => {
+        {modeCards
+          .filter((card) => showByok || card.mode !== "byok")
+          .map((card) => {
           const selected = mode === card.mode;
           const isLoadingThis = card.mode === "managed" && switchingManaged;
           return (

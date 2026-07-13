@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getEvolutionConfig, isEvolutionConfigured } from "@/lib/evolution";
-import { isSuperAdmin } from "@/lib/access";
+import { hasFeatureAccess, isSuperAdmin } from "@/lib/access";
 import { orgHasMetaApi } from "@/lib/plan-features";
 import { ConnectionsView } from "@/components/connections/connections-view";
 
@@ -33,16 +33,27 @@ export default async function ConnectionsPage() {
     ]);
 
   let connectionsLimit: number | null = 1;
+  let planName = "Free";
   if (subscription?.plan_id) {
     const { data: plan } = await supabase
       .from("plans")
-      .select("connections_limit")
+      .select("connections_limit, name")
       .eq("id", subscription.plan_id)
       .maybeSingle();
     // null em connections_limit = plano sem limite; só cai pro default 1 se o
     // plano em si não foi encontrado (não confundir "sem limite" com "sem plano").
     connectionsLimit = plan ? plan.connections_limit : 1;
+    planName = plan?.name ?? "Free";
   }
+
+  // Simplificação de UI pro plano básico: opção "Webhook" só aparece no
+  // seletor a partir do Pro. Super Admin sempre enxerga tudo.
+  const isBasicPlan = planName === "Free" || planName === "Starter";
+  const webhookModeAccess = hasFeatureAccess({
+    userEmail: session.user.email,
+    hasNormalAccess: !isBasicPlan,
+    requiredPlan: "Pro",
+  });
 
   const evolutionCfg = await getEvolutionConfig();
 
@@ -82,6 +93,7 @@ export default async function ConnectionsPage() {
       qrEnabled={isEvolutionConfigured(evolutionCfg)}
       limitOverride={isSuperAdmin(session.user.email)}
       webhookInfo={webhookInfo}
+      showWebhookMode={webhookModeAccess.access}
     />
   );
 }

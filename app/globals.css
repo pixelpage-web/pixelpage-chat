@@ -318,7 +318,7 @@
 }
 
 /* ----------------------------------------------------------------------------
-   React Flow (builder de fluxos) — adaptação ao tema escuro da Zari
+   React Flow (builder de fluxos) — adaptação ao tema escuro da PixelPage Chat
 ---------------------------------------------------------------------------- */
 .react-flow__controls {
   @apply overflow-hidden rounded-lg border border-line shadow-pop;

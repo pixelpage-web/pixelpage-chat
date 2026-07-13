@@ -6,8 +6,7 @@ import { decryptSecret } from "@/lib/crypto";
 
 /**
  * Entrega de eventos ao webhook externo do cliente (n8n).
- * - Payload assinado com HMAC SHA-256 nos headers X-PixelPage-Signature
- *   (e X-Zari-Signature, mantido por compatibilidade com integrações antigas)
+ * - Payload assinado com HMAC SHA-256 nos headers X-PixelPage-Signature/X-PixelPage-Event
  * - Até 3 tentativas por entrega
  * - Cada tentativa é registrada em webhook_logs
  * - 3 falhas consecutivas de entrega → notificação no painel (audit_logs)
@@ -41,9 +40,6 @@ export interface PixelPageWebhookPayload {
   // URL pública da plataforma (para montar chamadas à API a partir do n8n)
   app_url: string;
 }
-
-/** @deprecated use PixelPageWebhookPayload — alias por compatibilidade. */
-export type ZariWebhookPayload = PixelPageWebhookPayload;
 
 /** Assinatura HMAC SHA-256 do corpo (hex) — verificável pelo cliente. */
 export function signPayload(secret: string, rawBody: string): string {
@@ -143,11 +139,8 @@ export async function deliverToWebhook(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Header atual da marca + alias antigo (compatibilidade)
           "X-PixelPage-Signature": signature,
           "X-PixelPage-Event": payload.event,
-          "X-Zari-Signature": signature,
-          "X-Zari-Event": payload.event,
           "User-Agent": "PixelPageChat-Webhook/1.0",
           // Auth opcional para n8n self-hosted (só presente se configurada)
           ...(n8nAuthHeader ? { Authorization: n8nAuthHeader } : {}),

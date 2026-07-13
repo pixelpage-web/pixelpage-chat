@@ -331,7 +331,7 @@ export function ContactsView({ orgId }: { orgId: string }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "contatos_zari.csv";
+    a.download = "contatos_pixelpage.csv";
     a.click();
     URL.revokeObjectURL(url);
   }

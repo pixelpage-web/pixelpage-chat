@@ -233,7 +233,7 @@ Content-Type: application/json
               id="webhook-url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://seu-n8n.com/webhook/zari"
+              placeholder="https://seu-n8n.com/webhook/pixelpage"
               className="flex-1"
             />
             <Button
@@ -274,7 +274,7 @@ Content-Type: application/json
         {webhook && (
           <>
             <div>
-              <Label hint={t("usado na assinatura HMAC SHA-256 (header X-Zari-Signature)")}>
+              <Label hint={t("usado na assinatura HMAC SHA-256 (header X-PixelPage-Signature)")}>
                 {t("Secret de assinatura")}
               </Label>
               <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ Content-Type: application/json
                   {t("A cada mensagem recebida no WhatsApp, enviamos um")}{" "}
                   <code className="text-lime">POST</code>{" "}
                   {t("para a sua URL com este corpo (assinado com HMAC SHA-256 do corpo no header")}{" "}
-                  <code className="text-lime">X-Zari-Signature</code>):
+                  <code className="text-lime">X-PixelPage-Signature</code>):
                 </p>
                 <CodeBlock code={payloadExample} label={t("payload recebido")} />
                 <p className="text-xs leading-relaxed text-txt-mut">
