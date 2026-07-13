@@ -53,9 +53,21 @@ export async function POST(request: Request) {
 
   // -------------------------------------------------------- managed/disabled
   if (aiMode === "managed" || aiMode === "disabled") {
+    // managed aceita opcionalmente escolher o provider (ex.: OpenAI gpt-5.6-luna
+    // em vez do Anthropic default da plataforma). Sem provider informado (ou
+    // valor inválido) -> null = default (Anthropic). Sempre grava algo aqui
+    // (nunca deixa o campo como estava) porque senão um ai_provider órfão de
+    // um BYOK anterior ficaria "escondido" no banco e voltaria a valer assim
+    // que a org saísse do byok — resolveOrgAiConfig agora lê esse campo também
+    // em modo managed.
+    const requestedProvider =
+      aiMode === "managed" ? (body.ai_provider as AiProvider | undefined) : undefined;
+    const ai_provider =
+      requestedProvider && VALID_PROVIDERS.includes(requestedProvider) ? requestedProvider : null;
+
     const { error } = await admin
       .from("organizations")
-      .update({ ai_mode: aiMode })
+      .update({ ai_mode: aiMode, ai_provider })
       .eq("id", orgId);
     if (error) {
       return NextResponse.json(

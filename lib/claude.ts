@@ -3,7 +3,7 @@ import { getClaudeConfig } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkAiUsageAllowed, recordAiUsage } from "@/lib/ai-usage";
 import { resolveOrgAiConfig } from "@/lib/ai-provider";
-import { callOpenAI } from "@/lib/openai-provider";
+import { callOpenAI, DEFAULT_MANAGED_OPENAI_MODEL } from "@/lib/openai-provider";
 import type { AgentFaqRow, AgentRow, AiUsageSource } from "@/types/database";
 
 /**
@@ -229,10 +229,12 @@ export async function verifyAnthropicKey(apiKey: string): Promise<boolean> {
  * - "disabled" → retorna de imediato com error: "ai_disabled_by_org".
  * - "byok" sem chave utilizável (nunca verificada, decifra falhou, etc.) →
  *   retorna de imediato com error: "byok_key_missing".
- * - "managed" (comportamento de hoje) → proteção de margem: se `enforceLimit`
- *   (default true) e a org já estourou o teto de custo de IA do plano, a
- *   Claude API NEM É CHAMADA — retorna com error: "ai_budget_exceeded".
- *   BYOK nunca passa por esse gate (custo é do próprio cliente).
+ * - "managed" → proteção de margem: se `enforceLimit` (default true) e a org
+ *   já estourou o teto de custo de IA do plano, o provider NEM É CHAMADO —
+ *   retorna com error: "ai_budget_exceeded". BYOK nunca passa por esse gate
+ *   (custo é do próprio cliente). Provider managed é Anthropic por padrão
+ *   (org.ai_provider null) ou OpenAI (gpt-5.6-luna) se a org escolheu —
+ *   nesse caso usa OPENAI_API_KEY do ambiente em vez de ANTHROPIC_API_KEY.
  * Após uma resposta bem sucedida, registra o uso (tokens + custo, custo
  * zerado quando BYOK) via lib/ai-usage.ts.
  */
@@ -269,9 +271,17 @@ export async function generateAgentReply(params: {
   }
 
   if (aiConfig.mode === "managed") {
-    if (!process.env.ANTHROPIC_API_KEY) {
+    // resolveOrgAiConfig já resolve o default (OpenAI, sem provider explícito
+    // na org) — aiConfig.provider nunca vem null aqui; o "?? anthropic" é só
+    // defensivo caso essa garantia mude no futuro.
+    const managedProvider = aiConfig.provider ?? "anthropic";
+    const envKeyMissing =
+      managedProvider === "openai" ? !process.env.OPENAI_API_KEY : !process.env.ANTHROPIC_API_KEY;
+    if (envKeyMissing) {
       return fail(
-        "ANTHROPIC_API_KEY não configurada — adicione a chave no .env.local para ativar o bot."
+        managedProvider === "openai"
+          ? "OPENAI_API_KEY não configurada — adicione a chave no .env.local para ativar o bot."
+          : "ANTHROPIC_API_KEY não configurada — adicione a chave no .env.local para ativar o bot."
       );
     }
     const enforceLimit = params.enforceLimit !== false;
@@ -289,11 +299,13 @@ export async function generateAgentReply(params: {
   let result: AgentReplyResult;
   let provider: "anthropic" | "openai";
 
-  if (aiConfig.mode === "byok" && aiConfig.provider === "openai") {
+  if (aiConfig.provider === "openai" && (aiConfig.mode === "byok" || aiConfig.mode === "managed")) {
     provider = "openai";
     result = await callOpenAI({
-      apiKey: aiConfig.apiKey!,
-      model: "gpt-5.4-mini",
+      // byok: chave do cliente (obrigatória, já validada acima). managed: sem
+      // chave — callOpenAI cai no fallback de OPENAI_API_KEY do ambiente.
+      apiKey: aiConfig.mode === "byok" ? aiConfig.apiKey! : undefined,
+      model: aiConfig.mode === "byok" ? "gpt-5.4-mini" : DEFAULT_MANAGED_OPENAI_MODEL,
       systemPrompt: params.systemPrompt,
       history: params.history,
       userMessage: params.userMessage,

@@ -2,16 +2,22 @@ import OpenAI from "openai";
 import type { ChatTurn, AgentReplyResult } from "@/lib/claude";
 
 /**
- * Integração com a OpenAI para orgs em modo BYOK (ai_provider = 'openai').
- * Usa a Responses API (não a Chat Completions API) — orientação atual da
- * OpenAI para novos integrações de chat de propósito geral.
+ * Integração com a OpenAI — usada tanto por orgs em BYOK (ai_provider =
+ * 'openai', chave do próprio cliente) quanto managed (ai_provider =
+ * 'openai', chave da própria plataforma via OPENAI_API_KEY). Usa a
+ * Responses API (não a Chat Completions API) — orientação atual da OpenAI
+ * para novas integrações de chat de propósito geral.
  */
 
 /** Mesmo formato de retorno que lib/claude.ts usa para o resultado do provider. */
 export type ProviderCallResult = AgentReplyResult;
 
+/** Modelo managed padrão — mesmo espírito do CLAUDE_MODEL default em lib/settings.ts. */
+export const DEFAULT_MANAGED_OPENAI_MODEL = "gpt-5.6-luna";
+
 export async function callOpenAI(params: {
-  apiKey: string;
+  /** Se omitida (modo managed), usa OPENAI_API_KEY do ambiente — mesmo padrão de callAnthropic. */
+  apiKey?: string;
   model: string;
   systemPrompt: string;
   history: ChatTurn[]; // mesmo ChatTurn de lib/claude.ts
@@ -27,7 +33,7 @@ export async function callOpenAI(params: {
     error,
   });
 
-  const client = new OpenAI({ apiKey: params.apiKey });
+  const client = params.apiKey ? new OpenAI({ apiKey: params.apiKey }) : new OpenAI();
 
   // Mesma janela/limpeza de histórico usada para o Anthropic em lib/claude.ts.
   const history = params.history.slice(-20).filter((t) => t.content.trim());

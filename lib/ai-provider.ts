@@ -14,7 +14,12 @@ type AdminClient = SupabaseClient<Database>;
 
 export interface ResolvedAiConfig {
   mode: "managed" | "byok" | "disabled";
-  provider: "anthropic" | "openai" | null; // só definido quando mode === "byok"
+  /**
+   * managed: qual provider a org escolheu (null = default da plataforma, Anthropic).
+   * byok: provider da chave própria do cliente.
+   * disabled: sempre null.
+   */
+  provider: "anthropic" | "openai" | null;
   apiKey: string | null; // decifrada, só definida quando mode === "byok" e existe uma chave válida
 }
 
@@ -41,13 +46,23 @@ export async function resolveOrgAiConfig(
   }
 
   const mode = (org.ai_mode as ResolvedAiConfig["mode"]) || "managed";
+  const provider = (org.ai_provider as ResolvedAiConfig["provider"]) ?? null;
 
-  // Cobre tanto "managed" (comportamento de hoje, inalterado) quanto "disabled".
-  if (mode !== "byok") {
+  // "disabled" não usa provider nenhum.
+  if (mode === "disabled") {
     return { mode, provider: null, apiKey: null };
   }
 
-  const provider = (org.ai_provider as ResolvedAiConfig["provider"]) ?? null;
+  // "managed": org.ai_provider reflete a escolha, quando existir. Sem escolha
+  // (null — caso de toda org hoje, já que não há UI para setar isso em modo
+  // managed) o default da plataforma é OpenAI (gpt-5.6-luna) — mudança
+  // deliberada, não é mais Anthropic implícito. Nunca usa chave própria do
+  // cliente aqui (apiKey sempre null); o provider escolhido usa a chave
+  // gerenciada da plataforma via variável de ambiente (OPENAI_API_KEY /
+  // ANTHROPIC_API_KEY), resolvida em lib/claude.ts.
+  if (mode === "managed") {
+    return { mode, provider: provider ?? "openai", apiKey: null };
+  }
 
   // Nunca verificado com sucesso -> sem chave utilizável, mesmo que exista
   // algo salvo em org_secrets (só marcamos ai_byok_verified_at após uma
