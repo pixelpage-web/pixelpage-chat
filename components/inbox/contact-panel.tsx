@@ -257,7 +257,7 @@ export function ContactPanel({
       </div>
 
       {/* Tabs */}
-      <div className="mt-5 flex gap-0.5 rounded-lg border border-line bg-ink p-0.5">
+      <div className="mt-4 flex gap-0.5 rounded-lg border border-line bg-ink p-0.5">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -326,7 +326,7 @@ export function ContactPanel({
           </dl>
 
           {/* Campos editáveis: email e nascimento */}
-          <div className="mt-3 space-y-1.5">
+          <div className="mt-4 space-y-1.5">
             {/* Email */}
             <div className="flex items-center gap-1.5 rounded-md border border-line bg-ink px-2.5 py-1.5">
               <Mail className="h-3 w-3 shrink-0 text-txt-dim" aria-hidden />
@@ -427,7 +427,7 @@ export function ContactPanel({
           )}
 
           {/* Etiquetas */}
-          <section className="mt-5">
+          <section className="mt-4">
             <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-txt-dim">
               <Tag className="h-3 w-3" aria-hidden />
               {t("Etiquetas")}

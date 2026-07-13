@@ -1,9 +1,7 @@
 "use client";
 
-import { Bot } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
-import { Ticker } from "@/components/ui/Ticker";
+import { ChatMockup } from "@/components/ui/ChatMockup";
 import { useT } from "@/lib/i18n";
 
 const bullets = [
@@ -12,26 +10,10 @@ const bullets = [
   "Inbox unificado para toda a equipe responder junto",
 ];
 
-// Pills flutuantes ao redor do texto do hero, só em /register (item E).
-// Posições/tempos variados pra não ficarem sincronizadas.
-const floatingTags: {
-  label: string;
-  style: React.CSSProperties;
-}[] = [
-  { label: "Atendimento 24h", style: { top: "4%", right: "4%", animationDuration: "5s", animationDelay: "0s" } },
-  { label: "Bot com IA", style: { top: "16%", left: "0%", animationDuration: "6s", animationDelay: "0.8s" } },
-  { label: "Multi-atendente", style: { top: "38%", right: "0%", animationDuration: "4.5s", animationDelay: "1.6s" } },
-  { label: "WhatsApp Oficial", style: { top: "54%", left: "2%", animationDuration: "5.5s", animationDelay: "0.4s" } },
-  { label: "Setup em minutos", style: { top: "70%", right: "6%", animationDuration: "6.5s", animationDelay: "2.2s" } },
-  { label: "Sem cartão", style: { top: "80%", left: "8%", animationDuration: "5s", animationDelay: "1.2s" } },
-];
-
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const t = useT();
-  const pathname = usePathname();
-  const isRegister = pathname === "/register";
 
   return (
     <div className="flex min-h-dvh flex-col bg-ink lg:flex-row">
@@ -62,73 +44,32 @@ export default function AuthLayout({
           <Logo />
         </div>
 
-        {/* Pills flutuantes (item E) — só em /register, mesma visibilidade do
-            texto do hero que elas decoram (hidden até lg) */}
-        {isRegister && (
-          <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block" aria-hidden>
-            {floatingTags.map((tag) => (
-              <span key={tag.label} className="floating-tag" style={tag.style}>
-                {t(tag.label)}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Conteúdo completo — somente lg+ */}
+        {/* Conteúdo completo — somente lg+. Hierarquia reforçada (item 1d):
+            sem as pills flutuantes que antes preenchiam o espaço ao redor
+            do texto, o título cresce (text-4xl -> lg:text-5xl) e os
+            espaçamentos entre blocos aumentam um pouco, pra não sobrar
+            vazio nas bordas. */}
         <div className="relative z-10 mt-10 hidden flex-1 flex-col justify-center lg:flex">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-lime/70">
             <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-lime align-middle" />
             {t("online · resposta em segundos")}
           </p>
-          <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-txt">
+          <h2 className="mt-5 font-display text-4xl font-bold leading-tight text-txt lg:text-5xl">
             {t("Seu WhatsApp,")}
             <br />
             {t("automatizado com IA.")}
           </h2>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-txt-mut">
+          <p className="mt-4 max-w-md text-base leading-relaxed text-txt-mut">
             {t(
               "Inbox, bot inteligente e automações num só lugar para sua empresa vender e atender mais rápido."
             )}
           </p>
 
-          {/* Mock de conversa — bolhas flutuantes */}
-          <div className="relative mt-10 h-48" aria-hidden>
-            <div
-              className="absolute left-0 top-0 w-[70%] max-w-[230px] -rotate-2 animate-float rounded-2xl rounded-bl-sm border border-line bg-surface p-3 shadow-pop"
-              style={{ animationDelay: "0s" }}
-            >
-              <p className="text-xs leading-relaxed text-txt-mut">
-                {t("Olá! Vocês entregam hoje?")}
-              </p>
-            </div>
-            <div
-              className="absolute right-0 top-16 w-[75%] max-w-[240px] rotate-1 animate-float rounded-2xl rounded-br-sm border border-lime/30 bg-lime-soft p-3 shadow-pop"
-              style={{ animationDelay: "1.2s" }}
-            >
-              <div className="mb-1 flex items-center gap-1.5 text-lime">
-                <Bot className="h-3 w-3" aria-hidden />
-                <span className="font-mono text-[10px] uppercase tracking-wide">
-                  IA
-                </span>
-              </div>
-              <p className="text-xs leading-relaxed text-txt">
-                {t("Sim! Entrega em até 40 min 🚀")}
-              </p>
-            </div>
-            <div className="absolute left-4 top-[7.5rem] flex items-center gap-1 rounded-2xl rounded-bl-sm border border-line bg-surface px-3 py-2.5">
-              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-dim" />
-              <span
-                className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-dim"
-                style={{ animationDelay: "0.15s" }}
-              />
-              <span
-                className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-dim"
-                style={{ animationDelay: "0.3s" }}
-              />
-            </div>
-          </div>
+          {/* Mockup de conversa animado — único elemento com animação
+              elaborada da página (item 1c) */}
+          <ChatMockup />
 
-          <ul className="mt-8 space-y-3">
+          <ul className="mt-10 space-y-3.5">
             {bullets.map((bullet) => (
               <li key={bullet} className="flex items-start gap-2.5 text-sm text-txt-mut">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-[2px] bg-lime" aria-hidden />
@@ -143,24 +84,8 @@ export default function AuthLayout({
         </p>
       </div>
 
-      {/* Painel direito — formulário. min-w-0 é necessário: sem isso, o
-          conteúdo de largura intrínseca do Ticker (marquee com
-          width:max-content) força esta coluna flex a crescer pra caber o
-          texto inteiro, mesmo com overflow:hidden no Ticker — "overflow"
-          evita vazamento visual, mas não impede a propagação do tamanho
-          mínimo de conteúdo pelo item flex pai (flexbug #1 clássico). */}
+      {/* Painel direito — formulário */}
       <div className="relative flex min-w-0 flex-1 flex-col">
-        {/* Ticker (item B) — só em /register, no topo da coluna do formulário.
-            Não pode ser filho direto do container flex-row acima: nesse
-            contexto ele vira um item de linha sem flex-basis controlado, e
-            como o próprio .ticker-wrap tem width:100%, esse valor vira a
-            base de flex e o navegador o estica pra tomar todo o espaço
-            horizontal restante — combinado com align-items:stretch (default),
-            também esticava pra altura inteira da viewport (bug do bloco
-            verde gigante em telas ≥1024px). Aqui dentro ele é só mais um
-            filho normal de uma coluna (flex-col), sem esse problema. */}
-        {isRegister && <Ticker />}
-
         <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 lg:py-10">
           <div className="w-full max-w-sm">
             {children}

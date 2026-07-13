@@ -32,7 +32,6 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FeatureBadge } from "@/components/ui/feature-badge";
 import { Modal } from "@/components/ui/modal";
-import { Ticker } from "@/components/ui/Ticker";
 import { IconBadge } from "@/components/ui/IconBadge";
 import { QrConnectModal } from "@/components/whatsapp/qr-connect-modal";
 import { QrConsentModal } from "./qr-consent-modal";
@@ -251,7 +250,7 @@ export function ConnectionsView({
         <header className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-lg font-semibold">{t("Conexões WhatsApp")}</h1>
+              <h1 className="font-display text-xl font-semibold">{t("Conexões WhatsApp")}</h1>
               {limitOverride && overLimit && <FeatureBadge requiredPlan={t("superior")} />}
             </div>
             {connectionsLimit === null ? (
@@ -447,11 +446,6 @@ export function ConnectionsView({
             </p>
           </Card>
         )}
-
-        {/* Divisor (item B) */}
-        <div className="-mx-4 sm:-mx-6">
-          <Ticker />
-        </div>
 
         {/* Lista de conexões */}
         {connections.length === 0 ? (

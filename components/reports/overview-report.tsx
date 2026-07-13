@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { MessageSquare, Users, Clock, TrendingUp } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface OverviewStats {
   openConversations: number;
@@ -73,7 +74,7 @@ export function OverviewReport({ orgId }: { orgId: string }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">{t("Visão Geral")}</h2>
+          <h2 className="text-xl font-semibold">{t("Visão Geral")}</h2>
           <p className="text-sm text-txt-dim">{t("Atualiza a cada 30 segundos.")}</p>
         </div>
         <span className="flex items-center gap-1.5 text-xs text-ok">
@@ -84,13 +85,13 @@ export function OverviewReport({ orgId }: { orgId: string }) {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-xl border border-line bg-surface p-5">
+          <Card key={kpi.label}>
             <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
             <p className="mt-3 text-2xl font-bold font-display">
               {loading ? "—" : kpi.value}
             </p>
             <p className="mt-1 text-xs text-txt-dim">{kpi.label}</p>
-          </div>
+          </Card>
         ))}
       </div>
     </div>

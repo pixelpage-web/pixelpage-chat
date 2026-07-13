@@ -282,7 +282,7 @@ export function SettingsView({
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-2xl space-y-5 p-4 sm:p-6">
         <header>
-          <h1 className="font-display text-lg font-semibold">{t("Configurações")}</h1>
+          <h1 className="font-display text-xl font-semibold">{t("Configurações")}</h1>
           <p className="mt-0.5 text-sm text-txt-mut">
             {t("Sua conta, sua empresa e sua equipe.")}
           </p>

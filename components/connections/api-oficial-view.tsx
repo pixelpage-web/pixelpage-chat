@@ -127,7 +127,7 @@ export function ApiOficialView({
         {hasPlan3 && (
           <>
             {/* Card de apresentação */}
-            <Card className="border-ok/30 bg-gradient-to-br from-ok-soft to-transparent">
+            <Card>
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ok-soft">
                   <ShieldCheck className="h-6 w-6 text-ok" aria-hidden />

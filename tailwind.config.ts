@@ -90,7 +90,7 @@ const config: Config = {
         // ── Nova identidade (redesign, passo 2 — verde-neon) ───────────
         // Valores fixos da paleta dark de referência — usados em qualquer
         // lugar que precise do tom exato independente do tema ativo (ex:
-        // Ticker, IconBadge, pills flutuantes).
+        // IconBadge).
         brand: "#00FF41",
         bg: "#0A0A0A",
         surface2: "#1A1A1A",

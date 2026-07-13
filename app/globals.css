@@ -209,45 +209,6 @@
     box-shadow: 0 0 0 3px var(--brand-glow);
     outline: none;
   }
-
-  /* Ticker/marquee (item B) — trilha duplicada, translateX 0 -> -50% do
-     total (= exatamente a largura de uma cópia), loop perfeito sem "salto"
-     independente do tamanho do conteúdo. */
-  .ticker-wrap {
-    overflow: hidden;
-    width: 100%;
-    /* var(--brand) === #00ff41 no .dark (mesmo valor de antes, sem
-       mudança visual) e === #16a34a no :root (tema claro). */
-    background: var(--brand);
-  }
-
-  .ticker-track {
-    display: flex;
-    width: max-content;
-    animation: ticker 30s linear infinite;
-  }
-
-  /* Tema claro: verde mais escuro pede texto branco (o texto preto do
-     .dark, pensado pro verde neon, ficaria com contraste mais fraco). */
-  :root:not(.dark) .ticker-track {
-    color: #ffffff;
-  }
-
-  .ticker-wrap:hover .ticker-track {
-    animation-play-state: paused;
-  }
-
-  @media (max-width: 767px) {
-    .ticker-track {
-      animation-duration: 45s;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ticker-track {
-      animation: none;
-    }
-  }
 }
 
 /* Sidebar/nav mobile (app-shell.tsx) usam bg-theme-bg = var(--bg), que no
@@ -264,57 +225,6 @@
    componente, por instrução) pro cinza-claro pedido. */
 :root:not(.dark) .hover\:bg-white\/\[0\.03\]:hover {
   background-color: var(--surface-2);
-}
-
-@keyframes ticker {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* Pills flutuantes do hero de /register (item E) */
-@keyframes floatTag {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.floating-tag {
-  position: absolute;
-  white-space: nowrap;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--brand);
-  background: var(--brand-dim);
-  border: 1px solid var(--brand-border);
-  animation-name: floatTag;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .floating-tag {
-    animation: none;
-  }
-}
-
-/* Tablet (item I): tags a ~80% de escala — reduz tamanho em vez de usar
-   transform:scale, que seria sobrescrito a cada frame pela animação
-   (transform já é usado pelo floatTag). */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .floating-tag {
-    padding: 5px 10px;
-    font-size: 10px;
-  }
 }
 
 /* ----------------------------------------------------------------------------
