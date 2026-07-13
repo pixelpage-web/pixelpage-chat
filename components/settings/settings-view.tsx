@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -32,6 +32,14 @@ const notificationTypes = [
   { key: "bot_error", label: "Erro no bot IA" },
 ] as const;
 
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+const ALLOWED_LOGO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const LOGO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
 export function SettingsView({
   userId,
   userEmail,
@@ -39,6 +47,7 @@ export function SettingsView({
   role,
   orgId,
   orgName,
+  orgLogoUrl,
   members: initialMembers,
   notificationPrefs,
 }: {
@@ -48,6 +57,7 @@ export function SettingsView({
   role: Role;
   orgId: string;
   orgName: string;
+  orgLogoUrl: string | null;
   members: TeamMember[];
   notificationPrefs: Record<string, boolean>;
 }) {
@@ -56,6 +66,10 @@ export function SettingsView({
   const [newPassword, setNewPassword] = useState("");
   const [prefs, setPrefs] = useState<Record<string, boolean>>(notificationPrefs);
   const [company, setCompany] = useState(orgName);
+  const [logoUrl, setLogoUrl] = useState(orgLogoUrl);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [removingLogo, setRemovingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [members, setMembers] = useState(initialMembers);
   const [saving, setSaving] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -100,6 +114,104 @@ export function SettingsView({
       toast.error(t("Erro de conexão."));
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function saveDisplayName() {
+    const trimmed = company.trim();
+    if (trimmed.length < 2 || trimmed.length > 50) {
+      toast.error(t("O nome precisa ter entre 2 e 50 caracteres."));
+      return;
+    }
+    setSaving("displayName");
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("organizations")
+        .update({ name: trimmed })
+        .eq("id", orgId);
+      if (error) {
+        toast.error(t("Não foi possível atualizar o nome."));
+        return;
+      }
+      toast.success(t("Nome atualizado."));
+    } catch {
+      toast.error(t("Erro de conexão."));
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
+      toast.error(t("Formato inválido. Use JPEG, PNG ou WebP."));
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      toast.error(t("A imagem precisa ter no máximo 2MB."));
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const supabase = createClient();
+      const ext = LOGO_EXT[file.type];
+      const path = `${orgId}/logo.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("logos")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadError) {
+        toast.error(t("Não foi possível enviar a logo."));
+        return;
+      }
+      const { data: pub } = supabase.storage.from("logos").getPublicUrl(path);
+      const { error: updateError } = await supabase
+        .from("organizations")
+        .update({ logo_url: pub.publicUrl })
+        .eq("id", orgId);
+      if (updateError) {
+        toast.error(t("Não foi possível salvar a logo."));
+        return;
+      }
+      setLogoUrl(pub.publicUrl);
+      toast.success(t("Logo atualizada."));
+    } catch {
+      toast.error(t("Erro de conexão."));
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
+  async function handleRemoveLogo() {
+    if (!logoUrl) return;
+    setRemovingLogo(true);
+    try {
+      const supabase = createClient();
+      // Extrai o caminho dentro do bucket a partir da URL pública salva.
+      const marker = "/object/public/logos/";
+      const idx = logoUrl.indexOf(marker);
+      if (idx !== -1) {
+        const path = logoUrl.slice(idx + marker.length);
+        await supabase.storage.from("logos").remove([path]);
+      }
+      const { error } = await supabase
+        .from("organizations")
+        .update({ logo_url: null })
+        .eq("id", orgId);
+      if (error) {
+        toast.error(t("Não foi possível remover a logo."));
+        return;
+      }
+      setLogoUrl(null);
+      toast.success(t("Logo removida."));
+    } catch {
+      toast.error(t("Erro de conexão."));
+    } finally {
+      setRemovingLogo(false);
     }
   }
 
@@ -179,7 +291,89 @@ export function SettingsView({
             <Sun className="mt-0.5 h-5 w-5 text-txt-dim" aria-hidden />
             <div className="flex-1">
               <CardTitle>{t("Aparência")}</CardTitle>
-              <CardDescription>{t("Escolha entre tema escuro ou claro.")}</CardDescription>
+              <CardDescription>
+                {t("Personalize a identidade visual e escolha o tema.")}
+              </CardDescription>
+
+              {isOwner && (
+                <>
+                  {/* Logo da empresa */}
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm text-txt-mut">{t("Logo da empresa")}</span>
+                    <div className="flex items-center gap-3">
+                      {logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={logoUrl}
+                          alt={t("Logo da empresa")}
+                          className="h-16 w-16 shrink-0 rounded-xl border border-line object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-raised font-display text-xl font-bold text-txt-mut">
+                          {(company.trim().charAt(0) || "?").toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-1.5">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          loading={uploadingLogo}
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          {t("Alterar logo")}
+                        </Button>
+                        {logoUrl && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            loading={removingLogo}
+                            onClick={() => void handleRemoveLogo()}
+                          >
+                            {t("Remover logo")}
+                          </Button>
+                        )}
+                      </div>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => void handleLogoChange(e)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Nome exibido */}
+                  <div className="mt-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-sm text-txt-mut">{t("Nome exibido")}</span>
+                      <div className="flex flex-1 gap-2 sm:max-w-xs">
+                        <Input
+                          value={company}
+                          onChange={(e) => setCompany(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          loading={saving === "displayName"}
+                          onClick={() => void saveDisplayName()}
+                        >
+                          {t("Salvar")}
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="mt-1.5 text-xs text-txt-dim">
+                      {t("Este nome aparece na sua área de trabalho.")}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Tema */}
               <div className="mt-4 flex items-center justify-between gap-3">
                 <span className="text-sm text-txt-mut">{t("Tema")}</span>
                 <ThemeToggle />

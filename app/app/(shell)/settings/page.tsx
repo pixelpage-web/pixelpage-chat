@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const supabase = await createServerSupabase();
 
   const [{ data: org }, { data: members }] = await Promise.all([
-    supabase.from("organizations").select("id, name").eq("id", orgId).maybeSingle(),
+    supabase.from("organizations").select("id, name, logo_url").eq("id", orgId).maybeSingle(),
     supabase
       .from("profiles")
       .select("id, name, role, created_at")
@@ -31,6 +31,7 @@ export default async function SettingsPage() {
       role={session.profile.role}
       orgId={org?.id ?? orgId}
       orgName={org?.name ?? ""}
+      orgLogoUrl={org?.logo_url ?? null}
       members={members ?? []}
       notificationPrefs={
         (session.profile.notification_prefs ?? {}) as Record<string, boolean>

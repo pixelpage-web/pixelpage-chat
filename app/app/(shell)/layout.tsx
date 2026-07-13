@@ -50,7 +50,7 @@ export default async function ShellLayout({
     { data: notifications },
     { count: unreadConvCount },
   ] = await Promise.all([
-    supabase.from("organizations").select("name, suspended").eq("id", orgId).maybeSingle(),
+    supabase.from("organizations").select("name, suspended, logo_url").eq("id", orgId).maybeSingle(),
     supabase
       .from("subscriptions")
       .select("status, trial_ends_at, plan_id")
@@ -113,6 +113,7 @@ export default async function ShellLayout({
     role: session.profile.role,
     orgId,
     orgName: org?.name ?? "",
+    orgLogoUrl: org?.logo_url ?? null,
     orgSuspended: org?.suspended ?? false,
     impersonating: session.impersonating,
     whatsappDown: (downCount ?? 0) > 0,

@@ -45,6 +45,8 @@ export interface ShellData {
   role: Role;
   orgId: string | null;
   orgName: string;
+  /** logo customizada da org (white-label); null = usa a logo padrão da plataforma */
+  orgLogoUrl: string | null;
   orgSuspended: boolean;
   impersonating: boolean;
   /** alguma conexão QR Code caiu (status disconnected) */
@@ -420,7 +422,7 @@ export function AppShell({
         <aside className="hidden w-52 shrink-0 flex-col border-r border-theme-border bg-theme-bg py-4 md:flex">
           <div className="mb-5 flex items-center justify-between px-4">
             <Link href="/app/inbox" aria-label={t("Início")}>
-              <Logo />
+              <Logo orgLogoUrl={data.orgLogoUrl} orgName={data.orgName} />
             </Link>
             <ThemeToggle />
           </div>
