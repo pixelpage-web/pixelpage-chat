@@ -363,7 +363,7 @@ if (assinatura !== esperado) {
                     {t("Testar conexão")}
                   </Button>
                   <Link
-                    href="/app/docs"
+                    href="/app/help"
                     className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
                   >
                     {t("Como personalizar (Central de Ajuda)")}

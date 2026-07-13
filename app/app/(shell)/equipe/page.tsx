@@ -25,6 +25,7 @@ export default async function EquipePage() {
   return (
     <EquipeView
       userId={session.user.id}
+      orgId={orgId}
       isOwner={isOwner}
       initialMembers={members ?? []}
     />

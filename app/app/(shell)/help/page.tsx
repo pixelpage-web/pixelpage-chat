@@ -10,5 +10,15 @@ export default async function HelpPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
 
-  return <HelpView />;
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    "https://www.pixelpagechat.com.br";
+
+  return (
+    <HelpView
+      orgId={session.profile.org_id}
+      authorName={session.profile.name}
+      appUrl={appUrl}
+    />
+  );
 }

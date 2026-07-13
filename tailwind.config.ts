@@ -133,6 +133,10 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-scale": {
+          "0%": { opacity: "0", transform: "scale(0.96)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
@@ -141,6 +145,7 @@ const config: Config = {
       animation: {
         shimmer: "shimmer 1.4s linear infinite",
         "fade-up": "fade-up 0.25s ease-out",
+        "fade-scale": "fade-scale 0.2s ease-out",
         float: "float 6s ease-in-out infinite",
       },
     },

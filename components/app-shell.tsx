@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
-  BookOpen,
   Bot,
   CreditCard,
   Eye,
@@ -35,6 +34,7 @@ import { SupportButton } from "@/components/support-button";
 import { InboxNotifications } from "@/components/inbox-notifications";
 import { GlobalSearch } from "@/components/global-search";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { WelcomeModal } from "@/components/onboarding/welcome-modal";
 import { NAV_PERMISSION_MAP } from "@/lib/permissions";
 import type { Role, SubscriptionStatus, SystemNotificationRow, TeamMemberPermissionsRow } from "@/types/database";
 
@@ -166,7 +166,6 @@ const navGroups: NavGroup[] = [
   {
     label: "Suporte",
     items: [
-      { href: "/app/docs", label: "Documentação", icon: BookOpen },
       { href: "/app/help", label: "Central de Ajuda", icon: LifeBuoy },
     ],
   },
@@ -539,6 +538,9 @@ export function AppShell({
 
       {/* Botão de suporte flutuante — presente em todas as páginas */}
       <SupportButton />
+
+      {/* Modal de boas-vindas — só na 1ª entrada autenticada de cada usuário */}
+      <WelcomeModal userId={data.userId} orgName={data.orgName} />
     </div>
     </UnreadCountContext.Provider>
   );

@@ -99,6 +99,7 @@ export async function POST(request: Request) {
       conversation_id: conversation.id,
       direction: "outbound",
       sender_type: "human",
+      sender_id: session.user.id,
       content,
       message_type: "text",
       meta_message_id: metaMessageId,

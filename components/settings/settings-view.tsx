@@ -23,7 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { UnitsCard } from "@/components/settings/units-card";
-import { TeamCard, type TeamMember } from "@/components/settings/team-card";
+import type { TeamMember } from "@/components/settings/team-card";
 import type { Json, Role } from "@/types/database";
 
 const notificationTypes = [
@@ -73,7 +73,7 @@ export function SettingsView({
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [removingLogo, setRemovingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const [members, setMembers] = useState(initialMembers);
+  const [members] = useState(initialMembers);
   const [saving, setSaving] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -502,9 +502,6 @@ export function SettingsView({
           </Card>
         )}
 
-        {/* Equipe */}
-        <TeamCard userId={userId} isOwner={isOwner} members={members} setMembers={setMembers} />
-
         {/* Unidades (roteamento de conversas por local) */}
         {isOwner && showProFeatures && <UnitsCard orgId={orgId} members={members} />}
 
@@ -515,14 +512,14 @@ export function SettingsView({
             <div className="flex-1">
               <CardTitle>{t("Ajuda e sugestões")}</CardTitle>
               <CardDescription>
-                {t("Dúvidas sobre como algo funciona? Veja a documentação. Tem uma ideia? Manda pra gente!")}
+                {t("Dúvidas sobre como algo funciona? Veja a Central de Ajuda. Tem uma ideia? Manda pra gente!")}
               </CardDescription>
               <Link
-                href="/app/docs"
+                href="/app/help"
                 className="focus-ring mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-txt-mut transition-colors hover:border-lime/40 hover:text-lime"
               >
                 <BookOpen className="h-3.5 w-3.5" aria-hidden />
-                {t("Abrir documentação")}
+                {t("Abrir Central de Ajuda")}
               </Link>
               <div className="mt-4">
                 <SuggestionForm orgId={orgId} authorName={name || profileName} />
