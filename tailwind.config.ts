@@ -138,8 +138,27 @@ const config: Config = {
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         "toast-in": {
-          "0%": { opacity: "0", transform: "translateY(16px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+          "0%": { opacity: "0", transform: "translateY(28px) scale(0.9)" },
+          "55%": { opacity: "1", transform: "translateY(-3px) scale(1.015)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "toast-out": {
+          "0%": { opacity: "1", transform: "translateY(0) scale(1)" },
+          "100%": { opacity: "0", transform: "translateY(14px) scale(0.95)" },
+        },
+        "urgent-pulse": {
+          "0%, 100%": {
+            boxShadow:
+              "0 0 0 1px rgba(239,68,68,0.35), 0 8px 30px rgba(0,0,0,0.55)",
+          },
+          "50%": {
+            boxShadow:
+              "0 0 0 1.5px rgba(239,68,68,0.9), 0 0 18px rgba(239,68,68,0.4), 0 8px 30px rgba(0,0,0,0.55)",
+          },
+        },
+        "shrink-bar": {
+          "0%": { transform: "scaleX(1)" },
+          "100%": { transform: "scaleX(0)" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
@@ -150,7 +169,12 @@ const config: Config = {
         shimmer: "shimmer 1.4s linear infinite",
         "fade-up": "fade-up 0.25s ease-out",
         "fade-scale": "fade-scale 0.2s ease-out",
-        "toast-in": "toast-in 0.3s ease-out",
+        "toast-in": "toast-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "toast-out": "toast-out 0.2s ease-in forwards",
+        "urgent-pulse": "urgent-pulse 2.4s ease-in-out infinite",
+        // Duração fixa (8s) sincronizada com AUTO_DISMISS_MS em
+        // components/system-notifications.tsx — mudou lá, muda aqui também.
+        "shrink-bar": "shrink-bar 8s linear forwards",
         float: "float 6s ease-in-out infinite",
       },
     },

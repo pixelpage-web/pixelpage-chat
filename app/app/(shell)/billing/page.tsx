@@ -73,10 +73,17 @@ export default async function BillingPage({
   const currentPlan =
     plans?.find((p) => p.id === subscription?.plan_id) ?? null;
 
+  // Decide qual checkout oferecer pra assinantes NOVOS — Cakto continua o
+  // default; só vira Stripe se explicitamente configurado. Não afeta quem
+  // já assina (isso depende de subscription.payment_provider, não disso).
+  const activePaymentProvider =
+    process.env.ACTIVE_PAYMENT_PROVIDER === "stripe" ? "stripe" : "cakto";
+
   return (
     <BillingView
       subscription={subscription ?? null}
       currentPlan={currentPlan}
+      activePaymentProvider={activePaymentProvider}
       plans={plans ?? []}
       aiUsed={usage?.ai_messages_used ?? 0}
       connectionsCount={connectionsCount ?? 0}

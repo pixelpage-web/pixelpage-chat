@@ -194,7 +194,7 @@ export async function handleInboundMessage(
   // 4. Bloqueio por assinatura: salva no inbox mas não roteia
   const { data: subscription } = await admin
     .from("subscriptions")
-    .select("status, trial_ends_at, plan_id")
+    .select("status, trial_ends_at, current_period_end, plan_id")
     .eq("org_id", org.id)
     .maybeSingle();
   if (isSubscriptionBlocked(subscription ?? null)) return;

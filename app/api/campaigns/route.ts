@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   // Assinatura ativa?
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("status, trial_ends_at, plan_id")
+    .select("status, trial_ends_at, current_period_end, plan_id")
     .eq("org_id", orgId)
     .maybeSingle();
   if (isSubscriptionBlocked(subscription ?? null)) {

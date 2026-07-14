@@ -20,7 +20,7 @@ export default async function InboxPage() {
   const supabase = await createServerSupabase();
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("status, trial_ends_at")
+    .select("status, trial_ends_at, current_period_end")
     .eq("org_id", session.profile.org_id)
     .maybeSingle();
 

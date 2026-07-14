@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   // Super Admin não é bloqueado (acesso de demonstração a todos os planos).
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("status, trial_ends_at")
+    .select("status, trial_ends_at, current_period_end")
     .eq("org_id", orgId)
     .maybeSingle();
   if (!isSuperAdmin(session.user.email) && isSubscriptionBlocked(subscription ?? null)) {

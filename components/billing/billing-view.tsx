@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
+import { toast } from "sonner";
 import {
   AlertOctagon,
   AlertTriangle,
@@ -11,7 +12,9 @@ import {
   Check,
   Clock,
   KeyRound,
+  Loader2,
   Lock,
+  Settings,
   Shield,
   Zap,
 } from "lucide-react";
@@ -152,6 +155,7 @@ function UsageBar({
 export function BillingView({
   subscription,
   currentPlan,
+  activePaymentProvider,
   plans,
   aiUsed,
   connectionsCount,
@@ -167,6 +171,8 @@ export function BillingView({
 }: {
   subscription: SubscriptionRow | null;
   currentPlan: PlanRow | null;
+  /** Provider oferecido pro checkout de assinantes NOVOS (env ACTIVE_PAYMENT_PROVIDER). */
+  activePaymentProvider: "cakto" | "stripe";
   plans: PlanRow[];
   aiUsed: number;
   connectionsCount: number;
@@ -187,12 +193,52 @@ export function BillingView({
   const t = useT();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(showSuccess);
+  const [checkingOutPlanId, setCheckingOutPlanId] = useState<string | null>(null);
+  const [openingPortal, setOpeningPortal] = useState(false);
 
   function handleModalClose() {
     setModalOpen(false);
     // Remove ?success=true da URL sem recarregar
     window.history.replaceState(null, "", "/app/billing");
     router.refresh();
+  }
+
+  async function startStripeCheckout(planId: string) {
+    setCheckingOutPlanId(planId);
+    try {
+      const res = await fetch("/api/checkout/stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan_id: planId }),
+      });
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !json.url) {
+        toast.error(json.error ?? t("Não foi possível iniciar o checkout."));
+        return;
+      }
+      window.location.href = json.url;
+    } catch {
+      toast.error(t("Erro de conexão."));
+    } finally {
+      setCheckingOutPlanId(null);
+    }
+  }
+
+  async function openStripePortal() {
+    setOpeningPortal(true);
+    try {
+      const res = await fetch("/api/billing/portal", { method: "POST" });
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !json.url) {
+        toast.error(json.error ?? t("Não foi possível abrir o portal."));
+        return;
+      }
+      window.location.href = json.url;
+    } catch {
+      toast.error(t("Erro de conexão."));
+    } finally {
+      setOpeningPortal(false);
+    }
   }
 
   const status = subscription ? statusLabels[subscription.status] : null;
@@ -246,12 +292,29 @@ export function BillingView({
                       : t("Gerencie seu plano abaixo.")}
               </CardDescription>
             </div>
-            {currentPlan && currentPlan.price_cents > 0 && (
-              <p className="font-display text-xl font-semibold text-lime">
-                {formatBRL(currentPlan.price_cents)}
-                <span className="text-xs font-normal text-txt-dim">/{t("mês")}</span>
-              </p>
-            )}
+            <div className="flex flex-col items-end gap-2">
+              {currentPlan && currentPlan.price_cents > 0 && (
+                <p className="font-display text-xl font-semibold text-lime">
+                  {formatBRL(currentPlan.price_cents)}
+                  <span className="text-xs font-normal text-txt-dim">/{t("mês")}</span>
+                </p>
+              )}
+              {/* Gerenciar assinatura via Stripe — Cakto não tem esse fluxo hoje */}
+              {isOwner && subscription?.payment_provider === "stripe" && (
+                <button
+                  onClick={() => void openStripePortal()}
+                  disabled={openingPortal}
+                  className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-txt transition-colors hover:border-lime/60 hover:text-lime disabled:opacity-60"
+                >
+                  {openingPortal ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                  ) : (
+                    <Settings className="h-3.5 w-3.5" aria-hidden />
+                  )}
+                  {t("Gerenciar assinatura")}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Alerta de custo de IA — só faz sentido no modo gerenciado (teto nosso). */}
@@ -375,7 +438,10 @@ export function BillingView({
               const isFeatured = copy?.featured ?? plan.highlight;
               const trialDays = (plan.features as Record<string, unknown>)
                 ?.trial_days as number | undefined;
-              const hasCheckout = !!plan.cakto_checkout_url;
+              const hasCheckout =
+                activePaymentProvider === "stripe"
+                  ? !!plan.stripe_price_id
+                  : !!plan.cakto_checkout_url;
 
               return (
                 <div
@@ -446,7 +512,23 @@ export function BillingView({
                   {/* CTA — dono, plano pago, não-atual */}
                   {!isCurrent && isOwner && plan.price_cents > 0 && (
                     <div className="mt-5">
-                      {hasCheckout ? (
+                      {hasCheckout && activePaymentProvider === "stripe" ? (
+                        <button
+                          onClick={() => void startStripeCheckout(plan.id)}
+                          disabled={checkingOutPlanId === plan.id}
+                          className={cn(
+                            "focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
+                            isFeatured
+                              ? "bg-lime text-black hover:opacity-90"
+                              : "border border-line-strong text-txt hover:border-lime/60 hover:text-lime"
+                          )}
+                        >
+                          {checkingOutPlanId === plan.id && (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                          )}
+                          {t("Assinar")} {plan.name}
+                        </button>
+                      ) : hasCheckout ? (
                         <a
                           href={buildCheckoutUrl(
                             plan.cakto_checkout_url!,

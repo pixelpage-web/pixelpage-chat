@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   // Bloqueio por assinatura
   const { data: subscription } = await admin
     .from("subscriptions")
-    .select("status, trial_ends_at")
+    .select("status, trial_ends_at, current_period_end")
     .eq("org_id", auth.orgId)
     .maybeSingle();
   if (isSubscriptionBlocked(subscription ?? null)) {

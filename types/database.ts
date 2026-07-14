@@ -15,6 +15,7 @@ export type Json =
 
 export type Role = "superadmin" | "admin" | "owner" | "manager" | "agent";
 export type SubscriptionStatus = "trial" | "active" | "past_due" | "canceled";
+export type PaymentProvider = "cakto" | "stripe";
 export type ConnectionMode = "manual" | "ai_bot" | "external_webhook";
 export type ConnectionStatus = "pending" | "connected" | "disconnected" | "error";
 export type ConnectionType = "meta_api" | "qr_code";
@@ -105,6 +106,7 @@ export type PlanRow = {
   created_at: string;
   max_ai_cost_usd_monthly: number | null;
   allow_official_api: boolean;
+  stripe_price_id: string | null;
 };
 
 export type SubscriptionRow = {
@@ -112,7 +114,9 @@ export type SubscriptionRow = {
   org_id: string;
   plan_id: string;
   status: SubscriptionStatus;
+  payment_provider: PaymentProvider;
   cakto_subscription_id: string | null;
+  stripe_subscription_id: string | null;
   trial_ends_at: string | null;
   trial_extended_count: number;
   current_period_end: string | null;

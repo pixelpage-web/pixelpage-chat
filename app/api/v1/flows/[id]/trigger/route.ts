@@ -42,7 +42,7 @@ export async function POST(
   // Bloqueio por assinatura (fluxo dispara mensagens)
   const { data: subscription } = await admin
     .from("subscriptions")
-    .select("status, trial_ends_at")
+    .select("status, trial_ends_at, current_period_end")
     .eq("org_id", auth.orgId)
     .maybeSingle();
   if (isSubscriptionBlocked(subscription ?? null)) {
