@@ -202,15 +202,34 @@ export default function IndicacoesPage() {
   const t = useT();
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  // 403 em /api/referral/link = papel sem permissão pra gerenciar o link
+  // (só owner/admin) — não é falha da página, só uma seção indisponível
+  // pra este usuário.
+  const [linkForbidden, setLinkForbidden] = useState(false);
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
+    setLoadError(false);
     try {
       const [statsRes, linkRes] = await Promise.all([
         fetch("/api/referral/stats"),
         fetch("/api/referral/link"),
       ]);
+
+      if (!statsRes.ok) {
+        setData(null);
+        setLoadError(true);
+        return;
+      }
       const stats = await statsRes.json() as Omit<StatsData, "hasPaidPlan">;
+
+      if (!linkRes.ok) {
+        setLinkForbidden(linkRes.status === 403);
+        setData({ ...stats, hasPaidPlan: true });
+        return;
+      }
+      setLinkForbidden(false);
       const linkData = await linkRes.json() as {
         link: StatsData["link"];
         url: string;
@@ -224,6 +243,8 @@ export default function IndicacoesPage() {
         hasPaidPlan: linkData.hasPaidPlan,
       });
     } catch {
+      setData(null);
+      setLoadError(true);
       toast.error("Erro ao carregar dados de indicações");
     } finally {
       setLoading(false);
@@ -235,7 +256,15 @@ export default function IndicacoesPage() {
   async function createLink() {
     setCreating(true);
     try {
-      await fetch("/api/referral/link");
+      const res = await fetch("/api/referral/link");
+      if (!res.ok) {
+        toast.error(
+          res.status === 403
+            ? "Apenas donos e administradores podem gerenciar o link de indicação."
+            : "Não foi possível criar o link."
+        );
+        return;
+      }
       await load();
     } catch {
       toast.error("Erro ao criar link");
@@ -271,7 +300,28 @@ export default function IndicacoesPage() {
     );
   }
 
-  const { stats, milestoneProgress, pendingMilestones, rewards, referrals } = data ?? {};
+  if (loadError || !data) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-3 px-4 text-center">
+        <AlertTriangle className="h-6 w-6 text-danger" aria-hidden />
+        <p className="text-sm text-txt-mut">
+          {t("Não foi possível carregar os dados de indicações.")}
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setLoading(true);
+            void load();
+          }}
+        >
+          {t("Tentar novamente")}
+        </Button>
+      </div>
+    );
+  }
+
+  const { stats, milestoneProgress, pendingMilestones, rewards, referrals } = data;
 
   return (
     <div className="h-full overflow-y-auto">
@@ -414,7 +464,11 @@ export default function IndicacoesPage() {
             </div>
           ) : (
             <div className="mt-4">
-              {data?.hasPaidPlan === false ? (
+              {linkForbidden ? (
+                <p className="rounded-lg border border-dashed border-line p-4 text-center text-sm text-txt-dim">
+                  Apenas donos e administradores podem gerenciar o link de indicação.
+                </p>
+              ) : data.hasPaidPlan === false ? (
                 <p className="rounded-lg border border-dashed border-line p-4 text-center text-sm text-txt-dim">
                   Faça upgrade para um plano pago para participar do programa de indicações.
                 </p>

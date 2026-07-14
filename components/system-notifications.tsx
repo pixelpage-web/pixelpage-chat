@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 import type { NotificationType, SystemNotificationRow } from "@/types/database";
 
 /**
- * Banner global de notificações do sistema (admin → clientes).
- * Renderiza no topo do /app. Tipos: manutenção (vermelho), alerta (âmbar),
- * info (azul), novidade (verde). Notificações dispensáveis podem ser fechadas
- * (estado guardado no localStorage); manutenção NÃO pode ser fechada.
- * Atualiza ao vivo via Supabase Realtime — uma manutenção programada aparece
- * para todos os clientes logados sem recarregar a página.
+ * Toasts de notificações do sistema (admin → clientes), empilhados no canto
+ * inferior direito. Tipos: manutenção (vermelho), alerta (âmbar), info
+ * (azul), novidade (verde). Notificações dispensáveis podem ser fechadas —
+ * o estado fica em sessionStorage (NUNCA localStorage): reaparecem a cada
+ * F5 ou reabertura do navegador, só somem enquanto durar a aba/sessão atual.
+ * Manutenção NÃO pode ser fechada. Atualiza ao vivo via Supabase Realtime.
  */
 
 const DISMISS_KEY = "ppc_sysnotif_dismissed";
@@ -45,7 +45,7 @@ const typeMeta: Record<
 
 function readDismissed(): Set<string> {
   try {
-    const raw = window.localStorage.getItem(DISMISS_KEY);
+    const raw = window.sessionStorage.getItem(DISMISS_KEY);
     return new Set(raw ? (JSON.parse(raw) as string[]) : []);
   } catch {
     return new Set();
@@ -105,9 +105,9 @@ export function SystemNotifications({
     next.add(id);
     setDismissed(next);
     try {
-      window.localStorage.setItem(DISMISS_KEY, JSON.stringify([...next]));
+      window.sessionStorage.setItem(DISMISS_KEY, JSON.stringify([...next]));
     } catch {
-      /* localStorage indisponível — ignora */
+      /* sessionStorage indisponível — ignora */
     }
   }
 
@@ -115,7 +115,7 @@ export function SystemNotifications({
     () =>
       items.filter(
         (n) =>
-          // manutenção sempre aparece; demais somem se o cliente já dispensou
+          // manutenção sempre aparece; demais somem se o cliente já dispensou (nesta sessão)
           n.type === "maintenance" || !dismissed.has(n.id)
       ),
     [items, dismissed]
@@ -124,14 +124,17 @@ export function SystemNotifications({
   if (visible.length === 0) return null;
 
   return (
-    <div className="divide-y divide-line/40">
+    <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[70] flex flex-col items-stretch gap-2 sm:inset-x-auto sm:right-4 sm:w-full sm:max-w-sm sm:items-end">
       {visible.map((n) => {
         const meta = typeMeta[n.type] ?? typeMeta.info;
         const canDismiss = n.dismissible && n.type !== "maintenance";
         return (
           <div
             key={n.id}
-            className={cn("flex items-start gap-3 border-b px-4 py-2.5 text-xs", meta.wrap)}
+            className={cn(
+              "animate-toast-in pointer-events-auto flex w-full items-start gap-3 rounded-card border p-3.5 text-xs shadow-pop backdrop-blur-sm",
+              meta.wrap
+            )}
           >
             <meta.icon className={cn("mt-0.5 h-4 w-4 shrink-0", meta.accent)} aria-hidden />
             <div className="min-w-0 flex-1">

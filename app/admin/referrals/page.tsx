@@ -70,6 +70,7 @@ export default function AdminReferralsPage() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<{ referrals: ReferralItem[]; total: number; pages: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
 
   // Estado do modal de exclusão
@@ -79,13 +80,21 @@ export default function AdminReferralsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (tab) params.set("status", tab);
       const res = await fetch(`/api/admin/referrals?${params}`);
+      if (!res.ok) {
+        setData(null);
+        setLoadError(true);
+        return;
+      }
       const json = await res.json();
       setData(json);
     } catch {
+      setData(null);
+      setLoadError(true);
       toast.error("Erro ao carregar indicações");
     } finally {
       setLoading(false);
@@ -188,16 +197,24 @@ export default function AdminReferralsPage() {
         <div className="flex h-40 items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-[#555]" />
         </div>
+      ) : loadError || !data ? (
+        <div className="flex h-40 flex-col items-center justify-center gap-3 text-center">
+          <XCircle className="h-6 w-6 text-red-500" aria-hidden />
+          <p className="text-sm text-[#666]">Não foi possível carregar as indicações.</p>
+          <Button size="sm" variant="outline" onClick={() => void load()}>
+            Tentar novamente
+          </Button>
+        </div>
       ) : (
         <>
           <div className="space-y-3">
-            {(data?.referrals.length ?? 0) === 0 && (
+            {data.referrals.length === 0 && (
               <p className="py-8 text-center text-sm text-[#444]">
                 Nenhuma indicação encontrada.
               </p>
             )}
 
-            {data?.referrals.map((r) => {
+            {data.referrals.map((r) => {
               const pendingRewards = r.rewards.filter((rw) => rw.status === "pending");
               const isActioning = actionId === r.id;
 

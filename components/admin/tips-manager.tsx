@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Lightbulb, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { timeAgo } from "@/lib/utils";
+import { TIP_ICONS, TIP_ICON_KEYS, getTipIcon } from "@/lib/tip-icons";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
@@ -14,8 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ClientTipRow } from "@/types/database";
 
-const emojis = ["💡", "🚀", "🤖", "📊", "✅", "🔔", "🎯", "📱", "⚡", "🎁"];
-
 export function TipsManager({
   initial,
   orgs,
@@ -24,7 +23,7 @@ export function TipsManager({
   orgs: { id: string; name: string }[];
 }) {
   const [items, setItems] = useState(initial);
-  const [emoji, setEmoji] = useState("💡");
+  const [iconKey, setIconKey] = useState(TIP_ICON_KEYS[0]);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [ctaLabel, setCtaLabel] = useState("");
@@ -46,7 +45,7 @@ export function TipsManager({
       const { data, error } = await supabase
         .from("client_tips")
         .insert({
-          emoji,
+          emoji: iconKey,
           title: title.trim(),
           body: body.trim(),
           cta_label: ctaLabel.trim() || null,
@@ -61,6 +60,7 @@ export function TipsManager({
         return;
       }
       setItems((prev) => [data, ...prev]);
+      setIconKey(TIP_ICON_KEYS[0]);
       setTitle("");
       setBody("");
       setCtaLabel("");
@@ -137,21 +137,25 @@ export function TipsManager({
           <div>
             <Label>Ícone</Label>
             <div className="flex flex-wrap gap-1.5">
-              {emojis.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setEmoji(e)}
-                  className={
-                    "focus-ring flex h-9 w-9 items-center justify-center rounded-lg border text-lg transition-colors " +
-                    (emoji === e
-                      ? "border-lime/50 bg-lime-soft"
-                      : "border-line bg-surface-raised hover:border-line-strong")
-                  }
-                >
-                  {e}
-                </button>
-              ))}
+              {TIP_ICON_KEYS.map((key) => {
+                const Icon = TIP_ICONS[key];
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setIconKey(key)}
+                    aria-label={key}
+                    className={
+                      "focus-ring flex h-9 w-9 items-center justify-center rounded-lg border transition-colors " +
+                      (iconKey === key
+                        ? "border-lime/50 bg-lime-soft text-lime"
+                        : "border-line bg-surface-raised text-txt-mut hover:border-line-strong")
+                    }
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -231,13 +235,13 @@ export function TipsManager({
         />
       ) : (
         <ul className="space-y-3">
-          {items.map((tip) => (
+          {items.map((tip) => {
+            const TipIcon = getTipIcon(tip.emoji);
+            return (
             <li key={tip.id} className="rounded-card border border-line bg-surface p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-2.5">
-                  <span className="text-xl leading-none" aria-hidden>
-                    {tip.emoji}
-                  </span>
+                  <TipIcon className="mt-0.5 h-5 w-5 shrink-0 text-lime" aria-hidden />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold text-txt">{tip.title}</span>
@@ -272,7 +276,8 @@ export function TipsManager({
                 </div>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>
