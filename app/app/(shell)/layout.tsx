@@ -4,6 +4,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { processDueJobs, shouldCheckDueJobs } from "@/lib/scheduled-jobs";
+import { hasFeatureAccess } from "@/lib/access";
 import { AppShell, type ShellData } from "@/components/app-shell";
 import type { TeamMemberPermissionsRow } from "@/types/database";
 
@@ -98,6 +99,15 @@ export default async function ShellLayout({
     aiLimit = plan?.ai_messages_limit ?? 0;
   }
 
+  // Fluxos (builder visual) é recurso Pro — mesmo padrão de gate usado em
+  // BYOK/Webhook/Units. Super Admin sempre enxerga (hasFeatureAccess).
+  const isBasicPlan = planName === "Free" || planName === "Starter";
+  const flowsAccess = hasFeatureAccess({
+    userEmail: session.user.email,
+    hasNormalAccess: !isBasicPlan,
+    requiredPlan: "Pro",
+  });
+
   // Permissões granulares por membro dependiam de `team_members`, sistema
   // legado sem RLS e sem dado real em produção — /app/equipe e Configurações
   // agora rodam 100% sobre `profiles` (sem granularidade de permissão por
@@ -121,6 +131,7 @@ export default async function ShellLayout({
     notifications: notifications ?? [],
     teamPermissions,
     unreadInboxCount: unreadConvCount ?? 0,
+    canAccessFlows: flowsAccess.access,
     subscription: subscription
       ? {
           status: subscription.status,

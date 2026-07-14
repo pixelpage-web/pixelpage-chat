@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { hasFeatureAccess } from "@/lib/access";
 import { FlowEditor } from "@/components/flows/flow-editor";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,31 @@ export default async function FlowEditPage({
 
   const { id } = await params;
   const supabase = await createServerSupabase();
+
+  // Fluxos é recurso Pro — bloqueia o editor também (não só a listagem),
+  // cobre o caso de a org ter fluxos antigos de quando era Pro e ter caído
+  // pra Free/Starter depois. Super Admin sempre libera.
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan_id")
+    .eq("org_id", orgId)
+    .maybeSingle();
+  let planName = "Free";
+  if (subscription?.plan_id) {
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("name")
+      .eq("id", subscription.plan_id)
+      .maybeSingle();
+    planName = plan?.name ?? "Free";
+  }
+  const isBasicPlan = planName === "Free" || planName === "Starter";
+  const flowsAccess = hasFeatureAccess({
+    userEmail: session.user.email,
+    hasNormalAccess: !isBasicPlan,
+    requiredPlan: "Pro",
+  });
+  if (!flowsAccess.access) redirect("/app/inbox");
 
   // RLS garante que o fluxo pertence à organização do usuário
   const [{ data: flow }, { data: team }, { data: units }] = await Promise.all([

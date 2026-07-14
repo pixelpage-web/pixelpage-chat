@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Bot } from "lucide-react";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSubscriptionBlocked } from "@/lib/billing";
@@ -43,8 +45,33 @@ export default async function InboxPage() {
     .order("sort_order", { ascending: true })
     .limit(5);
 
+  // Aviso de modo manual: some sozinho assim que não houver mais nenhuma
+  // conexão em modo manual (trocou pra Bot IA ou Webhook).
+  const { count: manualModeCount } = await supabase
+    .from("whatsapp_connections")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", session.profile.org_id)
+    .eq("mode", "manual");
+  const hasManualConnection = (manualModeCount ?? 0) > 0;
+
   return (
     <div className="flex h-full flex-col">
+      {hasManualConnection && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-line bg-surface px-4 py-2 text-xs text-txt-mut">
+          <Bot className="h-3.5 w-3.5 shrink-0 text-txt-dim" aria-hidden />
+          <span>
+            Atendimento manual — sua equipe responde direto. Para respostas
+            automáticas,{" "}
+            <Link
+              href="/app/agent"
+              className="font-medium text-lime underline-offset-2 hover:underline"
+            >
+              ative e configure o Agente IA
+            </Link>
+            .
+          </span>
+        </div>
+      )}
       <ClientTips tips={tips ?? []} />
       {access.isOverride && (
         <div className="border-b border-line bg-surface px-4 py-1.5">

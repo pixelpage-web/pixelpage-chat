@@ -59,6 +59,8 @@ export interface ShellData {
   teamPermissions: TeamMemberPermissionsRow | null;
   /** conversas abertas com mensagens não lidas (badge no nav) */
   unreadInboxCount: number;
+  /** Fluxos (builder visual) é recurso Pro — false esconde o nav e a rota redireciona */
+  canAccessFlows: boolean;
   subscription: {
     status: SubscriptionStatus;
     trialEndsAt: string | null;
@@ -124,6 +126,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   ownerOnly?: boolean;
+  proOnly?: boolean;
 }
 interface NavGroup {
   label: string | null;
@@ -144,7 +147,7 @@ const navGroups: NavGroup[] = [
       { href: "/app/contacts", label: "Contatos", icon: Users },
       { href: "/app/campaigns", label: "Campanhas", icon: Megaphone },
       { href: "/app/agent", label: "Agente IA", icon: Bot },
-      { href: "/app/flows", label: "Fluxos", icon: GitBranch },
+      { href: "/app/flows", label: "Fluxos", icon: GitBranch, proOnly: true },
       { href: "/app/automations", label: "Automações", icon: Zap },
     ],
   },
@@ -380,6 +383,7 @@ export function AppShell({
   // Para members com permissões granulares, filtra o nav; owner/admin vêem tudo menos equipe
   function isItemVisible(item: (typeof navItems)[number]) {
     if ("ownerOnly" in item && item.ownerOnly) return isOwnerOrAdmin;
+    if ("proOnly" in item && item.proOnly && !data.canAccessFlows) return false;
     if (!data.teamPermissions) return true; // acesso total
     const permKey = NAV_PERMISSION_MAP[item.href];
     if (!permKey) return true; // docs, ajuda — sempre visível

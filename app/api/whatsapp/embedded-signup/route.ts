@@ -98,6 +98,7 @@ export async function POST(request: Request) {
       phone_number_id: body.phone_number_id,
       phone_display: phoneInfo.display,
       status: "pending",
+      mode: "manual",
     })
     .select("*")
     .single();

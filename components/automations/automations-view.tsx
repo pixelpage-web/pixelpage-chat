@@ -293,6 +293,13 @@ export function AutomationsView({
       toast.error(t("Dê um nome para a regra."));
       return;
     }
+    const hasIncompleteAssignAgent = editor.actions.some(
+      (a) => a.type === "assign_agent" && !a.agent_id
+    );
+    if (hasIncompleteAssignAgent) {
+      toast.error(t("Selecione um agente para atribuir"));
+      return;
+    }
     const validActions = editor.actions.filter((a) => {
       if (a.type === "send_message") return !!a.message?.trim();
       if (a.type === "assign_agent") return !!a.agent_id;

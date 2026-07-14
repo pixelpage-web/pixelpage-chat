@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bot, RotateCcw, Send, User, Zap } from "lucide-react";
+import { AlertTriangle, Bot, RotateCcw, Send, User, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { AgentRow } from "@/types/database";
@@ -94,6 +94,15 @@ export function Simulator({
           <RotateCcw className="h-4 w-4" />
         </button>
       </header>
+
+      <div className="flex items-start gap-2 border-b border-line bg-amber-soft px-4 py-2 text-[11px] leading-relaxed text-amber">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+        <p>
+          {t(
+            "O simulador testa as respostas da IA, mas não considera horário comercial, status ativo/pausado nem limite de mensagens do plano — o comportamento em produção pode variar."
+          )}
+        </p>
+      </div>
 
       <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {welcome && messages.length === 0 && (

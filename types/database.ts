@@ -890,6 +890,10 @@ export type Database = {
         Args: { p_name: string; p_slug: string };
         Returns: string;
       };
+      publish_flow: {
+        Args: { p_flow_id: string; p_name: string; p_canvas_data: Json };
+        Returns: FlowRow;
+      };
       check_cpf_available: {
         Args: { p_cpf: string };
         Returns: boolean;

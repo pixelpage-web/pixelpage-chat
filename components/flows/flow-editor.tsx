@@ -339,16 +339,28 @@ function EditorInner({
   const persist = useCallback(
     async (nextStatus: "draft" | "published") => {
       const def = toDefinition(nodes, edges);
-      const { error } = await supabase
-        .from("flows")
-        .update({
-          name: name.trim() || "Novo fluxo",
-          status: nextStatus,
-          canvas_data: def as unknown as Json,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", flow.id);
-      if (error) throw new Error(error.message);
+      const trimmedName = name.trim() || "Novo fluxo";
+      if (nextStatus === "published") {
+        // publish_flow despublica, na mesma transação, qualquer outro fluxo
+        // já published na mesma conexão — garante no máximo 1 por conexão.
+        const { error } = await supabase.rpc("publish_flow", {
+          p_flow_id: flow.id,
+          p_name: trimmedName,
+          p_canvas_data: def as unknown as Json,
+        });
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase
+          .from("flows")
+          .update({
+            name: trimmedName,
+            status: nextStatus,
+            canvas_data: def as unknown as Json,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", flow.id);
+        if (error) throw new Error(error.message);
+      }
       setStatus(nextStatus);
       setDirty(false);
     },

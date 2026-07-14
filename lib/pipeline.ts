@@ -700,7 +700,19 @@ async function routeToAiBot(params: {
   // Fora do horário → mensagem de ausência (sem IA, sem custo)
   const hours = parseBusinessHoursConfig(agent.business_hours);
   if (!isWithinBusinessHours(hours)) {
-    if (agent.away_message.trim()) {
+    // Se já existe uma automação ativa de "fora do horário" pra esta conexão
+    // (ou global), ela tem prioridade (roda antes, em runInboundAutomations) e
+    // já cobre o aviso — evita mandar a mensagem de ausência em dobro.
+    const { data: outsideHoursRules } = await admin
+      .from("automation_rules")
+      .select("connection_id")
+      .eq("org_id", orgId)
+      .eq("trigger_type", "outside_hours")
+      .eq("active", true);
+    const hasOutsideHoursAutomation = (outsideHoursRules ?? []).some(
+      (r) => r.connection_id === null || r.connection_id === connection.id
+    );
+    if (!hasOutsideHoursAutomation && agent.away_message.trim()) {
       await sendAndSave(agent.away_message.trim());
     }
     return;
