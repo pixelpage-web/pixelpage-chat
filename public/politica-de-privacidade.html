@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Política de Privacidade · PixelPage Chat</title>
+  <meta name="description" content="Política de Privacidade do PixelPage Chat — como coletamos, usamos e protegemos dados pessoais, em conformidade com a LGPD." />
+  <link rel="icon" href="/logo.svg" />
+  <style>
+    /* Onest self-hospedada (mesmo arquivo que o next/font gera pro resto do
+       site) — o CSP do projeto (font-src 'self') bloqueia fonts.gstatic.com,
+       então não dá pra usar o link do Google Fonts direto aqui. */
+    @font-face {
+      font-family: "Onest";
+      font-style: normal;
+      font-weight: 400 900;
+      font-display: swap;
+      src: url("/fonts/onest-latin.woff2") format("woff2");
+    }
+
+    :root {
+      --ink: #0f0f0f;
+      --surface: #141414;
+      --surface-raised: #1a1a1a;
+      --line: #242424;
+      --line-strong: #2e2e2e;
+      --lime: #5dd62c;
+      --lime-bright: #79e84d;
+      --txt: #f8f8f8;
+      --txt-mut: #8a9bb0;
+      --txt-dim: #56677d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--txt);
+      font-family: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--lime);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: var(--lime-bright);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .brand img {
+      height: 32px;
+      width: 32px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .brand span {
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--txt);
+    }
+
+    .brand span.accent {
+      color: var(--lime);
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 40px 20px 64px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--lime);
+      border-radius: 12px;
+      padding: 28px 24px;
+    }
+
+    @media (min-width: 640px) {
+      .card {
+        padding: 40px 44px;
+      }
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin: 0 0 6px;
+      color: var(--txt);
+    }
+
+    .updated {
+      font-size: 0.875rem;
+      color: var(--txt-mut);
+      margin: 0 0 28px;
+    }
+
+    .updated strong {
+      color: var(--txt);
+      font-weight: 600;
+    }
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--txt);
+      margin: 36px 0 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    p {
+      color: var(--txt-mut);
+      margin: 0 0 14px;
+    }
+
+    strong {
+      color: var(--txt);
+      font-weight: 600;
+    }
+
+    ul {
+      margin: 0 0 14px;
+      padding-left: 1.25em;
+      color: var(--txt-mut);
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    li::marker {
+      color: var(--lime);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px;
+      font-size: 0.9rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+    }
+
+    th {
+      background: var(--surface-raised);
+      color: var(--txt);
+      font-weight: 600;
+    }
+
+    td {
+      color: var(--txt-mut);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 28px 0;
+    }
+
+    .contact-block {
+      color: var(--txt-mut);
+    }
+
+    .contact-block strong {
+      display: block;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+
+    .footnote {
+      font-size: 0.8rem;
+      color: var(--txt-dim);
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px 40px;
+      font-size: 0.75rem;
+      color: var(--txt-dim);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">
+      <img src="/logo.svg" alt="" onerror="this.style.display='none'" />
+      <span>PixelPage<span class="accent"> Chat</span></span>
+    </a>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Política de Privacidade — PixelPage Chat</h1>
+      <p class="updated"><strong>Última atualização:</strong> 15/07/2026</p>
+
+      <p>
+        O PixelPage Chat ("nós", "nosso", "Plataforma") é uma plataforma de
+        atendimento via WhatsApp com inteligência artificial. Contato:
+        <a href="mailto:contato@pixelpagechat.com.br">contato@pixelpagechat.com.br</a>
+        ou +55 67 98119-9150. A identificação legal do responsável pelo
+        tratamento de dados consta na seção 13.
+      </p>
+      <p>
+        Esta Política de Privacidade descreve como coletamos, usamos,
+        armazenamos e protegemos dados pessoais, em conformidade com a Lei
+        Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+      </p>
+
+      <h2>2. Papéis: quem controla os dados</h2>
+      <p>
+        O PixelPage Chat é uma plataforma B2B: empresas clientes
+        ("Clientes") usam a Plataforma para atender os próprios clientes
+        finais ("Contatos") via WhatsApp.
+      </p>
+      <ul>
+        <li>
+          <strong>Dados do Cliente</strong> (cadastro, cobrança, uso da
+          Plataforma): o PixelPage Chat é <strong>controlador</strong>.
+        </li>
+        <li>
+          <strong>Dados dos Contatos</strong> (mensagens, nome, telefone,
+          histórico de conversa): o Cliente é <strong>controlador</strong>;
+          o PixelPage Chat atua como <strong>operador</strong>, tratando
+          esses dados apenas para prestar o serviço contratado.
+        </li>
+      </ul>
+
+      <h2>3. Dados que coletamos</h2>
+      <p>
+        <strong>Cadastro do Cliente:</strong> nome, e-mail, telefone, nome
+        da empresa, CPF/CNPJ quando aplicável, senha (armazenada com hash).
+      </p>
+      <p>
+        <strong>Uso da Plataforma:</strong> registros de acesso, IP,
+        dispositivo, navegador, ações realizadas no painel, dados de
+        indicação (código de referência, quando o Cliente participa do
+        programa de indicações).
+      </p>
+      <p>
+        <strong>Conversas (tratadas em nome do Cliente):</strong> mensagens
+        de texto, áudio, imagem e documentos trocados via WhatsApp; nome e
+        número de telefone dos Contatos; metadados de conversa.
+      </p>
+      <p>
+        <strong>Pagamento:</strong> processado por parceiro de pagamento
+        certificado (atualmente Stripe). O PixelPage Chat
+        <strong>não armazena dados completos de cartão de crédito</strong>
+        — apenas identificadores de assinatura e status de cobrança.
+      </p>
+      <p>
+        <strong>Processamento por Inteligência Artificial:</strong> quando
+        o Agente de IA está ativo, mensagens dos Contatos são enviadas a
+        provedores de IA (OpenAI e/ou Anthropic, conforme configuração da
+        conta) para gerar respostas automáticas.
+      </p>
+
+      <h2>4. Como usamos os dados</h2>
+      <ul>
+        <li>Prestar e manter o funcionamento da Plataforma</li>
+        <li>Processar pagamentos e gerenciar assinaturas</li>
+        <li>Habilitar o Agente de IA a responder mensagens em nome do Cliente</li>
+        <li>Operar o programa de indicações, quando utilizado</li>
+        <li>Enviar comunicações operacionais (confirmação de conta, avisos de cobrança, notificações do sistema)</li>
+        <li>Monitorar e corrigir falhas técnicas</li>
+        <li>Prevenir fraude e uso indevido</li>
+        <li>Cumprir obrigações legais</li>
+      </ul>
+
+      <h2>5. Com quem compartilhamos dados</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Finalidade</th>
+            <th>Prestador</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Envio/recebimento de mensagens WhatsApp</td>
+            <td>Meta (WhatsApp Business Platform)</td>
+          </tr>
+          <tr>
+            <td>Processamento de IA</td>
+            <td>OpenAI, Anthropic</td>
+          </tr>
+          <tr>
+            <td>Banco de dados e armazenamento</td>
+            <td>Supabase</td>
+          </tr>
+          <tr>
+            <td>Hospedagem e infraestrutura</td>
+            <td>Vercel</td>
+          </tr>
+          <tr>
+            <td>Processamento de pagamentos</td>
+            <td>Stripe</td>
+          </tr>
+          <tr>
+            <td>Monitoramento de erros técnicos</td>
+            <td>Sentry</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Podemos, no futuro, adotar prestadores adicionais ou alternativos
+        para as mesmas finalidades acima; nesses casos, atualizaremos esta
+        lista sem necessidade de reescrever a Política inteira.
+      </p>
+      <p>
+        Esses prestadores têm acesso apenas aos dados estritamente
+        necessários para prestar seus respectivos serviços, sob obrigações
+        contratuais de confidencialidade e segurança.
+        <strong>Não vendemos dados pessoais a terceiros.</strong>
+      </p>
+
+      <h2>6. Transferência internacional de dados</h2>
+      <p>
+        Parte da nossa infraestrutura (processamento de IA, hospedagem,
+        banco de dados) está localizada fora do Brasil, majoritariamente
+        nos Estados Unidos. Essas transferências ocorrem com base nas
+        garantias contratuais exigidas pela LGPD (art. 33).
+      </p>
+
+      <h2>7. Retenção e exportação de dados</h2>
+      <p>
+        Mantemos os dados pelo tempo necessário para prestar o serviço e
+        cumprir obrigações legais. O Cliente pode exportar seus dados de
+        contatos diretamente pelo painel da Plataforma. Ao encerrar a
+        conta, os dados do Cliente e das conversas associadas são
+        removidos conforme nossos prazos internos de retenção, exceto
+        quando a manutenção for exigida por lei (ex.: dados fiscais).
+      </p>
+
+      <h2>8. Segurança</h2>
+      <p>
+        Adotamos medidas técnicas e administrativas para proteger dados
+        pessoais, incluindo controle de acesso por função (RBAC),
+        isolamento de dados entre Clientes (arquitetura multi-tenant com
+        Row Level Security), criptografia em trânsito e em repouso,
+        monitoramento contínuo de erros e falhas de segurança, e registro
+        de auditoria para ações administrativas sensíveis.
+      </p>
+
+      <h2>9. Seus direitos (titular de dados)</h2>
+      <p>
+        Nos termos da LGPD, você pode solicitar: confirmação da existência
+        de tratamento, acesso aos dados, correção de dados incompletos ou
+        desatualizados, anonimização ou eliminação de dados desnecessários,
+        portabilidade, eliminação de dados tratados com consentimento,
+        informação sobre compartilhamento, e revogação de consentimento.
+      </p>
+      <p>
+        Para exercer esses direitos:
+        <strong><a href="mailto:contato@pixelpagechat.com.br">contato@pixelpagechat.com.br</a></strong>.
+      </p>
+      <p>
+        Se você é Contato de um Cliente (conversou com uma empresa que usa
+        o PixelPage Chat), sua solicitação pode precisar ser direcionada
+        diretamente a essa empresa, controladora dos seus dados de
+        conversa.
+      </p>
+
+      <h2>10. Cookies</h2>
+      <p>
+        Utilizamos cookies estritamente necessários para autenticação,
+        segurança (proteção contra bots) e funcionamento da Plataforma.
+        Não utilizamos cookies de rastreamento publicitário de terceiros.
+      </p>
+
+      <h2>11. Menores de idade</h2>
+      <p>
+        A Plataforma é destinada a uso empresarial (B2B) e não é
+        direcionada a menores de 18 anos.
+      </p>
+
+      <h2>12. Alterações desta Política</h2>
+      <p>
+        Podemos atualizar esta Política periodicamente. Alterações
+        relevantes serão comunicadas por e-mail ou aviso na Plataforma.
+      </p>
+
+      <h2>13. Contato</h2>
+      <p class="contact-block">
+        <strong>PixelPage Chat</strong>
+        E-mail: <a href="mailto:contato@pixelpagechat.com.br">contato@pixelpagechat.com.br</a><br />
+        Telefone/WhatsApp: +55 67 98119-9150
+      </p>
+
+      <hr />
+
+      <p class="footnote">
+        Identificação do controlador, conforme exigido pela LGPD (art. 9º,
+        I): Patrick Santos, CPF 082.002.981-59.
+      </p>
+    </div>
+  </main>
+
+  <footer>© 2026 PixelPage Chat. Todos os direitos reservados.</footer>
+</body>
+</html>

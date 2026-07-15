@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Termos de Uso · PixelPage Chat</title>
+  <meta name="description" content="Termos de Uso do PixelPage Chat — condições de uso da plataforma de atendimento via WhatsApp com inteligência artificial." />
+  <link rel="icon" href="/logo.svg" />
+  <style>
+    /* Onest self-hospedada (mesmo arquivo que o next/font gera pro resto do
+       site) — o CSP do projeto (font-src 'self') bloqueia fonts.gstatic.com,
+       então não dá pra usar o link do Google Fonts direto aqui. */
+    @font-face {
+      font-family: "Onest";
+      font-style: normal;
+      font-weight: 400 900;
+      font-display: swap;
+      src: url("/fonts/onest-latin.woff2") format("woff2");
+    }
+
+    :root {
+      --ink: #0f0f0f;
+      --surface: #141414;
+      --surface-raised: #1a1a1a;
+      --line: #242424;
+      --line-strong: #2e2e2e;
+      --lime: #5dd62c;
+      --lime-bright: #79e84d;
+      --txt: #f8f8f8;
+      --txt-mut: #8a9bb0;
+      --txt-dim: #56677d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--txt);
+      font-family: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--lime);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: var(--lime-bright);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .brand img {
+      height: 32px;
+      width: 32px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .brand span {
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--txt);
+    }
+
+    .brand span.accent {
+      color: var(--lime);
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 40px 20px 64px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--lime);
+      border-radius: 12px;
+      padding: 28px 24px;
+    }
+
+    @media (min-width: 640px) {
+      .card {
+        padding: 40px 44px;
+      }
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin: 0 0 6px;
+      color: var(--txt);
+    }
+
+    .updated {
+      font-size: 0.875rem;
+      color: var(--txt-mut);
+      margin: 0 0 28px;
+    }
+
+    .updated strong {
+      color: var(--txt);
+      font-weight: 600;
+    }
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--txt);
+      margin: 36px 0 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    p {
+      color: var(--txt-mut);
+      margin: 0 0 14px;
+    }
+
+    strong {
+      color: var(--txt);
+      font-weight: 600;
+    }
+
+    ul {
+      margin: 0 0 14px;
+      padding-left: 1.25em;
+      color: var(--txt-mut);
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    li::marker {
+      color: var(--lime);
+    }
+
+    .contact-block {
+      color: var(--txt-mut);
+    }
+
+    .contact-block strong {
+      display: block;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px 40px;
+      font-size: 0.75rem;
+      color: var(--txt-dim);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">
+      <img src="/logo.svg" alt="" onerror="this.style.display='none'" />
+      <span>PixelPage<span class="accent"> Chat</span></span>
+    </a>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Termos de Uso — PixelPage Chat</h1>
+      <p class="updated"><strong>Última atualização:</strong> 15/07/2026</p>
+
+      <h2>1. Aceitação dos Termos</h2>
+      <p>
+        Ao criar uma conta ou usar o PixelPage Chat ("Plataforma"), você
+        concorda com estes Termos de Uso. Se não concordar, não utilize a
+        Plataforma.
+      </p>
+
+      <h2>2. Descrição do serviço</h2>
+      <p>
+        O PixelPage Chat é uma plataforma SaaS que permite a empresas
+        conectar números de WhatsApp (via QR Code ou API Oficial da
+        Meta), centralizar atendimento em um inbox unificado, configurar
+        um agente de inteligência artificial para respostas automáticas,
+        criar fluxos de automação e gerenciar campanhas de mensagens.
+      </p>
+
+      <h2>3. Elegibilidade e cadastro</h2>
+      <p>
+        Você deve ter ao menos 18 anos e representar uma empresa ou
+        atividade profissional — o serviço é destinado a uso comercial
+        (B2B).
+      </p>
+      <p>
+        Você é responsável por manter a confidencialidade da sua senha e
+        por todas as atividades realizadas em sua conta.
+      </p>
+
+      <h2>4. Planos e cobrança</h2>
+      <p>
+        A Plataforma oferece um período de teste gratuito, seguido de
+        planos pagos com cobrança recorrente mensal, processados por meio
+        de parceiro de pagamento certificado (atualmente Stripe).
+      </p>
+      <p>
+        Ao assinar um plano pago, você autoriza cobranças recorrentes até
+        o cancelamento. O cancelamento pode ser feito a qualquer momento
+        pelo painel ou pelo portal de gerenciamento de assinatura; o
+        acesso permanece ativo até o fim do período já pago, sem
+        reembolso proporcional, salvo disposição legal em contrário.
+      </p>
+      <p>
+        Reservamo-nos o direito de alterar preços mediante aviso prévio,
+        sem afetar cobranças já em curso no ciclo atual.
+      </p>
+
+      <h2>5. Uso aceitável</h2>
+      <p>Você concorda em <strong>não</strong>:</p>
+      <ul>
+        <li>
+          Enviar spam, mensagens não solicitadas em massa fora das
+          políticas da Meta, ou conteúdo ilegal, ofensivo, fraudulento ou
+          enganoso;
+        </li>
+        <li>
+          Configurar o Agente de IA para atuar como assistente de
+          propósito geral, fora do escopo do seu negócio — isso viola as
+          políticas da Meta para WhatsApp Business e pode levar ao
+          banimento do número. Você é responsável por manter seu Agente
+          de IA restrito ao contexto do seu próprio negócio;
+        </li>
+        <li>
+          Tentar acessar dados de outros Clientes ou contornar mecanismos
+          de segurança da Plataforma;
+        </li>
+        <li>
+          Utilizar a Plataforma para fins ilegais ou que violem direitos
+          de terceiros;
+        </li>
+        <li>Fazer engenharia reversa, copiar ou revender a Plataforma sem autorização.</li>
+      </ul>
+      <p>
+        O descumprimento pode resultar em suspensão ou encerramento da
+        conta, sem reembolso.
+      </p>
+
+      <h2>6. Conexão via QR Code (não oficial)</h2>
+      <p>
+        A conexão via QR Code utiliza a interface web do WhatsApp e
+        <strong> não é um canal oficial homologado pela Meta</strong>. O
+        uso em alto volume ou de forma automatizada pode resultar em
+        bloqueio do número — risco de responsabilidade do Cliente,
+        sinalizado na interface da Plataforma antes da conexão.
+      </p>
+
+      <h2>7. Conexão via API Oficial (Meta)</h2>
+      <p>
+        O PixelPage Chat atua como Provedor de Tecnologia (Tech Provider)
+        oficial da Meta para conexões via API Oficial. O uso desse canal
+        está sujeito também às políticas comerciais e de mensageria da
+        própria Meta, incluindo eventuais tarifas por mensagem cobradas
+        pela Meta e refletidas no plano contratado.
+      </p>
+
+      <h2>8. Inteligência Artificial</h2>
+      <p>
+        Os recursos de IA são fornecidos por provedores terceiros (OpenAI
+        e/ou Anthropic). Respostas geradas por IA podem conter
+        imprecisões; o Cliente é responsável por revisar e configurar
+        adequadamente o comportamento do Agente de IA.
+      </p>
+
+      <h2>9. Programa de indicações</h2>
+      <p>
+        Quando disponível, o programa de indicações concede benefícios ao
+        Cliente que indicar novos assinantes, conforme regras vigentes na
+        Plataforma no momento da indicação. Reservamo-nos o direito de
+        ajustar, suspender ou encerrar o programa a qualquer momento, sem
+        afetar benefícios já concedidos.
+      </p>
+
+      <h2>10. Disponibilidade do serviço</h2>
+      <p>
+        Envidamos esforços para manter a Plataforma disponível, mas não
+        garantimos operação ininterrupta. Manutenções programadas ou
+        falhas em serviços de terceiros (Meta, provedores de IA,
+        infraestrutura de nuvem) podem afetar temporariamente a
+        disponibilidade.
+      </p>
+
+      <h2>11. Propriedade intelectual</h2>
+      <p>
+        A Plataforma, seu código, design e marca são de propriedade do
+        PixelPage Chat. O Cliente mantém a propriedade sobre os dados e
+        conteúdos que insere na Plataforma.
+      </p>
+
+      <h2>12. Limitação de responsabilidade</h2>
+      <p>
+        Na máxima extensão permitida por lei, o PixelPage Chat não será
+        responsável por danos indiretos, lucros cessantes, ou perdas
+        decorrentes de: bloqueio de número pelo WhatsApp/Meta,
+        indisponibilidade de serviços de terceiros, ou uso indevido da
+        Plataforma pelo Cliente ou por sua equipe.
+      </p>
+
+      <h2>13. Encerramento</h2>
+      <p>
+        Você pode encerrar sua conta a qualquer momento pelo painel.
+        Podemos suspender ou encerrar contas que violem estes Termos,
+        mediante notificação quando razoavelmente possível.
+      </p>
+
+      <h2>14. Alterações destes Termos</h2>
+      <p>
+        Podemos atualizar estes Termos periodicamente. O uso continuado
+        da Plataforma após alterações constitui aceitação dos novos
+        termos.
+      </p>
+
+      <h2>15. Lei aplicável e foro</h2>
+      <p>
+        Estes Termos são regidos pelas leis brasileiras. Fica eleito o
+        foro da comarca de Bandeirantes-MS para dirimir eventuais
+        controvérsias, com renúncia a qualquer outro, por mais
+        privilegiado que seja.
+      </p>
+
+      <h2>16. Contato</h2>
+      <p class="contact-block">
+        <strong>PixelPage Chat</strong>
+        E-mail: <a href="mailto:contato@pixelpagechat.com.br">contato@pixelpagechat.com.br</a><br />
+        Telefone/WhatsApp: +55 67 98119-9150
+      </p>
+    </div>
+  </main>
+
+  <footer>© 2026 PixelPage Chat. Todos os direitos reservados.</footer>
+</body>
+</html>

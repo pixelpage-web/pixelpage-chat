@@ -7,7 +7,13 @@ import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 
 /** Login social com Google (OAuth do Supabase). */
-export function GoogleButton({ next = "/app" }: { next?: string }) {
+export function GoogleButton({
+  next = "/app",
+  disabled = false,
+}: {
+  next?: string;
+  disabled?: boolean;
+}) {
   const [loading, setLoading] = useState(false);
   const t = useT();
 
@@ -39,6 +45,7 @@ export function GoogleButton({ next = "/app" }: { next?: string }) {
       className="w-full"
       onClick={handleGoogle}
       loading={loading}
+      disabled={disabled}
     >
       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
         <path

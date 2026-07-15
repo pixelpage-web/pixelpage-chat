@@ -117,6 +117,8 @@ export default function RegisterPage() {
   const [cpf, setCpf] = useState("");
   const [establishmentName, setEstablishmentName] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsTouched, setTermsTouched] = useState(false);
 
   const [touched, setTouched] = useState({
     name: false,
@@ -211,6 +213,7 @@ export default function RegisterPage() {
       cpf: true,
       establishmentName: true,
     });
+    setTermsTouched(true);
 
     if (
       !nameValid ||
@@ -219,7 +222,8 @@ export default function RegisterPage() {
       !phoneValid ||
       !cpfFormatValid ||
       !passwordValid ||
-      !confirmValid
+      !confirmValid ||
+      !termsAccepted
     ) {
       return;
     }
@@ -254,6 +258,7 @@ export default function RegisterPage() {
             phone: metaPhone,
             cpf: cpfDigits,
             establishment_name: establishmentName.trim(),
+            terms_accepted_at: new Date().toISOString(),
             ...(trimmedReferralCode ? { referral_code: trimmedReferralCode } : {}),
           },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/onboarding`,
@@ -592,6 +597,45 @@ export default function RegisterPage() {
               onExpire={() => setCaptchaToken("")}
             />
 
+            <div>
+              <label className="flex items-start gap-2.5 text-sm text-txt-mut">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    setTermsTouched(true);
+                  }}
+                  className="focus-ring mt-0.5 h-4 w-4 shrink-0 rounded border-line text-lime accent-lime"
+                />
+                <span>
+                  {t("Li e aceito os")}{" "}
+                  <a
+                    href="/termos-de-uso.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-lime hover:underline"
+                  >
+                    {t("Termos de Uso")}
+                  </a>{" "}
+                  {t("e a")}{" "}
+                  <a
+                    href="/politica-de-privacidade.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-lime hover:underline"
+                  >
+                    {t("Política de Privacidade")}
+                  </a>
+                </span>
+              </label>
+              {termsTouched && !termsAccepted && (
+                <FieldError>
+                  {t("Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.")}
+                </FieldError>
+              )}
+            </div>
+
             <Button type="submit" className="w-full" loading={loading}>
               {t("Criar conta grátis")}
             </Button>
@@ -603,7 +647,12 @@ export default function RegisterPage() {
             <div className="h-px flex-1 bg-line" />
           </div>
 
-          <GoogleButton next="/app/onboarding" />
+          <GoogleButton next="/app/onboarding" disabled={!termsAccepted} />
+          {!termsAccepted && (
+            <p className="mt-2 text-center text-xs text-txt-dim">
+              {t("Marque o aceite dos Termos acima para continuar com o Google.")}
+            </p>
+          )}
 
           <p className="mt-6 text-center text-sm text-txt-mut">
             {t("Já tem conta?")}{" "}

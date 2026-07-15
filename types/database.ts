@@ -97,6 +97,7 @@ export type ProfileRow = {
   created_at: string;
   cpf: string | null;
   phone: string | null;
+  terms_accepted_at: string | null;
 };
 
 export type PlanRow = {
