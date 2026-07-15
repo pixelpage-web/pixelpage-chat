@@ -186,7 +186,15 @@ export async function POST(request: Request) {
     const orgId = await orgIdByStripeSubscriptionId(stripeSubId, admin);
     if (!orgId) {
       console.error(`[stripe-webhook] invoice.paid — nenhuma org com stripe_subscription_id=${stripeSubId}`);
-      return NextResponse.json({ received: true });
+      // Não responde 200 aqui: checkout.session.completed pode ainda não ter
+      // gravado o stripe_subscription_id (Stripe não garante ordem de entrega
+      // dos webhooks). Um não-2xx faz a Stripe reentregar com backoff — dá
+      // tempo do outro handler gravar antes da próxima tentativa, em vez de
+      // mascarar a falha com {received:true} e perder o evento de vez.
+      return NextResponse.json(
+        { error: "Org ainda não vinculada a essa subscription" },
+        { status: 409 }
+      );
     }
 
     const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
