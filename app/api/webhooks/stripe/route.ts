@@ -190,10 +190,16 @@ export async function POST(request: Request) {
     }
 
     const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
+    // Não grava "active" fixo: uma invoice paga em R$0 do período de trial
+    // também dispara invoice.paid mesmo com a subscription ainda em
+    // trialing — sem derivar do status real, isso vira o inverso do bug
+    // original (ativa acesso pago antes da cobrança real, dependendo só
+    // da ordem de entrega dos webhooks, que a Stripe não garante).
+    const mappedStatus = mapStripeStatus(stripeSub.status) ?? "active";
     const { error } = await admin
       .from("subscriptions")
       .update({
-        status: "active",
+        status: mappedStatus,
         current_period_end: periodEndFromUnix(subscriptionPeriodEnd(stripeSub)),
       })
       .eq("org_id", orgId);
@@ -206,10 +212,10 @@ export async function POST(request: Request) {
     await admin.from("audit_logs").insert({
       org_id: orgId,
       action: "billing.subscription_renewed",
-      metadata: { event: event.type, provider: "stripe" },
+      metadata: { event: event.type, provider: "stripe", stripe_status: stripeSub.status },
     });
 
-    console.log(`[stripe-webhook] invoice.paid ok — org=${orgId}`);
+    console.log(`[stripe-webhook] invoice.paid ok — org=${orgId} status=${mappedStatus}`);
   }
 
   // ── invoice.payment_failed ───────────────────────────────────────────────
