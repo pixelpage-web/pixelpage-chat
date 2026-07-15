@@ -62,6 +62,15 @@ export type ReferralNotificationType =
 
 export type AiMode = "managed" | "byok" | "disabled";
 export type AiProvider = "anthropic" | "openai";
+export type ExpenseCategory =
+  | "infraestrutura"
+  | "ia"
+  | "pagamento"
+  | "dominio_hospedagem"
+  | "ferramentas"
+  | "marketing"
+  | "outro";
+export type ExpenseBillingCycle = "mensal" | "anual" | "unico";
 
 export type OrganizationRow = {
   id: string;
@@ -808,6 +817,24 @@ export type OrgUsageMonthlyRow = {
   updated_at: string;
 };
 
+// 0041 — custos operacionais do próprio negócio (Vercel, Supabase, IA,
+// domínio, ferramentas...), separado das subscriptions de receita dos
+// clientes. Só superadmin acessa (RLS).
+export type BusinessExpenseRow = {
+  id: string;
+  name: string;
+  category: ExpenseCategory;
+  provider: string | null;
+  amount_cents: number;
+  currency: string;
+  billing_cycle: ExpenseBillingCycle;
+  next_charge_date: string | null;
+  active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // Insert/Update usam Partial<Row>: o banco preenche id/created_at/defaults,
 // e a checagem de obrigatórios fica nas constraints SQL.
 type TableShape<Row> = {
@@ -887,6 +914,8 @@ export type Database = {
       org_usage_monthly: TableShape<OrgUsageMonthlyRow>;
       // 0028
       org_secrets: TableShape<OrgSecretsRow>;
+      // 0041
+      business_expenses: TableShape<BusinessExpenseRow>;
     };
     Views: Record<string, never>;
     Functions: {

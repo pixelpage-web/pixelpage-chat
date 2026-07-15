@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Sparkles,
   Tags,
+  Wallet,
   Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ const navSections = [
       { href: "/admin/feature-flags", label: "Feature Flags", icon: Flag, exact: false },
       { href: "/admin/plans", label: "Planos", icon: Tags, exact: false },
       { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign, exact: false },
+      { href: "/admin/expenses", label: "Gastos", icon: Wallet, exact: false },
     ],
   },
   {
