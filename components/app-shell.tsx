@@ -454,7 +454,7 @@ export function AppShell({
                       <item.icon className="h-4 w-4 shrink-0" aria-hidden />
                       <span className="flex-1">{t(item.label)}</span>
                       {isInbox && unreadCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white">
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-bg">
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
                       )}
@@ -518,7 +518,7 @@ export function AppShell({
               <span className="relative">
                 <item.icon className="h-5 w-5" aria-hidden />
                 {isInbox && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-white">
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-bg">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}

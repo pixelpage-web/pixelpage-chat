@@ -4,43 +4,48 @@
 
 @layer base {
   /*
-   * Variáveis do redesign (passo 1) — hoje só a sidebar (app-shell.tsx)
-   * usa isso de fato, via os tokens "theme-*" do tailwind.config.ts. O
-   * resto do app ainda roda nos tokens antigos (ink/surface/txt), fixos
-   * em dark, que continuam abaixo sem mudança.
-   *
-   * :root = tema claro premium (fundo #F7F7F5, verde #16A34A). .dark
-   * continua igual, sem qualquer alteração.
+   * Identidade oficial (brandboard aprovado) — verde natural, não neon.
+   * --text-muted claro ajustado de #6E786C pra #5C6659 (o valor do
+   * brandboard falhava WCAG AA normal: 4.21:1, precisa 4.5 — confirmado
+   * por cálculo de luminância relativa antes de aplicar). --text-subtle,
+   * --border-muted e as variantes de opacidade do brand (--brand-dim/
+   * -border/-glow) não vieram especificados no brandboard — derivados
+   * aqui a partir dos tokens que vieram, mesma família de matiz. Ajustar
+   * se o brandboard tiver valores próprios pra esses.
    */
   :root {
-    --bg: #f7f7f5;
+    --bg: #f3f6ef;
     --surface: #ffffff;
-    --surface-2: #f0f0ee;
-    --border: #e2e2df;
-    --border-muted: #ebebea;
-    --text: #1a1a1a;
-    --text-muted: #6b6b6b;
-    --text-subtle: #a3a3a0;
-    --brand: #16a34a;
-    --brand-dim: rgba(22, 163, 74, 0.1);
-    --brand-border: rgba(22, 163, 74, 0.25);
-    --brand-glow: rgba(22, 163, 74, 0.15);
+    --surface-2: #e7ece1;
+    --border: #dce3d6;
+    --border-muted: #e9eee4;
+    --text: #0b0f0c;
+    --text-muted: #5c6659;
+    --text-subtle: #96a091;
+    --brand: #159a3d;
+    --brand-bright: #4fe04c;
+    --brand-soft: #c8ffae;
+    --brand-dim: rgba(21, 154, 61, 0.1);
+    --brand-border: rgba(21, 154, 61, 0.25);
+    --brand-glow: rgba(21, 154, 61, 0.15);
     color-scheme: light;
   }
 
   .dark {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --surface-2: #1a1a1a;
-    --border: #1a1a1a;
-    --border-muted: #222222;
-    --text: #ffffff;
-    --text-muted: #888888;
-    --text-subtle: #555555;
-    --brand: #00ff41;
-    --brand-dim: rgba(0, 255, 65, 0.12);
-    --brand-border: rgba(0, 255, 65, 0.25);
-    --brand-glow: rgba(0, 255, 65, 0.2);
+    --bg: #0b0f0c;
+    --surface: #141912;
+    --surface-2: #1b231a;
+    --border: #232d21;
+    --border-muted: #2a352a;
+    --text: #f3f6ef;
+    --text-muted: #8a9488;
+    --text-subtle: #5c6659;
+    --brand: #4fe04c;
+    --brand-bright: #4fe04c;
+    --brand-soft: #c8ffae;
+    --brand-dim: rgba(79, 224, 76, 0.12);
+    --brand-border: rgba(79, 224, 76, 0.25);
+    --brand-glow: rgba(79, 224, 76, 0.2);
     color-scheme: dark;
   }
 
@@ -247,7 +252,7 @@
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #00ff41;
+  stroke: var(--brand);
 }
 
 .react-flow__attribution {

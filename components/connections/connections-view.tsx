@@ -689,7 +689,7 @@ export function ConnectionsView({
               setLogoutConfirmId(null);
               if (connection) void qrAction(connection, "logout");
             }}
-            className="focus-ring inline-flex h-10 flex-1 select-none items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="focus-ring inline-flex h-10 flex-1 select-none items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-bg transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busyId === logoutConfirmId && (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

@@ -3,14 +3,13 @@ import type { Config } from "tailwindcss";
 /**
  * Design tokens da PixelPage Chat.
  *
- * MIGRAÇÃO EM ANDAMENTO (redesign, passo 2/N): a identidade está
- * mudando de verde elétrico (#5DD62C, token "lime") para verde-neon
- * (#00FF41, token "brand" — passo anterior era laranja #FF5D00, abandonado
- * antes de qualquer adoção ampla). Os tokens antigos (ink/surface/line/
- * lime/txt) continuam ativos e em uso na maioria dos componentes — eles só
- * serão migrados/removidos nos próximos passos. Os tokens novos ("brand",
- * "bg"/"surface2"/"border-dark", "theme-*") já existem e hoje só a sidebar
- * (components/app-shell.tsx) os usa de fato.
+ * IDENTIDADE OFICIAL (brandboard aprovado): verde natural — claro `#159A3D`,
+ * escuro `#4FE04C` (token "brand") — substitui o verde-neon #00FF41 do passo
+ * anterior do redesign (que por sua vez veio do verde elétrico #5DD62C,
+ * token "lime", e antes disso um laranja #FF5D00 nunca adotado). Os tokens
+ * antigos (ink/surface/line/lime/txt) continuam ativos e em uso na maioria
+ * dos componentes — migração pros tokens "theme-*"/"brand" ainda em
+ * andamento. Ver `app/globals.css` pros valores completos de :root/.dark.
  *
  * Tokens "panel" e "forest" são exclusivos do painel admin (/admin) —
  * fora do escopo deste redesign por ora.
@@ -40,12 +39,18 @@ const config: Config = {
           DEFAULT: "#242424",
           strong: "#2E2E2E",
         },
-        // Acento principal — verde elétrico PixelPage (#5DD62C)
+        // Acento principal — identidade oficial (brandboard aprovado),
+        // verde natural. Substituiu o verde elétrico #5DD62C (que por sua
+        // vez tinha sido a base do neon #00FF41 abandonado no redesign
+        // anterior). "lime" é o token usado na maioria do app (register,
+        // login, botões) — sempre no tom escuro/brilhante, já que essa
+        // camada não participa do toggle claro/escuro (ver comentário
+        // no topo do arquivo).
         lime: {
-          DEFAULT: "#5DD62C",
-          bright: "#79E84D",
-          dim: "#337418",
-          soft: "rgba(93, 214, 44, 0.14)",
+          DEFAULT: "#4FE04C",
+          bright: "#7CE879",
+          dim: "#159A3D",
+          soft: "rgba(79, 224, 76, 0.14)",
         },
         // Alertas
         amber: {
@@ -87,14 +92,14 @@ const config: Config = {
           glow: "rgba(93, 214, 44, 0.22)",
         },
 
-        // ── Nova identidade (redesign, passo 2 — verde-neon) ───────────
+        // ── Identidade oficial (brandboard aprovado — verde natural) ───
         // Valores fixos da paleta dark de referência — usados em qualquer
         // lugar que precise do tom exato independente do tema ativo (ex:
-        // IconBadge).
-        brand: "#00FF41",
-        bg: "#0A0A0A",
-        surface2: "#1A1A1A",
-        "border-dark": "#1A1A1A",
+        // IconBadge). Substituem o verde-neon #00FF41 do passo anterior.
+        brand: "#4FE04C",
+        bg: "#0B0F0C",
+        surface2: "#1B231A",
+        "border-dark": "#232D21",
         // Tokens que respondem ao toggle claro/escuro (var(--x) definida em
         // globals.css) — usar estes (não os fixos acima) em qualquer
         // componente que precise se adaptar ao tema.
@@ -108,13 +113,13 @@ const config: Config = {
         "theme-border-muted": "var(--border-muted)",
       },
       fontFamily: {
-        // Onest é a única fonte do projeto — display e sans apontam pra
-        // mesma variável (ver app/layout.tsx). Mantidos os dois nomes de
-        // classe (font-display/font-sans) só pra não exigir troca de
-        // className em nenhum componente existente.
-        display: ["var(--font-onest)", "system-ui", "sans-serif"],
-        sans: ["var(--font-onest)", "system-ui", "sans-serif"],
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        // Identidade oficial: Space Grotesk (títulos) + Inter (corpo) +
+        // JetBrains Mono (uso restrito — só badges de status, timestamps e
+        // valores técnicos; nunca título, corpo de texto ou botão). Ver
+        // app/layout.tsx pras variáveis next/font.
+        display: ["var(--font-space-grotesk)", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       borderRadius: {
         card: "0.75rem",

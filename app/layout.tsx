@@ -1,18 +1,31 @@
 import type { Metadata } from "next";
-import { Onest } from "next/font/google";
+import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-// Onest é a única fonte do projeto — display e sans apontam pra mesma
-// variável (ver tailwind.config.ts). 600 incluído além dos pesos pedidos
-// (400/500/700/900) porque font-semibold já é usado em componentes
-// existentes (botões, títulos de card) — sem isso o browser sintetizaria
-// o peso em vez de usar o Onest de verdade.
-const onest = Onest({
+// Identidade oficial (redesign): Space Grotesk pra títulos, Inter pro corpo,
+// JetBrains Mono só pra badges/timestamps/valores técnicos (nunca título,
+// corpo ou botão — ver uso restrito em tailwind.config.ts). Substituem a
+// Onest, que era a única fonte do sistema anterior.
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-onest",
+  variable: "--font-space-grotesk",
   display: "swap",
-  weight: ["400", "500", "600", "700", "900"],
+  weight: ["500", "600", "700"],
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+  weight: ["400", "500"],
 });
 
 // Aplica a classe `dark` no <html> antes do 1º paint, lendo a preferência
@@ -27,13 +40,10 @@ export const metadata: Metadata = {
   },
   description:
     "Plataforma de WhatsApp Business com Bot IA — inbox, automação e API pública.",
-  // Favicon: usa o logo.svg de /public (com fallback para .png se existir)
-  icons: {
-    icon: [
-      { url: "/logo.svg", type: "image/svg+xml" },
-      { url: "/logo.png", type: "image/png" },
-    ],
-  },
+  // Favicon: sem campo `icons` explícito — app/icon.svg (convenção nativa do
+  // Next.js App Router) é detectado automaticamente, sem precisar apontar
+  // pra cá. Antes apontava pro /logo.svg antigo (mark detalhado, ilegível
+  // em favicon) com um /logo.png de fallback que nem existia como arquivo.
   // Impede a sugestão automática de tradução do Chrome — a interface é só em
   // português por design, não faz sentido o navegador oferecer traduzir.
   other: {
@@ -45,7 +55,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={onest.variable}>
+    <html
+      lang="pt-BR"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

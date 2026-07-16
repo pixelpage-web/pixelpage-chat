@@ -13,7 +13,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-lime text-white font-semibold hover:bg-lime-bright active:bg-lime-dim disabled:bg-lime/40",
+    // text-ink (não text-white): o novo verde da marca é claro demais pra
+    // texto branco em cima passar WCAG AA (~1.7:1, calculado) — preto/quase-
+    // preto (~11:1) é o que garante contraste em toda a família lime nova.
+    "bg-lime text-ink font-semibold hover:bg-lime-bright active:bg-lime-dim disabled:bg-lime/40",
   secondary:
     "bg-surface-raised text-txt border border-line hover:bg-surface-hover hover:border-line-strong",
   ghost: "text-txt-mut hover:text-txt hover:bg-surface-raised",
