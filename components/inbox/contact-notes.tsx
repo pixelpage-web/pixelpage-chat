@@ -103,7 +103,7 @@ export function ContactNotes({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 px-2 text-[11px] text-lime hover:bg-lime-soft"
+          className="h-7 px-2 text-[11px] text-txt-mut hover:bg-surface-raised hover:text-txt"
           loading={generating}
           onClick={() => void handleGenerateNote()}
           title={t("A IA resume a conversa numa nota")}

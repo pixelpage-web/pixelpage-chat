@@ -89,7 +89,7 @@ export function SuggestionsManager({
         <p className="mt-0.5 text-sm text-txt-mut">
           Ideias de melhoria enviadas pelo painel —{" "}
           {newCount > 0 ? (
-            <span className="font-medium text-lime">{newCount} nova(s)</span>
+            <span className="font-medium text-txt">{newCount} nova(s)</span>
           ) : (
             "nenhuma nova"
           )}
@@ -105,7 +105,7 @@ export function SuggestionsManager({
             className={cn(
               "focus-ring rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               filter === f.value
-                ? "bg-lime-soft text-lime"
+                ? "bg-surface-raised text-txt"
                 : "text-txt-dim hover:bg-surface-raised hover:text-txt"
             )}
           >

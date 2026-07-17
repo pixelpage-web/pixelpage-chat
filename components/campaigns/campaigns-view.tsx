@@ -364,7 +364,7 @@ export function CampaignsView({
                       <div
                         className={cn(
                           "h-full rounded-full transition-all",
-                          c.status === "failed" ? "bg-danger" : "bg-lime"
+                          c.status === "failed" ? "bg-danger" : "bg-txt-mut"
                         )}
                         style={{ width: `${pct}%` }}
                       />
@@ -440,7 +440,7 @@ export function CampaignsView({
                   className={cn(
                     "focus-ring rounded-lg border p-2 text-xs font-medium transition-colors",
                     recipientMode === mode
-                      ? "border-lime/60 bg-lime-soft text-lime"
+                      ? "border-line-strong bg-surface-raised text-txt"
                       : "border-line bg-surface-raised text-txt-mut hover:border-line-strong"
                   )}
                 >
@@ -494,7 +494,7 @@ export function CampaignsView({
                 className={cn(
                   "focus-ring rounded-lg border p-2 text-xs font-medium",
                   whenMode === "now"
-                    ? "border-lime/60 bg-lime-soft text-lime"
+                    ? "border-line-strong bg-surface-raised text-txt"
                     : "border-line bg-surface-raised text-txt-mut"
                 )}
               >
@@ -506,7 +506,7 @@ export function CampaignsView({
                 className={cn(
                   "focus-ring rounded-lg border p-2 text-xs font-medium",
                   whenMode === "schedule"
-                    ? "border-lime/60 bg-lime-soft text-lime"
+                    ? "border-line-strong bg-surface-raised text-txt"
                     : "border-line bg-surface-raised text-txt-mut"
                 )}
               >
@@ -525,7 +525,7 @@ export function CampaignsView({
           </div>
 
           {/* Pré-visualização */}
-          <div className="rounded-lg border border-lime/25 bg-lime-soft px-3 py-2 text-xs text-lime">
+          <div className="rounded-lg border border-line-strong bg-surface-raised px-3 py-2 text-xs text-txt">
             {t("Você vai enviar para")} <strong>{recipientPreview}</strong>{" "}
             {t("contato(s).")}
             {remainingQuota !== null &&

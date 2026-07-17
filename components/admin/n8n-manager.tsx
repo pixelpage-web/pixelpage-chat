@@ -66,7 +66,7 @@ export function N8nManager({ initialWebhooks }: { initialWebhooks: AdminWebhookR
         <h1 className="font-display text-lg font-semibold">n8n / Workflows</h1>
         <p className="mt-0.5 text-sm text-txt-mut">
           Todas as organizações usando webhook externo —{" "}
-          <span className="font-medium text-lime">{webhooks.length}</span> no total,{" "}
+          <span className="font-medium text-txt">{webhooks.length}</span> no total,{" "}
           {platformCount} no workflow da plataforma.
         </p>
       </header>
@@ -119,7 +119,7 @@ export function N8nManager({ initialWebhooks }: { initialWebhooks: AdminWebhookR
                     </Button>
                     <Link
                       href="/admin/logs"
-                      className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                      className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-txt transition-colors hover:border-line-strong hover:text-txt"
                     >
                       <ScrollText className="h-3.5 w-3.5" aria-hidden />
                       Ver logs

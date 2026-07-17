@@ -184,7 +184,7 @@ export default function AdminReferralsPage() {
             className={cn(
               "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
               tab === t.key
-                ? "bg-lime/10 text-lime"
+                ? "bg-[#2A2A2A] text-[#EEE]"
                 : "text-[#555] hover:bg-panel-card hover:text-[#BBB]"
             )}
           >
@@ -291,7 +291,7 @@ export default function AdminReferralsPage() {
                           className={cn(
                             "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px]",
                             rw.status === "applied"
-                              ? "bg-lime/10 text-lime"
+                              ? "bg-[#3DD68C]/10 text-[#3DD68C]"
                               : rw.status === "expired"
                                 ? "bg-[#222] text-[#444]"
                                 : "bg-amber/10 text-amber"

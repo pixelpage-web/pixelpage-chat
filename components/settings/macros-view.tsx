@@ -168,7 +168,7 @@ export function MacrosView({ orgId }: { orgId: string }) {
         <ul className="space-y-2">
           {macros.map((macro) => (
             <li key={macro.id} className="flex items-start gap-3 rounded-lg border border-line bg-surface p-4">
-              <Zap className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
+              <Zap className="mt-0.5 h-4 w-4 shrink-0 text-txt-mut" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium">{macro.name}</p>
@@ -207,7 +207,7 @@ export function MacrosView({ orgId }: { orgId: string }) {
                 <button
                   key={v}
                   onClick={() => setVisibility(v)}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${visibility === v ? "border-lime bg-lime-soft text-lime" : "border-line text-txt-dim hover:border-line-strong"}`}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${visibility === v ? "border-line-strong bg-surface-raised text-txt" : "border-line text-txt-dim hover:border-line-strong"}`}
                 >
                   {v === "public" ? t("Pública (toda equipe)") : t("Privada (só eu)")}
                 </button>

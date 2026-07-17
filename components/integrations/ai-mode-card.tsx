@@ -202,8 +202,8 @@ export function AiModeCard({
   return (
     <Card>
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-          <Bot className="h-5 w-5 text-lime" aria-hidden />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+          <Bot className="h-5 w-5 text-txt-mut" aria-hidden />
         </div>
         <div>
           <CardTitle>{t("Modo de atendimento por IA")}</CardTitle>
@@ -230,7 +230,7 @@ export function AiModeCard({
               className={cn(
                 "focus-ring w-full rounded-lg border p-4 text-left transition-colors disabled:cursor-wait",
                 selected
-                  ? "border-lime/60 bg-lime-soft"
+                  ? "border-line-strong bg-surface-raised"
                   : "border-line bg-surface-raised hover:border-line-strong"
               )}
             >
@@ -238,7 +238,7 @@ export function AiModeCard({
                 <card.icon
                   className={cn(
                     "mt-0.5 h-5 w-5 shrink-0",
-                    selected ? "text-lime" : "text-txt-dim"
+                    selected ? "text-txt" : "text-txt-dim"
                   )}
                   aria-hidden
                 />
@@ -246,7 +246,7 @@ export function AiModeCard({
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">{t(card.title)}</p>
                     {selected && (
-                      <span className="flex items-center gap-1 text-[11px] font-medium text-lime">
+                      <span className="flex items-center gap-1 text-[11px] font-medium text-txt">
                         <Check className="h-3 w-3" aria-hidden />
                         {t("ativo")}
                       </span>
@@ -307,7 +307,7 @@ export function AiModeCard({
                 className={cn(
                   "focus-ring flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   formProvider === p
-                    ? "bg-lime-soft text-lime"
+                    ? "bg-surface-raised text-txt"
                     : "text-txt-mut hover:bg-surface-hover hover:text-txt"
                 )}
               >

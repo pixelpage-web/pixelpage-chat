@@ -52,16 +52,16 @@ export function ClientTips({ tips }: { tips: ClientTipRow[] }) {
         return (
           <div
             key={tip.id}
-            className="animate-toast-in pointer-events-auto flex w-full items-start gap-2.5 rounded-card border border-lime/20 bg-lime-soft p-3.5 shadow-pop backdrop-blur-sm"
+            className="animate-toast-in pointer-events-auto flex w-full items-start gap-2.5 rounded-card border border-line-strong bg-surface-raised p-3.5 shadow-pop backdrop-blur-sm"
           >
-            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-lime" aria-hidden />
+            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-txt-mut" aria-hidden />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-txt">{tip.title}</p>
               <p className="mt-0.5 text-xs leading-relaxed text-txt-mut">{tip.body}</p>
               {tip.cta_label && tip.cta_href && (
                 <Link
                   href={tip.cta_href}
-                  className="focus-ring mt-1 inline-flex items-center gap-1 rounded text-xs font-medium text-lime transition-colors hover:text-lime-bright"
+                  className="focus-ring mt-1 inline-flex items-center gap-1 rounded text-xs font-medium text-txt transition-colors hover:opacity-80"
                 >
                   {tip.cta_label}
                   <ArrowRight className="h-3 w-3" aria-hidden />

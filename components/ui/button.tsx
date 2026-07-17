@@ -12,18 +12,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
+  // Alto contraste neutro invertido (txt/ink) — sem cor, efeito tipo
+  // Linear/Vercel. Verde fica reservado só ao logo/wordmark
+  // (components/logo.tsx) — nada mais no sistema usa verde.
   primary:
-    // text-ink (não text-white): o novo verde da marca é claro demais pra
-    // texto branco em cima passar WCAG AA (~1.7:1, calculado) — preto/quase-
-    // preto (~11:1) é o que garante contraste em toda a família lime nova.
-    "bg-lime text-ink font-semibold hover:bg-lime-bright active:bg-lime-dim disabled:bg-lime/40",
+    "bg-txt text-ink font-semibold hover:bg-txt/90 active:bg-txt/80 disabled:bg-txt/40",
   secondary:
     "bg-surface-raised text-txt border border-line hover:bg-surface-hover hover:border-line-strong",
   ghost: "text-txt-mut hover:text-txt hover:bg-surface-raised",
   danger:
     "bg-danger-soft text-danger border border-danger/30 hover:bg-danger/20",
   outline:
-    "border border-line-strong text-txt hover:border-lime/50 hover:text-lime",
+    "border border-line-strong text-txt hover:border-txt-mut hover:bg-surface-raised",
 };
 
 const sizes: Record<Size, string> = {

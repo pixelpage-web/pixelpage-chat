@@ -33,7 +33,7 @@ const wizardSteps = ["Seus dados", "Confirmar e-mail"];
 const strengthMeta: Record<PasswordStrength, { label: string; bars: number; color: string }> = {
   fraca: { label: "Senha fraca", bars: 1, color: "bg-danger" },
   media: { label: "Senha média", bars: 2, color: "bg-amber" },
-  forte: { label: "Senha forte", bars: 3, color: "bg-lime" },
+  forte: { label: "Senha forte", bars: 3, color: "bg-txt" },
 };
 
 /** Input com ícone de status (check/erro/carregando) — wrapper local, não altera o <Input> compartilhado. */
@@ -395,9 +395,9 @@ export default function RegisterPage() {
               className={cn(
                 "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold",
                 i < step
-                  ? "bg-lime text-white"
+                  ? "bg-txt text-ink"
                   : i === step
-                    ? "border border-lime text-lime"
+                    ? "border border-txt-mut text-txt"
                     : "border border-line text-txt-dim"
               )}
             >
@@ -606,7 +606,7 @@ export default function RegisterPage() {
                     setTermsAccepted(e.target.checked);
                     setTermsTouched(true);
                   }}
-                  className="focus-ring mt-0.5 h-4 w-4 shrink-0 rounded border-line text-lime accent-lime"
+                  className="focus-ring mt-0.5 h-4 w-4 shrink-0 rounded border-line text-txt accent-txt"
                 />
                 <span>
                   {t("Li e aceito os")}{" "}
@@ -614,7 +614,7 @@ export default function RegisterPage() {
                     href="/termos-de-uso.html"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-lime hover:underline"
+                    className="font-medium text-txt hover:underline"
                   >
                     {t("Termos de Uso")}
                   </a>{" "}
@@ -623,7 +623,7 @@ export default function RegisterPage() {
                     href="/politica-de-privacidade.html"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-lime hover:underline"
+                    className="font-medium text-txt hover:underline"
                   >
                     {t("Política de Privacidade")}
                   </a>
@@ -656,7 +656,7 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-txt-mut">
             {t("Já tem conta?")}{" "}
-            <Link href="/login" className="font-medium text-lime hover:underline">
+            <Link href="/login" className="font-medium text-txt hover:underline">
               {t("Entrar")}
             </Link>
           </p>
@@ -687,7 +687,7 @@ export default function RegisterPage() {
                 disabled={verifying}
                 onChange={(e) => handleOtpChange(i, e.target.value)}
                 onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                className="focus-ring h-12 w-10 rounded-lg border border-line bg-surface-raised text-center text-lg font-semibold text-txt transition-colors focus:border-lime/50 disabled:opacity-60"
+                className="focus-ring h-12 w-10 rounded-lg border border-line bg-surface-raised text-center text-lg font-semibold text-txt transition-colors focus:border-txt-mut disabled:opacity-60"
               />
             ))}
           </div>
@@ -702,7 +702,7 @@ export default function RegisterPage() {
           <button
             onClick={handleResend}
             disabled={resendCooldown > 0 || resending}
-            className="focus-ring mt-6 text-sm font-medium text-lime hover:underline disabled:cursor-not-allowed disabled:text-txt-dim disabled:no-underline"
+            className="focus-ring mt-6 text-sm font-medium text-txt hover:underline disabled:cursor-not-allowed disabled:text-txt-dim disabled:no-underline"
           >
             {resendCooldown > 0
               ? `${t("Reenviar em")} ${resendCooldown}s`

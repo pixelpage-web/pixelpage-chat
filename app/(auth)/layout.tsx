@@ -31,11 +31,11 @@ export default function AuthLayout({
         />
         {/* Brilhos radiais — âncoras nos cantos, não no centro */}
         <div
-          className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-lime/10 blur-3xl"
+          className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-txt-mut/10 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -top-24 -right-16 hidden h-72 w-72 rounded-full bg-lime/5 blur-3xl lg:block"
+          className="pointer-events-none absolute -top-24 -right-16 hidden h-72 w-72 rounded-full bg-txt-mut/5 blur-3xl lg:block"
           aria-hidden
         />
 
@@ -50,8 +50,8 @@ export default function AuthLayout({
             espaçamentos entre blocos aumentam um pouco, pra não sobrar
             vazio nas bordas. */}
         <div className="relative z-10 mt-10 hidden flex-1 flex-col justify-center lg:flex">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-lime/70">
-            <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-lime align-middle" />
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-txt-mut">
+            <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-txt-mut align-middle" />
             {t("online · resposta em segundos")}
           </p>
           <h2 className="mt-5 font-display text-4xl font-bold leading-tight text-txt lg:text-5xl">
@@ -72,7 +72,7 @@ export default function AuthLayout({
           <ul className="mt-10 space-y-3.5">
             {bullets.map((bullet) => (
               <li key={bullet} className="flex items-start gap-2.5 text-sm text-txt-mut">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-[2px] bg-lime" aria-hidden />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-[2px] bg-txt-mut" aria-hidden />
                 {t(bullet)}
               </li>
             ))}

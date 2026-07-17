@@ -64,7 +64,7 @@ export function generateReferralCode(): string {
 export function buildReferralUrl(code: string): string {
   const base =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://www.pixelpagechat.com.br";
-  return `${base}/indicacao/${code}`;
+  return `${base}/r/${code}`;
 }
 
 // ─── reward granting ──────────────────────────────────────────────────────────

@@ -50,7 +50,7 @@ export function AgentView({
               className={cn(
                 "focus-ring flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                 tab === item.value
-                  ? "bg-lime-soft text-lime"
+                  ? "bg-surface-raised text-txt"
                   : "text-txt-dim hover:bg-surface-raised hover:text-txt"
               )}
             >

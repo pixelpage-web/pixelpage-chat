@@ -13,7 +13,7 @@ interface IconBadgeProps {
   className?: string;
 }
 
-/** Badge circular com ícone — acento verde-neon da marca (item D). */
+/** Badge circular com ícone — neutro (verde reservado só ao logo/wordmark). */
 export function IconBadge({ icon: Icon, size = "md", className }: IconBadgeProps) {
   const { box, icon } = SIZES[size];
   return (
@@ -24,11 +24,11 @@ export function IconBadge({ icon: Icon, size = "md", className }: IconBadgeProps
         className
       )}
       style={{
-        background: "var(--brand-dim)",
-        borderColor: "var(--brand-border)",
+        background: "var(--surface-2)",
+        borderColor: "var(--border)",
       }}
     >
-      <Icon className={icon} style={{ color: "var(--brand)" }} aria-hidden />
+      <Icon className={icon} style={{ color: "var(--text-muted)" }} aria-hidden />
     </div>
   );
 }

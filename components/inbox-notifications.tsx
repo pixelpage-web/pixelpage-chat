@@ -117,7 +117,7 @@ export function InboxNotifications({
       >
         <Bell className="h-4 w-4" />
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime px-0.5 text-[10px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-txt px-0.5 text-[10px] font-bold text-ink">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -132,7 +132,7 @@ export function InboxNotifications({
               {unread > 0 && (
                 <button
                   onClick={() => void markAllRead()}
-                  className="flex items-center gap-1 text-[11px] text-lime hover:underline"
+                  className="flex items-center gap-1 text-[11px] text-txt hover:underline"
                 >
                   <CheckCheck className="h-3.5 w-3.5" />
                   {t("Marcar todas lidas")}
@@ -161,13 +161,13 @@ export function InboxNotifications({
                       }}
                       className={cn(
                         "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover",
-                        !n.read_at && "bg-lime-soft/30"
+                        !n.read_at && "bg-surface-raised/50"
                       )}
                     >
                       <div className={cn(
                         "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
                         typeIconTone[n.notification_type] ??
-                          (!n.read_at ? "bg-lime-soft text-lime" : "bg-surface text-txt-dim")
+                          (!n.read_at ? "bg-surface-raised text-txt" : "bg-surface text-txt-dim")
                       )}>
                         <Icon className="h-3.5 w-3.5" />
                       </div>
@@ -178,7 +178,7 @@ export function InboxNotifications({
                         <p className="mt-0.5 text-[10px] text-txt-dim">{timeAgo(n.created_at)}</p>
                       </div>
                       {!n.read_at && (
-                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-lime" />
+                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-txt-mut" />
                       )}
                     </button>
                   );

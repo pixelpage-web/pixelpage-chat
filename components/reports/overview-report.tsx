@@ -64,7 +64,7 @@ export function OverviewReport({ orgId }: { orgId: string }) {
   }, [orgId]); // eslint-disable-line
 
   const kpis = [
-    { icon: MessageSquare, label: t("Conversas abertas"), value: stats.openConversations, color: "text-lime" },
+    { icon: MessageSquare, label: t("Conversas abertas"), value: stats.openConversations, color: "text-txt" },
     { icon: TrendingUp, label: t("Resolvidas hoje"), value: stats.resolvedToday, color: "text-ok" },
     { icon: Users, label: t("Agentes na equipe"), value: stats.agentsOnline, color: "text-info" },
     { icon: Clock, label: t("Tempo médio resposta"), value: stats.avgResponseMin != null ? `${stats.avgResponseMin}min` : "—", color: "text-amber" },

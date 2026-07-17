@@ -125,9 +125,9 @@ export function FeatureFlagsManager({
                 <div className="flex items-start gap-3">
                   <div className={cn(
                     "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                    flag.enabled_globally ? "bg-lime-soft" : "bg-surface-raised"
+                    flag.enabled_globally ? "bg-surface-hover" : "bg-surface-raised"
                   )}>
-                    <Flag className={cn("h-4 w-4", flag.enabled_globally ? "text-lime" : "text-txt-dim")} />
+                    <Flag className={cn("h-4 w-4", flag.enabled_globally ? "text-txt" : "text-txt-dim")} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

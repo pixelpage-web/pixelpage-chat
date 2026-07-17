@@ -444,7 +444,7 @@ Content-Type: application/json
       <div className="mx-auto max-w-3xl space-y-5 p-4 sm:p-6">
         <header>
           <h1 className="flex items-center gap-2 font-display text-lg font-semibold">
-            <LifeBuoy className="h-5 w-5 text-lime" aria-hidden />
+            <LifeBuoy className="h-5 w-5 text-txt-mut" aria-hidden />
             {t("Central de Ajuda")}
           </h1>
           <p className="mt-0.5 text-sm text-txt-mut">
@@ -459,8 +459,8 @@ Content-Type: application/json
             className="group rounded-card border border-line bg-surface"
           >
             <summary className="focus-ring flex cursor-pointer select-none items-center gap-3 rounded-card px-5 py-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-                <section.icon className="h-5 w-5 text-lime" aria-hidden />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+                <section.icon className="h-5 w-5 text-txt-mut" aria-hidden />
               </div>
               <div className="min-w-0">
                 <p className="font-display text-sm font-semibold">
@@ -478,7 +478,7 @@ Content-Type: application/json
             <dl className="space-y-4 border-t border-line px-5 py-4">
               {section.items.map((item, i) => (
                 <div key={i}>
-                  <dt className="text-sm font-semibold text-lime">
+                  <dt className="text-sm font-semibold text-txt">
                     {pick(item.term)}
                   </dt>
                   <dd className="mt-1 text-sm leading-relaxed text-txt-mut">
@@ -556,7 +556,7 @@ Content-Type: application/json
               <a
                 href="/downloads/workflow-pixelpage-atendimento-base.json"
                 download
-                className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-txt-mut"
               >
                 <Download className="h-3.5 w-3.5" aria-hidden />
                 {t("Baixar workflow base")}
@@ -574,7 +574,7 @@ Content-Type: application/json
             {faq.map((item) => (
               <details
                 key={item.question}
-                className="group rounded-lg border border-line bg-surface open:border-lime/30"
+                className="group rounded-lg border border-line bg-surface open:border-line-strong"
               >
                 <summary className="focus-ring flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
                   {t(item.question)}
@@ -596,10 +596,10 @@ Content-Type: application/json
         </div>
 
         {/* Sugestões */}
-        <div className="rounded-card border border-lime/25 bg-surface p-5">
+        <div className="rounded-card border border-line-strong bg-surface p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-              <Lightbulb className="h-5 w-5 text-lime" aria-hidden />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+              <Lightbulb className="h-5 w-5 text-txt-mut" aria-hidden />
             </div>
             <div className="flex-1">
               <p className="font-display text-sm font-semibold">

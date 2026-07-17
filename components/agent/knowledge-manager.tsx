@@ -197,11 +197,11 @@ export function KnowledgeManager({
           onDragLeave={() => setDragOver(false)}
           className={cn(
             "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors",
-            dragOver ? "border-lime/60 bg-lime-soft" : "border-line bg-ink"
+            dragOver ? "border-txt-mut/60 bg-surface-raised" : "border-line bg-ink"
           )}
         >
           {uploading ? (
-            <Loader2 className="h-6 w-6 animate-spin text-lime" aria-hidden />
+            <Loader2 className="h-6 w-6 animate-spin text-txt-mut" aria-hidden />
           ) : (
             <Upload className="h-6 w-6 text-txt-dim" aria-hidden />
           )}

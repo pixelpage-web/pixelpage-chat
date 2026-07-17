@@ -401,7 +401,7 @@ export function AutomationsView({
               <button
                 key={preset.title}
                 onClick={() => openPreset(preset)}
-                className="focus-ring rounded-lg border border-line bg-surface-raised p-3 text-left transition-colors hover:border-lime/40"
+                className="focus-ring rounded-lg border border-line bg-surface-raised p-3 text-left transition-colors hover:border-line-strong"
               >
                 <p aria-hidden>{preset.emoji}</p>
                 <p className="mt-1 text-xs font-semibold">{t(preset.title)}</p>
@@ -426,8 +426,8 @@ export function AutomationsView({
               <Card key={rule.id} className={cn(!rule.active && "opacity-60")}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-                      <Zap className="h-5 w-5 text-lime" aria-hidden />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+                      <Zap className="h-5 w-5 text-txt-mut" aria-hidden />
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{rule.name}</p>

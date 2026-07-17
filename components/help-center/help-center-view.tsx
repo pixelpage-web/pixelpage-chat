@@ -217,7 +217,7 @@ export function HelpCenterView({ orgId }: { orgId: string }) {
               href={`/hc/${selectedPortal.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-lime hover:underline"
+              className="flex items-center gap-1 text-xs text-txt hover:underline"
             >
               <Eye className="h-3.5 w-3.5" />
               {t("Ver público")}
@@ -428,7 +428,7 @@ function ArticleEditor({
               "rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
               draft.status === "published"
                 ? "bg-ok-soft text-ok hover:bg-danger-soft hover:text-danger"
-                : "bg-lime-soft text-lime hover:bg-lime hover:text-white"
+                : "bg-surface-raised text-txt hover:bg-txt hover:text-ink"
             )}
           >
             {draft.status === "published" ? t("Despublicar") : t("Publicar")}

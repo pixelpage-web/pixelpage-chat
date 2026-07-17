@@ -547,7 +547,7 @@ export function OrgDetail({
                   className={cn(
                     "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
                     trialDays === d && !trialCustomDays
-                      ? "border-lime bg-lime-soft text-lime"
+                      ? "border-line-strong bg-surface-raised text-txt"
                       : "border-line text-txt-dim hover:border-line-strong hover:text-txt"
                   )}
                 >

@@ -245,8 +245,8 @@ export function TeamCard({
                         {stat.assigned} {t("conversas")} ({stat.resolved} {t("resolvidas")})
                       </span>
                       {stat.csatCount > 0 && (
-                        <span className="inline-flex items-center gap-1 text-lime">
-                          <Star className="h-3 w-3 fill-lime" aria-hidden />
+                        <span className="inline-flex items-center gap-1 text-txt">
+                          <Star className="h-3 w-3 fill-txt-mut" aria-hidden />
                           {stat.csatAvg!.toFixed(1)} ({stat.csatCount})
                         </span>
                       )}

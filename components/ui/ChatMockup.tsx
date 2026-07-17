@@ -71,31 +71,31 @@ export function ChatMockup() {
       {/* Indicador de "digitando" — mesma posição da resposta, some quando ela aparece */}
       <div
         className={cn(
-          "absolute right-0 top-16 flex items-center gap-1 rounded-2xl rounded-br-sm border border-lime/30 bg-lime-soft px-3 py-2.5",
+          "absolute right-0 top-16 flex items-center gap-1 rounded-2xl rounded-br-sm border border-line-strong bg-surface-raised px-3 py-2.5",
           transition,
           typingOn ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-3"
         )}
       >
-        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-lime" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-mut" />
         <span
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-lime"
+          className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-mut"
           style={{ animationDelay: "0.15s" }}
         />
         <span
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-lime"
+          className="h-1.5 w-1.5 animate-bounce rounded-full bg-txt-mut"
           style={{ animationDelay: "0.3s" }}
         />
       </div>
 
-      {/* Resposta da IA */}
+      {/* Resposta da IA — neutra (verde reservado só ao logo/wordmark) */}
       <div
         className={cn(
-          "absolute right-0 top-16 w-[75%] max-w-[240px] rotate-1 rounded-2xl rounded-br-sm border border-lime/30 bg-lime-soft p-3 shadow-pop",
+          "absolute right-0 top-16 w-[75%] max-w-[240px] rotate-1 rounded-2xl rounded-br-sm border border-line-strong bg-surface-raised p-3 shadow-pop",
           transition,
           bubble2On ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-3"
         )}
       >
-        <div className="mb-1 flex items-center gap-1.5 text-lime">
+        <div className="mb-1 flex items-center gap-1.5 text-txt-mut">
           <Bot className="h-3 w-3" aria-hidden />
           <span className="font-mono text-[10px] uppercase tracking-wide">IA</span>
         </div>

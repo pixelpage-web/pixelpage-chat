@@ -115,7 +115,7 @@ export function ApiOficialView({
               </div>
               <Link
                 href="/app/billing"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-lime px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-txt px-4 py-2 text-sm font-semibold text-ink hover:opacity-90"
               >
                 {t("Ver planos")}
               </Link>
@@ -192,7 +192,7 @@ export function ApiOficialView({
             {phase === "connecting" && (
               <Card>
                 <div className="flex items-center gap-3 py-1">
-                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-lime" aria-hidden />
+                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-txt-mut" aria-hidden />
                   <div>
                     <p className="text-sm font-medium">{t("Configurando sua conexão...")}</p>
                     <p className="text-xs text-txt-dim">
@@ -225,7 +225,7 @@ export function ApiOficialView({
                 <div className="mt-4">
                   <Link
                     href="/app/connections"
-                    className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-txt transition-colors hover:border-line-strong"
                   >
                     {t("Ver todas as conexões")}
                   </Link>

@@ -462,7 +462,7 @@ export function ContactsView({ orgId }: { orgId: string }) {
                     <Link
                       href="/app/inbox"
                       title={t("Ver conversas no inbox")}
-                      className="focus-ring rounded-md p-1.5 text-txt-dim hover:bg-surface-hover hover:text-lime"
+                      className="focus-ring rounded-md p-1.5 text-txt-dim hover:bg-surface-hover hover:text-txt"
                     >
                       <MessageSquare className="h-4 w-4" />
                     </Link>

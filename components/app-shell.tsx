@@ -210,13 +210,13 @@ function TrialBanner({ data }: { data: ShellData }) {
     return (
       <div className="border-b border-line bg-surface px-4 py-2 text-center text-xs text-txt-mut">
         {t("Teste grátis:")}{" "}
-        <span className="font-semibold text-lime">
+        <span className="font-semibold text-txt">
           {daysLeft === 0
             ? t("último dia")
             : `${daysLeft} ${daysLeft === 1 ? t("dia restante") : t("dias restantes")}`}
         </span>{" "}
         ·{" "}
-        <Link href="/app/billing" className="text-lime underline">
+        <Link href="/app/billing" className="text-txt underline">
           {t("fazer upgrade")}
         </Link>
       </div>
@@ -417,11 +417,11 @@ export function AppShell({
       <StatusBanners data={data} />
       <div className="flex min-h-0 flex-1">
         {/* Sidebar com ícones + labels — desktop. Migrada pros tokens novos
-            (theme-x e brand) desde o passo 1 do redesign — é a única
-            parte do app que já responde ao ThemeToggle; o resto continua
-            nos tokens antigos (ink/surface/lime) até os próximos passos.
-            Item F (verde-neon): bg própria (theme-bg, não theme-surface),
-            item ativo com borda esquerda + grupos com separador rotulado. */}
+            (theme-x) desde o passo 1 do redesign — é a única parte do app
+            que já responde ao ThemeToggle; o resto continua nos tokens
+            antigos (ink/surface/lime) até os próximos passos.
+            Item ativo: contraste neutro (theme-surface-2/theme-text), sem
+            verde e sem borda colorida — grupos com separador rotulado. */}
         <aside className="hidden w-52 shrink-0 flex-col border-r border-theme-border bg-theme-bg py-4 md:flex">
           <div className="mb-5 flex items-center justify-between px-4">
             <Link href="/app/inbox" aria-label={t("Início")}>
@@ -445,16 +445,16 @@ export function AppShell({
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "focus-ring flex items-center gap-2.5 rounded-lg border-l-[3px] px-3 py-2 text-sm transition-colors",
+                        "focus-ring flex items-center gap-2.5 rounded-lg border-l-[3px] border-transparent px-3 py-2 text-sm transition-colors",
                         active
-                          ? "border-brand bg-brand/[0.08] font-medium text-brand"
-                          : "border-transparent text-theme-text-muted hover:bg-white/[0.03] hover:text-theme-text"
+                          ? "bg-theme-surface-2 font-medium text-theme-text"
+                          : "text-theme-text-muted hover:bg-white/[0.03] hover:text-theme-text"
                       )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" aria-hidden />
                       <span className="flex-1">{t(item.label)}</span>
                       {isInbox && unreadCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-bg">
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-theme-text px-1.5 text-[10px] font-bold text-theme-bg">
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
                       )}
@@ -512,13 +512,13 @@ export function AppShell({
               aria-label={t(item.label)}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px]",
-                active ? "text-brand" : "text-theme-text-muted"
+                active ? "text-theme-text" : "text-theme-text-muted"
               )}
             >
               <span className="relative">
                 <item.icon className="h-5 w-5" aria-hidden />
                 {isInbox && unreadCount > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-bg">
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-theme-text px-1 text-[9px] font-bold text-theme-bg">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -532,7 +532,7 @@ export function AppShell({
           aria-label={t("Configurações")}
           className={cn(
             "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px]",
-            pathname.startsWith("/app/settings") ? "text-brand" : "text-theme-text-muted"
+            pathname.startsWith("/app/settings") ? "text-theme-text" : "text-theme-text-muted"
           )}
         >
           <Settings className="h-5 w-5" aria-hidden />

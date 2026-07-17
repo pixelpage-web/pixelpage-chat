@@ -101,7 +101,7 @@ function FlowNodeComponent({ type, data, selected }: NodeProps<EditorNodeData>) 
     <div
       className={cn(
         "w-56 rounded-xl border bg-surface shadow-pop transition-shadow",
-        selected ? "border-lime/70 shadow-glow" : "border-line",
+        selected ? "border-txt-mut" : "border-line",
         data.__error && "animate-pulse border-danger"
       )}
       style={{ borderLeftWidth: 3, borderLeftColor: data.__error ? "#EF4444" : meta.accent }}
@@ -141,7 +141,7 @@ function FlowNodeComponent({ type, data, selected }: NodeProps<EditorNodeData>) 
                 type="source"
                 position={Position.Right}
                 id={o.handle}
-                className="!h-2.5 !w-2.5 !border-2 !border-ink !bg-lime"
+                className="!h-2.5 !w-2.5 !border-2 !border-ink !bg-txt-mut"
                 style={{ position: "absolute", right: -5, top: "50%" }}
               />
             </div>
@@ -155,7 +155,7 @@ function FlowNodeComponent({ type, data, selected }: NodeProps<EditorNodeData>) 
           type="source"
           position={Position.Right}
           id="out"
-          className="!h-3 !w-3 !border-2 !border-ink !bg-lime"
+          className="!h-3 !w-3 !border-2 !border-ink !bg-txt-mut"
         />
       )}
     </div>

@@ -93,7 +93,7 @@ export function OnboardingWizard() {
   if (!needsName) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-lime" aria-hidden />
+        <Loader2 className="h-6 w-6 animate-spin text-txt-mut" aria-hidden />
       </div>
     );
   }

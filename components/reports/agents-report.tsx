@@ -100,7 +100,7 @@ export function AgentsReport({ orgId }: { orgId: string }) {
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-txt-dim">{agent.assigned}</td>
                   <td className="px-4 py-3 text-right">
-                    <span className="font-mono text-lime">{agent.open}</span>
+                    <span className="font-mono text-txt">{agent.open}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="font-mono text-ok">{agent.resolved}</span>

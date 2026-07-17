@@ -2,8 +2,12 @@ import { cn } from "@/lib/utils";
 
 type Tone = "lime" | "amber" | "danger" | "ok" | "neutral";
 
+// tone="lime" mantido no tipo por compatibilidade de API (11 usos no
+// projeto), mas agora renderiza neutro — verde reservado só ao logo/
+// wordmark (components/logo.tsx). "ok" é a única cor semântica que
+// sobra, pra status literalmente "sucesso/conectado".
 const tones: Record<Tone, string> = {
-  lime: "bg-lime-soft text-lime border-lime/25",
+  lime: "bg-surface-raised text-txt-mut border-line",
   amber: "bg-amber-soft text-amber border-amber/25",
   danger: "bg-danger-soft text-danger border-danger/25",
   ok: "bg-ok-soft text-ok border-ok/25",

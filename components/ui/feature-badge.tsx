@@ -20,7 +20,7 @@ export function FeatureBadge({
     <span
       title={t("Seu email de Super Admin libera este recurso para demonstração e testes. Clientes neste plano não têm acesso — para liberar, eles precisam fazer upgrade.")}
       className={cn(
-        "inline-flex cursor-help items-center gap-1 rounded-full bg-lime-soft px-2 py-0.5 text-[11px] font-medium leading-4 text-lime",
+        "inline-flex cursor-help items-center gap-1 rounded-full bg-amber-soft px-2 py-0.5 text-[11px] font-medium leading-4 text-amber",
         className
       )}
     >

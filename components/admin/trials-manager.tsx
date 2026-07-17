@@ -175,8 +175,8 @@ export function TrialsManager({
 
       {/* Ações em lote */}
       {selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-lime bg-lime-soft px-4 py-3">
-          <span className="text-sm font-medium text-lime">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line-strong bg-surface-raised px-4 py-3">
+          <span className="text-sm font-medium text-txt">
             {selected.size} cliente(s) selecionado(s)
           </span>
           <div className="flex items-center gap-2 ml-auto">
@@ -188,7 +188,7 @@ export function TrialsManager({
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                   batchDays === d
-                    ? "border-lime bg-lime text-white"
+                    ? "border-txt bg-txt text-ink"
                     : "border-line text-txt-dim hover:border-line-strong hover:text-txt"
                 )}
               >
@@ -348,7 +348,7 @@ export function TrialsManager({
                   className={cn(
                     "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
                     days === d && !customDays
-                      ? "border-lime bg-lime-soft text-lime"
+                      ? "border-line-strong bg-surface-raised text-txt"
                       : "border-line text-txt-dim hover:border-line-strong hover:text-txt"
                   )}
                 >

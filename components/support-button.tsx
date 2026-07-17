@@ -91,7 +91,7 @@ export function SupportButton() {
       <button
         onClick={() => setOpen(true)}
         aria-label={t("Ajuda e suporte")}
-        className="focus-ring fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-lime text-white shadow-pop transition-transform hover:scale-105 active:scale-95 md:bottom-5 md:right-5"
+        className="focus-ring fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-txt text-ink shadow-pop transition-transform hover:scale-105 active:scale-95 md:bottom-5 md:right-5"
       >
         <LifeBuoy className="h-6 w-6" aria-hidden />
       </button>
@@ -172,7 +172,7 @@ export function SupportButton() {
                 <Link
                   href="/app/help"
                   onClick={close}
-                  className="focus-ring inline-flex items-center gap-1.5 rounded text-xs text-txt-mut transition-colors hover:text-lime"
+                  className="focus-ring inline-flex items-center gap-1.5 rounded text-xs text-txt-mut transition-colors hover:text-txt"
                 >
                   <BookOpen className="h-3.5 w-3.5" aria-hidden />
                   {t("Central de Ajuda")}

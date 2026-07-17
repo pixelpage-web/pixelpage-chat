@@ -147,8 +147,8 @@ export function FlowsView({
               <Card key={flow.id}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-                      <GitBranch className="h-5 w-5 text-lime" aria-hidden />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+                      <GitBranch className="h-5 w-5 text-txt-mut" aria-hidden />
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{flow.name}</p>
@@ -203,19 +203,14 @@ export function FlowsView({
               className={cn(
                 "focus-ring rounded-lg border p-3.5 text-left transition-colors",
                 selectedTemplate === template.id
-                  ? "border-lime/60 bg-lime-soft"
+                  ? "border-line-strong bg-surface-raised"
                   : "border-line bg-surface-raised hover:border-line-strong"
               )}
             >
               <p className="text-lg" aria-hidden>
                 {template.emoji}
               </p>
-              <p
-                className={cn(
-                  "mt-1 text-sm font-semibold",
-                  selectedTemplate === template.id ? "text-lime" : "text-txt"
-                )}
-              >
+              <p className="mt-1 text-sm font-semibold text-txt">
                 {t(template.name)}
               </p>
               <p className="mt-0.5 text-xs leading-snug text-txt-dim">

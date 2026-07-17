@@ -20,7 +20,7 @@ import {
 const strengthMeta: Record<PasswordStrength, { label: string; bars: number; color: string }> = {
   fraca: { label: "Senha fraca", bars: 1, color: "bg-danger" },
   media: { label: "Senha média", bars: 2, color: "bg-amber" },
-  forte: { label: "Senha forte", bars: 3, color: "bg-lime" },
+  forte: { label: "Senha forte", bars: 3, color: "bg-txt" },
 };
 
 type LinkStatus = "checking" | "valid" | "invalid";
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
         </p>
         <Link
           href="/forgot-password"
-          className="focus-ring mt-6 inline-flex items-center gap-1.5 rounded-lg bg-lime px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
+          className="focus-ring mt-6 inline-flex items-center gap-1.5 rounded-lg bg-txt px-4 py-2 text-sm font-semibold text-ink hover:opacity-90"
         >
           {t("Solicitar novo link")}
         </Link>
@@ -127,8 +127,8 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="animate-fade-up rounded-card border border-line bg-surface p-6 sm:p-8">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lime-soft">
-        <KeyRound className="h-5 w-5 text-lime" aria-hidden />
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-raised">
+        <KeyRound className="h-5 w-5 text-txt-mut" aria-hidden />
       </div>
       <h1 className="mt-3 font-display text-2xl font-semibold text-txt">
         {t("Criar nova senha")}

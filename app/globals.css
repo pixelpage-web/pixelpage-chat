@@ -4,23 +4,24 @@
 
 @layer base {
   /*
-   * Identidade oficial (brandboard aprovado) — verde natural, não neon.
-   * --text-muted claro ajustado de #6E786C pra #5C6659 (o valor do
-   * brandboard falhava WCAG AA normal: 4.21:1, precisa 4.5 — confirmado
-   * por cálculo de luminância relativa antes de aplicar). --text-subtle,
-   * --border-muted e as variantes de opacidade do brand (--brand-dim/
-   * -border/-glow) não vieram especificados no brandboard — derivados
-   * aqui a partir dos tokens que vieram, mesma família de matiz. Ajustar
-   * se o brandboard tiver valores próprios pra esses.
+   * Fundo/superfícies neutralizados (sem tint de verde) — bg/surface/
+   * surface-2/border/border-muted/text/text-muted são cinza de verdade
+   * agora, não mais derivados do verde da marca. --border-muted claro
+   * não veio especificado nesse ajuste — derivado proporcionalmente ao
+   * antigo (mais claro que --border), mesma lógica neutra.
+   *
+   * --text-subtle e a família --brand-* continuam na paleta verde antiga
+   * por ora — verde fica reservado só ao logo/wordmark (ver
+   * components/logo.tsx), tratado à parte.
    */
   :root {
-    --bg: #f3f6ef;
+    --bg: #f7f7f8;
     --surface: #ffffff;
-    --surface-2: #e7ece1;
-    --border: #dce3d6;
-    --border-muted: #e9eee4;
-    --text: #0b0f0c;
-    --text-muted: #5c6659;
+    --surface-2: #ededef;
+    --border: #e1e1e4;
+    --border-muted: #eaeaed;
+    --text: #0a0a0b;
+    --text-muted: #6b6c72;
     --text-subtle: #96a091;
     --brand: #159a3d;
     --brand-bright: #4fe04c;
@@ -32,13 +33,13 @@
   }
 
   .dark {
-    --bg: #0b0f0c;
-    --surface: #141912;
-    --surface-2: #1b231a;
-    --border: #232d21;
-    --border-muted: #2a352a;
-    --text: #f3f6ef;
-    --text-muted: #8a9488;
+    --bg: #0a0a0b;
+    --surface: #16171a;
+    --surface-2: #1d1e22;
+    --border: #2a2b30;
+    --border-muted: #34353b;
+    --text: #f2f2f3;
+    --text-muted: #8b8d93;
     --text-subtle: #5c6659;
     --brand: #4fe04c;
     --brand-bright: #4fe04c;
@@ -79,9 +80,10 @@
 
   /* Cor do texto selecionado era fixa em branco — ilegível no tema claro
      (texto claro sobre o realce verde claro). Usa var(--text), que já
-     resolve certo nos dois temas (branco no .dark, escuro no :root). */
+     resolve certo nos dois temas (branco no .dark, escuro no :root).
+     Realce neutro (verde reservado só ao logo/wordmark). */
   ::selection {
-    background: var(--brand-glow);
+    background: color-mix(in srgb, var(--text) 20%, transparent);
     color: var(--text);
   }
 
@@ -106,7 +108,7 @@
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: var(--brand);
+    background: var(--text-muted);
   }
 }
 
@@ -123,19 +125,21 @@
     background-size: 400px 100%;
   }
 
-  /* Foco visível consistente — cor de marca (brand) */
+  /* Foco visível consistente — neutro (verde reservado só ao logo/wordmark,
+     ver components/logo.tsx). */
   .focus-ring {
-    @apply outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2;
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    --tw-ring-color: color-mix(in srgb, var(--text) 50%, transparent);
     --tw-ring-offset-color: var(--bg);
   }
 
-  /* Card com faixa lateral de marca — aplicado via <Card> compartilhado
-     (components/ui/card.tsx), então cobre conexões, planos, dashboard,
-     integrações etc. automaticamente, sem editar cada tela. */
+  /* Card — borda uniforme neutra (sem faixa lateral colorida). Aplicado via
+     <Card> compartilhado (components/ui/card.tsx), então cobre conexões,
+     planos, dashboard, integrações etc. automaticamente, sem editar cada
+     tela. */
   .card-brand {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--brand);
     border-radius: 12px;
     padding: 24px;
     transition: all 200ms ease;
@@ -143,28 +147,24 @@
 
   @media (min-width: 768px) {
     .card-brand:hover {
-      border-left-width: 4px;
-      box-shadow: 0 0 20px var(--brand-glow);
+      border-color: var(--border-muted);
       transform: translateX(2px);
     }
   }
-  /* Mobile: sem translateX no hover (item I), só o glow */
+  /* Mobile: sem translateX no hover (item I) */
   @media (max-width: 767px) {
     .card-brand:hover {
-      border-left-width: 4px;
-      box-shadow: 0 0 20px var(--brand-glow);
+      border-color: var(--border-muted);
     }
   }
 
-  /* Tema claro: sombra neutra em vez do glow verde (que é pensado pro
-     fundo escuro). Usa :root:not(.dark) — "html" sempre casa com :root,
-     dark ou não, então sem o :not(.dark) isto vazaria pro tema escuro. */
-  :root:not(.dark) .card-brand {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  /* Sombra neutra no hover, igual nos dois temas (glow verde removido). */
+  .card-brand:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
-  :root:not(.dark) .card-brand:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
+  :root.dark .card-brand:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
   }
 
   .label-uppercase {
@@ -175,28 +175,24 @@
     color: var(--text-muted);
   }
 
+  /* Alto contraste neutro invertido (--text/--bg) — sem cor, efeito
+     tipo Linear/Vercel. Sem uso hoje (verificado — nenhum componente
+     aplica esta classe; components/ui/button.tsx é quem renderiza o
+     botão primário de verdade), mantida coerente com a regra nova
+     caso passe a ser usada. */
   .btn-primary {
-    background: var(--brand);
+    background: var(--text);
     color: var(--bg);
     font-weight: 700;
     transition: filter 200ms ease, box-shadow 200ms ease, transform 100ms ease;
   }
 
   .btn-primary:hover {
-    box-shadow: 0 0 25px var(--brand-glow);
-    filter: brightness(1.1);
+    filter: brightness(0.9);
   }
 
   .btn-primary:active {
     transform: scale(0.98);
-  }
-
-  /* Tema claro: hover escurece a cor (não clareia — não é neon aqui) e
-     troca o glow por uma sombra colorida mais discreta. */
-  :root:not(.dark) .btn-primary:hover {
-    background: #15803d;
-    filter: none;
-    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
   }
 
   .input-brand {
@@ -210,8 +206,8 @@
   }
 
   .input-brand:focus {
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px var(--brand-glow);
+    border-color: var(--text-muted);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 12%, transparent);
     outline: none;
   }
 }
@@ -252,7 +248,7 @@
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--brand);
+  stroke: var(--text);
 }
 
 .react-flow__attribution {

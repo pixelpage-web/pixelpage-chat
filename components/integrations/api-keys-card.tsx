@@ -106,8 +106,8 @@ curl ${appUrl}/api/v1/conversations/{id}/messages \\
   return (
     <Card>
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-          <KeyRound className="h-5 w-5 text-lime" aria-hidden />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+          <KeyRound className="h-5 w-5 text-txt-mut" aria-hidden />
         </div>
         <div>
           <CardTitle>{t("API da PixelPage Chat")}</CardTitle>
@@ -179,16 +179,16 @@ curl ${appUrl}/api/v1/conversations/{id}/messages \\
           <div className="space-y-3 border-t border-line p-4">
             <ul className="space-y-1 text-xs text-txt-mut">
               <li>
-                <code className="text-lime">POST /api/v1/messages</code> — enviar
+                <code className="text-txt">POST /api/v1/messages</code> — enviar
                 mensagem (por <code>conversation_id</code>,{" "}
                 <code>reply_token</code> ou <code>to</code>)
               </li>
               <li>
-                <code className="text-lime">GET /api/v1/conversations</code> —
+                <code className="text-txt">GET /api/v1/conversations</code> —
                 listar conversas (<code>?status=open|resolved</code>)
               </li>
               <li>
-                <code className="text-lime">
+                <code className="text-txt">
                   GET /api/v1/conversations/{"{id}"}/messages
                 </code>{" "}
                 — histórico

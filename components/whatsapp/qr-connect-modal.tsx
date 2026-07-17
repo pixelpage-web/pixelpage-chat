@@ -193,7 +193,7 @@ export function QrConnectModal({
 
         {phase === "starting" && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <Loader2 className="h-8 w-8 animate-spin text-lime" aria-hidden />
+            <Loader2 className="h-8 w-8 animate-spin text-txt-mut" aria-hidden />
             <p className="text-sm text-txt-mut">{t("Preparando sua sessão…")}</p>
           </div>
         )}

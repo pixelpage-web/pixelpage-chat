@@ -19,7 +19,7 @@ export function HelpCard({
         className
       )}
     >
-      <Info className="mt-0.5 h-4 w-4 shrink-0 text-lime" aria-hidden />
+      <Info className="mt-0.5 h-4 w-4 shrink-0 text-txt-mut" aria-hidden />
       <p className="text-xs leading-relaxed text-txt-mut">{children}</p>
     </div>
   );

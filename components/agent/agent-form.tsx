@@ -140,16 +140,11 @@ export function AgentForm({
                   className={cn(
                     "focus-ring rounded-lg border p-2.5 text-left transition-colors",
                     draft.tone_preset === preset.value
-                      ? "border-lime/60 bg-lime-soft"
+                      ? "border-line-strong bg-surface-raised"
                       : "border-line bg-surface-raised hover:border-line-strong"
                   )}
                 >
-                  <p
-                    className={cn(
-                      "text-xs font-semibold",
-                      draft.tone_preset === preset.value ? "text-lime" : "text-txt"
-                    )}
-                  >
+                  <p className="text-xs font-semibold text-txt">
                     {t(preset.label)}
                   </p>
                   <p className="mt-0.5 text-[10px] leading-tight text-txt-dim">
@@ -245,7 +240,7 @@ export function AgentForm({
                       className={cn(
                         "focus-ring rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
                         hours.days.includes(i)
-                          ? "bg-lime text-white"
+                          ? "bg-txt text-ink"
                           : "bg-surface-raised text-txt-dim hover:text-txt"
                       )}
                     >

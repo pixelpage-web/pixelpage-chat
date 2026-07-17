@@ -91,7 +91,7 @@ function LoginForm() {
           />
           <Link
             href="/forgot-password"
-            className="focus-ring mt-1.5 inline-block text-xs font-medium text-txt-mut hover:text-lime hover:underline"
+            className="focus-ring mt-1.5 inline-block text-xs font-medium text-txt-mut hover:text-txt hover:underline"
           >
             {t("Esqueci minha senha")}
           </Link>
@@ -116,7 +116,7 @@ function LoginForm() {
 
       <p className="mt-6 text-center text-sm text-txt-mut">
         {t("Não tem conta?")}{" "}
-        <Link href="/register" className="font-medium text-lime hover:underline">
+        <Link href="/register" className="font-medium text-txt hover:underline">
           {t("Criar conta grátis")}
         </Link>
       </p>

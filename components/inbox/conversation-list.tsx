@@ -42,7 +42,7 @@ function previewPrefix(preview: MessagePreview) {
     case "human":
       return <User className="h-3 w-3 shrink-0 text-txt-dim" aria-label="Equipe" />;
     case "ai_bot":
-      return <Bot className="h-3 w-3 shrink-0 text-lime" aria-label="Bot IA" />;
+      return <Bot className="h-3 w-3 shrink-0 text-txt-mut" aria-label="Bot IA" />;
     case "external":
       return <Workflow className="h-3 w-3 shrink-0 text-amber" aria-label="n8n" />;
     default:
@@ -151,7 +151,7 @@ export function ConversationList({
           <h1 className="font-display text-lg font-semibold">Inbox</h1>
           <div className="flex items-center gap-2">
             {openCount > 0 && (
-              <span className="rounded-full bg-lime px-2 py-0.5 text-[11px] font-semibold text-white">
+              <span className="rounded-full bg-txt px-2 py-0.5 text-[11px] font-semibold text-ink">
                 {openCount} {openCount > 1 ? t("não lidas") : t("não lida")}
               </span>
             )}
@@ -180,7 +180,7 @@ export function ConversationList({
               className={cn(
                 "focus-ring rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                 filter === f.value
-                  ? "bg-lime-soft text-lime"
+                  ? "bg-surface-raised text-txt"
                   : "text-txt-dim hover:bg-surface-raised hover:text-txt"
               )}
             >
@@ -358,7 +358,7 @@ export function ConversationList({
                             </span>
                           )}
                           {conv.unread_count > 0 && (
-                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-lime px-1.5 text-[11px] font-bold text-white">
+                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-txt px-1.5 text-[11px] font-bold text-ink">
                               {conv.unread_count}
                             </span>
                           )}

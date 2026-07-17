@@ -288,7 +288,7 @@ export function ConnectionsView({
 
               <ul className="mt-4 space-y-2 text-xs leading-relaxed text-txt-mut">
                 <li className="flex items-start gap-2">
-                  <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime" aria-hidden />
+                  <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-txt-mut" aria-hidden />
                   {t("Ideal para começar ou testar — sem espera de aprovação.")}
                 </li>
                 <li className="flex items-start gap-2">
@@ -331,7 +331,7 @@ export function ConnectionsView({
             >
               {/* Glow decorativo no canto — reforça "upgrade premium" sem poluir */}
               <div
-                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lime/10 blur-2xl"
+                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-txt-mut/10 blur-2xl"
                 aria-hidden
               />
 
@@ -368,7 +368,7 @@ export function ConnectionsView({
                   </div>
                   <Link
                     href="/app/billing"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-lime px-3.5 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-txt px-3.5 py-1.5 text-xs font-semibold text-ink transition-opacity hover:opacity-90"
                   >
                     {t("Ver planos")}
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -426,7 +426,7 @@ export function ConnectionsView({
                   )}
                   <Link
                     href="/app/connections/api-oficial"
-                    className="focus-ring relative mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-lime px-3 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+                    className="focus-ring relative mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-txt px-3 py-2.5 text-sm font-semibold text-ink transition-opacity hover:opacity-90"
                   >
                     <ShieldCheck className="h-4 w-4" aria-hidden />
                     {t("Conectar agora")}
@@ -518,13 +518,13 @@ export function ConnectionsView({
                       <Star
                         className={cn(
                           "h-3.5 w-3.5",
-                          conn.csat_enabled ? "text-lime" : "text-txt-dim"
+                          conn.csat_enabled ? "text-txt" : "text-txt-dim"
                         )}
                         aria-hidden
                       />
                       CSAT
                       {conn.csat_enabled && (
-                        <span className="ml-0.5 text-[10px] text-lime">{t("ativo")}</span>
+                        <span className="ml-0.5 text-[10px] text-txt">{t("ativo")}</span>
                       )}
                     </Button>
                     <Button
@@ -560,23 +560,18 @@ export function ConnectionsView({
                           className={cn(
                             "focus-ring rounded-lg border p-2.5 text-left transition-colors",
                             conn.mode === mode.value
-                              ? "border-lime/60 bg-lime-soft"
+                              ? "border-line-strong bg-surface-raised"
                               : "border-line bg-surface-raised hover:border-line-strong"
                           )}
                         >
                           <mode.icon
                             className={cn(
                               "h-4 w-4",
-                              conn.mode === mode.value ? "text-lime" : "text-txt-dim"
+                              conn.mode === mode.value ? "text-txt" : "text-txt-dim"
                             )}
                             aria-hidden
                           />
-                          <p
-                            className={cn(
-                              "mt-1.5 text-xs font-semibold",
-                              conn.mode === mode.value ? "text-lime" : "text-txt"
-                            )}
-                          >
+                          <p className="mt-1.5 text-xs font-semibold text-txt">
                             {t(mode.label)}
                           </p>
                           <p className="text-[10px] leading-tight text-txt-dim">
@@ -617,7 +612,7 @@ export function ConnectionsView({
                             )}
                             <Link
                               href={`/app/connections/${conn.id}/webhook`}
-                              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                              className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-txt transition-colors hover:border-line-strong"
                             >
                               <Workflow className="h-3.5 w-3.5" aria-hidden />
                               {t("Configurar webhook")}
@@ -678,9 +673,9 @@ export function ConnectionsView({
             {t("Cancelar")}
           </Button>
           {/* Botão custom (não usa o <Button> compartilhado) — os variants
-              dele já trazem bg-lime/border-lime, que colidiriam com o
-              laranja pedido aqui já que cn() é só clsx, sem merge de
-              utilities conflitantes. */}
+              dele são neutros (verde reservado só ao logo/wordmark); esta
+              ação é destrutiva e usa âmbar, coerente com o AlertTriangle
+              acima. */}
           <button
             type="button"
             disabled={busyId === logoutConfirmId}
@@ -689,7 +684,7 @@ export function ConnectionsView({
               setLogoutConfirmId(null);
               if (connection) void qrAction(connection, "logout");
             }}
-            className="focus-ring inline-flex h-10 flex-1 select-none items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-bg transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="focus-ring inline-flex h-10 flex-1 select-none items-center justify-center gap-2 rounded-lg bg-amber text-sm font-semibold text-ink transition-colors hover:bg-amber/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busyId === logoutConfirmId && (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

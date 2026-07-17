@@ -46,9 +46,9 @@ export function AudioMessage({ url }: { url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mb-1.5 flex items-center gap-2.5 rounded-lg border border-line bg-ink/40 px-3 py-2.5 text-txt hover:border-lime/40"
+      className="mb-1.5 flex items-center gap-2.5 rounded-lg border border-line bg-ink/40 px-3 py-2.5 text-txt hover:border-line-strong"
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lime/15 text-lime">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-raised text-txt-mut">
         <Mic className="h-4 w-4" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">

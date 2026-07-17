@@ -143,8 +143,8 @@ export function NotificationsManager({
       {/* Criar */}
       <Card>
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-            <Megaphone className="h-5 w-5 text-lime" aria-hidden />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+            <Megaphone className="h-5 w-5 text-txt-mut" aria-hidden />
           </div>
           <div>
             <CardTitle>Nova notificação</CardTitle>

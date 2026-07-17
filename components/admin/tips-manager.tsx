@@ -121,8 +121,8 @@ export function TipsManager({
       {/* Criar */}
       <Card>
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-            <Lightbulb className="h-5 w-5 text-lime" aria-hidden />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+            <Lightbulb className="h-5 w-5 text-txt-mut" aria-hidden />
           </div>
           <div>
             <CardTitle>Nova dica</CardTitle>
@@ -148,7 +148,7 @@ export function TipsManager({
                     className={
                       "focus-ring flex h-9 w-9 items-center justify-center rounded-lg border transition-colors " +
                       (iconKey === key
-                        ? "border-lime/50 bg-lime-soft text-lime"
+                        ? "border-line-strong bg-surface-raised text-txt"
                         : "border-line bg-surface-raised text-txt-mut hover:border-line-strong")
                     }
                   >
@@ -241,7 +241,7 @@ export function TipsManager({
             <li key={tip.id} className="rounded-card border border-line bg-surface p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-2.5">
-                  <TipIcon className="mt-0.5 h-5 w-5 shrink-0 text-lime" aria-hidden />
+                  <TipIcon className="mt-0.5 h-5 w-5 shrink-0 text-txt-mut" aria-hidden />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold text-txt">{tip.title}</span>
@@ -257,7 +257,7 @@ export function TipsManager({
                     </div>
                     <p className="mt-0.5 text-xs text-txt-mut">{tip.body}</p>
                     {tip.cta_label && (
-                      <p className="mt-0.5 text-[11px] text-lime">
+                      <p className="mt-0.5 text-[11px] text-txt-mut">
                         {tip.cta_label} → {tip.cta_href}
                       </p>
                     )}

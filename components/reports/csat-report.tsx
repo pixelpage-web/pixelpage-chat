@@ -23,7 +23,7 @@ function StarRating({ score, size = "h-3.5 w-3.5" }: { score: number; size?: str
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={`${size} ${n <= rounded ? "fill-lime text-lime" : "text-line-strong"}`}
+          className={`${size} ${n <= rounded ? "fill-txt text-txt" : "text-line-strong"}`}
           aria-hidden
         />
       ))}
@@ -204,7 +204,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
         <Card className="sm:col-span-1">
           <p className="text-xs font-medium text-txt-mut">{t("Nota média geral")}</p>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className="font-display text-4xl font-semibold text-lime">
+            <p className="font-display text-4xl font-semibold text-txt">
               {average !== null ? average.toFixed(1) : "—"}
             </p>
             {average !== null && <StarRating score={average} size="h-4 w-4" />}
@@ -230,7 +230,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
               <p className="text-[11px] text-txt-dim">{t("respondidas")}</p>
             </div>
             <div>
-              <p className="font-display text-2xl font-semibold text-lime">
+              <p className="font-display text-2xl font-semibold text-txt">
                 {responseRate !== null ? `${Math.round(responseRate)}%` : "—"}
               </p>
               <p className="text-[11px] text-txt-dim">{t("taxa de resposta")}</p>
@@ -239,7 +239,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
           {responseRate !== null && (
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-raised">
               <div
-                className="h-full rounded-full bg-lime/70"
+                className="h-full rounded-full bg-txt-mut/70"
                 style={{ width: `${Math.min(responseRate, 100)}%` }}
               />
             </div>
@@ -329,7 +329,7 @@ export function CsatReport({ orgId, periodDays }: { orgId: string; periodDays: n
                   <tr key={row.agentId} className="border-t border-line">
                     <td className="py-2">{row.name}</td>
                     <td className="py-2 text-right">
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-lime">
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-txt">
                         {row.avg.toFixed(1)}
                         <StarRating score={row.avg} />
                       </span>

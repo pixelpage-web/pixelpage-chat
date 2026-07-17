@@ -157,7 +157,7 @@ export function CannedResponsesView({ orgId }: { orgId: string }) {
             <li key={item.id} className="flex items-start gap-3 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-line-strong">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="rounded bg-lime-soft px-1.5 py-0.5 font-mono text-xs font-semibold text-lime">/{item.short_code}</span>
+                  <span className="rounded bg-surface-raised px-1.5 py-0.5 font-mono text-xs font-semibold text-txt">/{item.short_code}</span>
                 </div>
                 <p className="mt-1.5 line-clamp-2 text-sm text-txt-mut">{item.content}</p>
               </div>

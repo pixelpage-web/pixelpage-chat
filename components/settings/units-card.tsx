@@ -238,7 +238,7 @@ export function UnitsCard({ orgId, members }: { orgId: string; members: Member[]
                       type="checkbox"
                       checked={assigned.includes(m.id)}
                       onChange={() => toggleAssigned(m.id)}
-                      className="accent-lime"
+                      className="accent-txt"
                     />
                     {m.name}
                   </label>

@@ -51,8 +51,8 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="animate-fade-up rounded-card border border-line bg-surface p-6 text-center sm:p-8">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
-          <MailCheck className="h-6 w-6 text-lime" aria-hidden />
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-raised">
+          <MailCheck className="h-6 w-6 text-txt-mut" aria-hidden />
         </div>
         <h1 className="mt-4 font-display text-xl font-semibold text-txt">
           {t("Verifique seu e-mail")}
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
         </p>
         <Link
           href="/login"
-          className="focus-ring mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-lime hover:underline"
+          className="focus-ring mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-txt hover:underline"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
           {t("Voltar para o login")}
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
       <p className="mt-6 text-center text-sm text-txt-mut">
         <Link
           href="/login"
-          className="focus-ring inline-flex items-center gap-1.5 font-medium text-lime hover:underline"
+          className="focus-ring inline-flex items-center gap-1.5 font-medium text-txt hover:underline"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
           {t("Voltar para o login")}

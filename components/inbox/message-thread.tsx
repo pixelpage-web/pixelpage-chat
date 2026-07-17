@@ -188,7 +188,7 @@ function MessageBubble({
           "max-w-[85%] rounded-2xl px-3.5 py-2 sm:max-w-[70%]",
           isInbound
             ? "rounded-bl-sm bg-surface-raised"
-            : "rounded-br-sm bg-lime/15 ring-1 ring-inset ring-lime/20"
+            : "rounded-br-sm bg-surface-raised ring-1 ring-inset ring-line-strong"
         )}
       >
         {/* Mídia: preview de imagem, player de áudio, link de documento */}
@@ -211,7 +211,7 @@ function MessageBubble({
               href={message.media_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mb-1.5 flex items-center gap-2 rounded-lg border border-line bg-ink/40 px-3 py-2 text-xs text-lime underline"
+              className="mb-1.5 flex items-center gap-2 rounded-lg border border-line bg-ink/40 px-3 py-2 text-xs text-txt underline"
             >
               <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden />
               {message.content || t("Documento")}
@@ -590,7 +590,7 @@ export function MessageThread({
                       >
                         <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: lbl.color }} />
                         <span className="flex-1">{lbl.title}</span>
-                        {activeLabels.includes(lbl.id) && <Check className="h-3.5 w-3.5 text-lime" />}
+                        {activeLabels.includes(lbl.id) && <Check className="h-3.5 w-3.5 text-txt" />}
                       </button>
                     ))}
                   </div>
@@ -778,14 +778,14 @@ export function MessageThread({
               </span>
               <button
                 onClick={onToggleBotPause}
-                className="focus-ring rounded-md px-2 py-1 text-[11px] font-semibold text-lime hover:bg-lime-soft"
+                className="focus-ring rounded-md px-2 py-1 text-[11px] font-semibold text-txt hover:bg-surface-raised"
               >
                 {t("Reativar bot")}
               </button>
             </div>
           ) : conversation.current_flow_id ? (
-            <div className="flex items-center justify-between rounded-lg border border-lime/25 bg-lime-soft px-3 py-1.5">
-              <span className="flex min-w-0 items-center gap-1 truncate text-[11px] text-lime">
+            <div className="flex items-center justify-between rounded-lg border border-line-strong bg-surface-raised px-3 py-1.5">
+              <span className="flex min-w-0 items-center gap-1 truncate text-[11px] text-txt">
                 <Zap className="h-3 w-3 shrink-0" aria-hidden />
                 {t("Fluxo ativo")}: {flowName ?? t("fluxo")}
               </span>
@@ -825,7 +825,7 @@ export function MessageThread({
                 onClick={() => setNoteMode(false)}
                 className={cn(
                   "rounded-md px-3 py-1 text-xs font-medium transition-colors",
-                  !noteMode ? "bg-lime-soft text-lime" : "text-txt-dim hover:text-txt"
+                  !noteMode ? "bg-surface-raised text-txt" : "text-txt-dim hover:text-txt"
                 )}
               >
                 {t("Resposta")}
@@ -910,7 +910,7 @@ export function MessageThread({
                         }}
                         className="block w-full px-3 py-2 text-left hover:bg-surface-hover"
                       >
-                        <span className="text-xs font-semibold text-lime">/{tp.name}</span>
+                        <span className="text-xs font-semibold text-txt">/{tp.name}</span>
                         <span className="mt-0.5 block truncate text-xs text-txt-mut">
                           {tp.content}
                         </span>
@@ -970,7 +970,7 @@ export function MessageThread({
               <button
                 onClick={() => void handleSubmit()}
                 disabled={!draft.trim() || sending}
-                className="focus-ring flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-lime text-white transition-colors hover:bg-lime-bright disabled:cursor-not-allowed disabled:opacity-50"
+                className="focus-ring flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-txt text-ink transition-colors hover:bg-txt/90 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label={t("Enviar mensagem")}
               >
                 <Send className="h-4 w-4" />

@@ -55,10 +55,10 @@ export function SuggestionForm({
 
   if (sent) {
     return (
-      <div className="flex items-start gap-2.5 rounded-lg border border-lime/25 bg-lime-soft p-3">
-        <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-lime" aria-hidden />
+      <div className="flex items-start gap-2.5 rounded-lg border border-line-strong bg-surface-raised p-3">
+        <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-txt-mut" aria-hidden />
         <div>
-          <p className="text-xs font-medium text-lime">
+          <p className="text-xs font-medium text-txt">
             {t("Sugestão enviada — obrigado!")}
           </p>
           <button

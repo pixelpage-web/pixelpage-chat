@@ -167,8 +167,8 @@ export function SettingsManager({
       {/* Claude */}
       <Card>
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-            <Bot className="h-5 w-5 text-lime" aria-hidden />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+            <Bot className="h-5 w-5 text-txt-mut" aria-hidden />
           </div>
           <div>
             <CardTitle>Claude API</CardTitle>
@@ -254,8 +254,8 @@ export function SettingsManager({
       {/* Evolution API (QR Code) */}
       <Card>
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-            <QrCode className="h-5 w-5 text-lime" aria-hidden />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+            <QrCode className="h-5 w-5 text-txt-mut" aria-hidden />
           </div>
           <div>
             <CardTitle>Evolution API (QR Code)</CardTitle>
@@ -368,7 +368,7 @@ export function SettingsManager({
             </li>
             <li>
               Em <strong>Webhook fields</strong>, assine o campo{" "}
-              <code className="text-lime">messages</code>
+              <code className="text-txt">messages</code>
             </li>
           </ol>
           <CodeBlock code={webhookUrl} label="callback url" />
@@ -423,8 +423,8 @@ export function SettingsManager({
       {/* API keys de todos os clientes */}
       <Card>
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-            <KeyRound className="h-5 w-5 text-lime" aria-hidden />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+            <KeyRound className="h-5 w-5 text-txt-mut" aria-hidden />
           </div>
           <div>
             <CardTitle>API keys dos clientes</CardTitle>

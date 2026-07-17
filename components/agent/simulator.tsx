@@ -75,8 +75,8 @@ export function Simulator({
     <div className="flex h-full w-full flex-col bg-ink">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-lime-soft">
-            <Bot className="h-4 w-4 text-lime" aria-hidden />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-raised">
+            <Bot className="h-4 w-4 text-txt-mut" aria-hidden />
           </div>
           <div>
             <p className="text-sm font-semibold">{agent.name || t("Assistente")}</p>
@@ -131,7 +131,7 @@ export function Simulator({
               className={cn(
                 "max-w-[85%] rounded-2xl px-3.5 py-2",
                 msg.role === "user"
-                  ? "rounded-br-sm bg-lime/15 ring-1 ring-inset ring-lime/20"
+                  ? "rounded-br-sm bg-surface-raised ring-1 ring-inset ring-line-strong"
                   : "rounded-bl-sm bg-surface-raised"
               )}
             >
@@ -145,7 +145,7 @@ export function Simulator({
                   </>
                 ) : (
                   <>
-                    <Bot className="h-3 w-3 text-lime" aria-hidden /> {agent.name || "bot"}
+                    <Bot className="h-3 w-3 text-txt-mut" aria-hidden /> {agent.name || "bot"}
                   </>
                 )}
               </div>
@@ -188,7 +188,7 @@ export function Simulator({
           <button
             onClick={() => void handleSend()}
             disabled={!draft.trim() || thinking}
-            className="focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-lime text-white transition-colors hover:bg-lime-bright disabled:cursor-not-allowed disabled:opacity-50"
+            className="focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-txt text-ink transition-colors hover:bg-txt/90 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={t("Enviar mensagem de teste")}
           >
             <Send className="h-4 w-4" />

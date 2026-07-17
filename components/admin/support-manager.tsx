@@ -148,7 +148,7 @@ export function SupportManager({
         <p className="mt-0.5 text-sm text-txt-mut">
           Mensagens enviadas pelos clientes pelo botão de suporte —{" "}
           {openCount > 0 ? (
-            <span className="font-medium text-lime">{openCount} aberto(s)</span>
+            <span className="font-medium text-txt">{openCount} aberto(s)</span>
           ) : (
             "nenhum aberto"
           )}
@@ -164,7 +164,7 @@ export function SupportManager({
             className={cn(
               "focus-ring rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               filter === f.value
-                ? "bg-lime-soft text-lime"
+                ? "bg-surface-raised text-txt"
                 : "text-txt-dim hover:bg-surface-raised hover:text-txt"
             )}
           >
@@ -235,7 +235,7 @@ export function SupportManager({
                       className={cn(
                         "rounded-lg px-3 py-2 text-sm leading-relaxed",
                         m.from_admin
-                          ? "ml-6 border border-lime/25 bg-lime-soft text-txt"
+                          ? "ml-6 border border-line-strong bg-surface-raised text-txt"
                           : "mr-6 bg-ink text-txt"
                       )}
                     >

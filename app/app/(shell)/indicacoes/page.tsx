@@ -62,7 +62,7 @@ function daysUntil(iso: string | null): number | null {
 function ReferralStatusBadge({ status }: { status: ReferralRow["status"] }) {
   const map = {
     pending:   { tone: "amber" as const, label: "Aguardando assinatura" },
-    activated: { tone: "lime" as const,  label: "Ativo" },
+    activated: { tone: "ok" as const,    label: "Ativo" },
     rewarded:  { tone: "ok" as const,    label: "Recompensado" },
     canceled:  { tone: "danger" as const, label: "Cancelado" },
   };
@@ -88,7 +88,7 @@ function MilestoneProgressBar({ progress }: { progress: MilestoneProgress }) {
       {/* Progress bar */}
       <div className="relative h-2 overflow-hidden rounded-full bg-surface-raised">
         <div
-          className="h-full rounded-full bg-lime transition-all duration-500"
+          className="h-full rounded-full bg-txt-mut transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -101,7 +101,7 @@ function MilestoneProgressBar({ progress }: { progress: MilestoneProgress }) {
             : "Nenhum marco atingido"}
         </span>
         {nextMilestone && (
-          <span className="font-medium text-lime">
+          <span className="font-medium text-txt">
             {toNextMilestone === 1
               ? "1 indicação para "
               : `${toNextMilestone} indicações para `}
@@ -109,7 +109,7 @@ function MilestoneProgressBar({ progress }: { progress: MilestoneProgress }) {
           </span>
         )}
         {!nextMilestone && (
-          <span className="inline-flex items-center gap-1 font-medium text-lime">
+          <span className="inline-flex items-center gap-1 font-medium text-txt">
             Nível máximo! <Trophy className="h-3.5 w-3.5" aria-hidden />
           </span>
         )}
@@ -130,7 +130,7 @@ function RewardCard({ reward }: { reward: ReferralRewardRow }) {
       className={cn(
         "rounded-card border p-4",
         reward.status === "applied"
-          ? "border-lime/30 bg-lime/5"
+          ? "border-ok/30 bg-ok-soft"
           : reward.status === "expired"
             ? "border-line bg-surface opacity-60"
             : expiringSoon
@@ -176,7 +176,7 @@ function RewardCard({ reward }: { reward: ReferralRewardRow }) {
                 ? "danger"
                 : expiringSoon
                   ? "amber"
-                  : "lime"
+                  : "neutral"
           }
         >
           {reward.status === "applied"
@@ -295,7 +295,7 @@ export default function IndicacoesPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-lime" />
+        <Loader2 className="h-5 w-5 animate-spin text-txt-mut" />
       </div>
     );
   }
@@ -351,7 +351,7 @@ export default function IndicacoesPage() {
                 </CardDescription>
               </div>
               <div className="text-right">
-                <p className="font-display text-2xl font-bold text-lime">
+                <p className="font-display text-2xl font-bold text-txt">
                   {milestoneProgress.activatedCount}
                 </p>
                 <p className="text-[11px] text-txt-dim">
@@ -402,13 +402,13 @@ export default function IndicacoesPage() {
                 <Icon
                   className={cn(
                     "h-3 w-3",
-                    accent ? "text-lime" : warn ? "text-amber" : dim ? "text-txt-dim" : "text-txt-mut"
+                    accent ? "text-txt" : warn ? "text-amber" : dim ? "text-txt-dim" : "text-txt-mut"
                   )}
                   aria-hidden
                 />
                 {label}
               </div>
-              <p className={cn("mt-1 font-display text-2xl font-bold", accent && "text-lime")}>
+              <p className={cn("mt-1 font-display text-2xl font-bold", accent && "text-txt")}>
                 {value}
               </p>
             </div>
@@ -430,7 +430,7 @@ export default function IndicacoesPage() {
                 </span>
                 <button
                   onClick={copyLink}
-                  className="shrink-0 rounded-md p-1.5 text-txt-dim transition-colors hover:bg-surface hover:text-lime"
+                  className="shrink-0 rounded-md p-1.5 text-txt-dim transition-colors hover:bg-surface hover:text-txt"
                   title="Copiar link"
                 >
                   <Copy className="h-3.5 w-3.5" />
@@ -450,7 +450,7 @@ export default function IndicacoesPage() {
                   href={data.link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs text-txt-mut transition-colors hover:border-lime/40 hover:text-lime"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs text-txt-mut transition-colors hover:border-line-strong hover:text-txt"
                 >
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                   Visualizar

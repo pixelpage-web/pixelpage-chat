@@ -141,7 +141,7 @@ function UsageBar({
         <div
           className={cn(
             "h-full rounded-full transition-all",
-            danger ? "bg-amber" : "bg-lime"
+            danger ? "bg-amber" : "bg-txt-mut"
           )}
           style={{ width: unlimited ? "4%" : `${pct}%` }}
         />
@@ -294,7 +294,7 @@ export function BillingView({
             </div>
             <div className="flex flex-col items-end gap-2">
               {currentPlan && currentPlan.price_cents > 0 && (
-                <p className="font-display text-xl font-semibold text-lime">
+                <p className="font-display text-xl font-semibold text-txt">
                   {formatBRL(currentPlan.price_cents)}
                   <span className="text-xs font-normal text-txt-dim">/{t("mês")}</span>
                 </p>
@@ -304,7 +304,7 @@ export function BillingView({
                 <button
                   onClick={() => void openStripePortal()}
                   disabled={openingPortal}
-                  className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-txt transition-colors hover:border-lime/60 hover:text-lime disabled:opacity-60"
+                  className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-xs font-medium text-txt transition-colors hover:border-txt-mut disabled:opacity-60"
                 >
                   {openingPortal ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -393,7 +393,7 @@ export function BillingView({
             {aiMode === "byok" && (
               <div className="rounded-lg border border-line bg-surface-raised/60 p-3">
                 <p className="flex items-center gap-1.5 text-xs font-medium text-txt">
-                  <KeyRound className="h-3.5 w-3.5 text-lime" aria-hidden />
+                  <KeyRound className="h-3.5 w-3.5 text-txt-mut" aria-hidden />
                   {t("Chave própria (BYOK)")}
                 </p>
                 <p className="mt-1.5 text-xs leading-relaxed text-txt-mut">
@@ -413,7 +413,7 @@ export function BillingView({
                 </p>
                 <Link
                   href="/app/integrations"
-                  className="mt-2 inline-flex items-center text-xs font-medium text-lime hover:underline"
+                  className="mt-2 inline-flex items-center text-xs font-medium text-txt hover:underline"
                 >
                   {t("Reativar em Integrações")} →
                 </Link>
@@ -421,7 +421,7 @@ export function BillingView({
             )}
           </div>
           <p className="mt-4 flex items-center gap-1.5 text-[11px] text-txt-dim">
-            <Zap className="h-3 w-3 text-lime" aria-hidden />
+            <Zap className="h-3 w-3 text-txt-mut" aria-hidden />
             {t("Webhook n8n e modo manual não consomem mensagens IA — são ilimitados em todos os planos.")}
           </p>
         </Card>
@@ -449,7 +449,7 @@ export function BillingView({
                   className={cn(
                     "relative flex flex-col rounded-card border p-5 transition-shadow",
                     isFeatured
-                      ? "border-lime/50 bg-lime-soft/20 shadow-glow"
+                      ? "border-line-strong bg-surface-hover shadow-pop"
                       : "border-line bg-surface"
                   )}
                 >
@@ -503,7 +503,7 @@ export function BillingView({
                         key={f}
                         className="flex items-start gap-1.5 text-[11px] text-txt-mut"
                       >
-                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-lime" aria-hidden />
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-txt-mut" aria-hidden />
                         {f}
                       </li>
                     ))}
@@ -519,8 +519,8 @@ export function BillingView({
                           className={cn(
                             "focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
                             isFeatured
-                              ? "bg-lime text-black hover:opacity-90"
-                              : "border border-line-strong text-txt hover:border-lime/60 hover:text-lime"
+                              ? "bg-txt text-ink hover:opacity-90"
+                              : "border border-line-strong text-txt hover:border-txt-mut"
                           )}
                         >
                           {checkingOutPlanId === plan.id && (
@@ -538,8 +538,8 @@ export function BillingView({
                           className={cn(
                             "focus-ring flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
                             isFeatured
-                              ? "bg-lime text-black hover:opacity-90"
-                              : "border border-line-strong text-txt hover:border-lime/60 hover:text-lime"
+                              ? "bg-txt text-ink hover:opacity-90"
+                              : "border border-line-strong text-txt hover:border-txt-mut"
                           )}
                         >
                           {t("Assinar")} {plan.name}
@@ -556,7 +556,7 @@ export function BillingView({
                   {!isCurrent && plan.price_cents === 0 && (
                     <div className="mt-5">
                       <p className="flex items-center justify-center gap-1.5 rounded-lg bg-surface-hover p-2 text-center text-[11px] text-txt-dim">
-                        <Shield className="h-3 w-3 text-lime" aria-hidden />
+                        <Shield className="h-3 w-3 text-txt-mut" aria-hidden />
                         {t("Sempre gratuito — sem cartão")}
                       </p>
                     </div>

@@ -84,7 +84,7 @@ export function WelcomeModal({ userId, orgName }: { userId: string; orgName: str
         <ul className="mt-5 space-y-3">
           {STEPS.map((step) => (
             <li key={step.label} className="flex items-center gap-3 text-sm text-txt">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lime-soft text-lime">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-raised text-txt-mut">
                 <step.icon className="h-4 w-4" aria-hidden />
               </span>
               {t(step.label)}

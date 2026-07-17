@@ -282,7 +282,7 @@ if (assinatura !== esperado) {
               className={cn(
                 "focus-ring flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 tab === tabItem.id
-                  ? "bg-lime-soft text-lime"
+                  ? "bg-surface-raised text-txt"
                   : "text-txt-mut hover:bg-surface-hover hover:text-txt"
               )}
             >
@@ -296,8 +296,8 @@ if (assinatura !== esperado) {
         {tab === "platform" && (
           <Card>
             <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-lime-soft">
-                <Sparkles className="h-5 w-5 text-lime" aria-hidden />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised">
+                <Sparkles className="h-5 w-5 text-txt-mut" aria-hidden />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -343,13 +343,13 @@ if (assinatura !== esperado) {
                   <Label>{t("API key da sua organização")}</Label>
                   {hasApiKey ? (
                     <p className="flex items-center gap-1.5 rounded-lg border border-line bg-ink px-3 py-2 text-xs text-txt-mut">
-                      <KeyRound className="h-3.5 w-3.5 shrink-0 text-lime" aria-hidden />
+                      <KeyRound className="h-3.5 w-3.5 shrink-0 text-txt-mut" aria-hidden />
                       {t("Sua API key já existe. O workflow usa o reply_token do evento — você não precisa colá-la em lugar nenhum.")}
                     </p>
                   ) : (
                     <Link
                       href="/app/integrations"
-                      className="focus-ring flex items-center gap-1.5 rounded-lg border border-dashed border-line px-3 py-2 text-xs text-txt-mut transition-colors hover:border-lime/50 hover:text-lime"
+                      className="focus-ring flex items-center gap-1.5 rounded-lg border border-dashed border-line px-3 py-2 text-xs text-txt-mut transition-colors hover:border-line-strong hover:text-txt"
                     >
                       <KeyRound className="h-3.5 w-3.5 shrink-0" aria-hidden />
                       {t("Gerar uma API key em Integrações (mostrada uma única vez)")}
@@ -364,7 +364,7 @@ if (assinatura !== esperado) {
                   </Button>
                   <Link
                     href="/app/help"
-                    className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 text-xs font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 text-xs font-medium text-txt transition-colors hover:border-txt-mut"
                   >
                     {t("Como personalizar (Central de Ajuda)")}
                   </Link>
@@ -453,7 +453,7 @@ if (assinatura !== esperado) {
                         setN8nApiKey("");
                         setN8nKeyRevealed(true);
                       }}
-                      className="focus-ring rounded text-xs font-medium text-lime transition-colors hover:underline"
+                      className="focus-ring rounded text-xs font-medium text-txt transition-colors hover:underline"
                     >
                       {t("Trocar")}
                     </button>

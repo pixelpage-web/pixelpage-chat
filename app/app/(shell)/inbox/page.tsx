@@ -64,7 +64,7 @@ export default async function InboxPage() {
             automáticas,{" "}
             <Link
               href="/app/agent"
-              className="font-medium text-lime underline-offset-2 hover:underline"
+              className="font-medium text-txt underline-offset-2 hover:underline"
             >
               ative e configure o Agente IA
             </Link>

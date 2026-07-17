@@ -301,7 +301,7 @@ export function SettingsView({
               {isOwner && !showProFeatures && (
                 <p className="mt-4 text-xs text-txt-dim">
                   {t("Logo e nome exibido: disponível no plano Pro.")}{" "}
-                  <Link href="/app/billing" className="text-lime underline">
+                  <Link href="/app/billing" className="text-txt underline">
                     {t("Fazer upgrade")}
                   </Link>
                 </p>
@@ -508,7 +508,7 @@ export function SettingsView({
         {/* Ajuda e sugestões */}
         <Card>
           <div className="flex items-start gap-3">
-            <Lightbulb className="mt-0.5 h-5 w-5 text-lime" aria-hidden />
+            <Lightbulb className="mt-0.5 h-5 w-5 text-txt-mut" aria-hidden />
             <div className="flex-1">
               <CardTitle>{t("Ajuda e sugestões")}</CardTitle>
               <CardDescription>
@@ -516,7 +516,7 @@ export function SettingsView({
               </CardDescription>
               <Link
                 href="/app/help"
-                className="focus-ring mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-txt-mut transition-colors hover:border-lime/40 hover:text-lime"
+                className="focus-ring mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-txt-mut transition-colors hover:border-line-strong hover:text-txt"
               >
                 <BookOpen className="h-3.5 w-3.5" aria-hidden />
                 {t("Abrir Central de Ajuda")}

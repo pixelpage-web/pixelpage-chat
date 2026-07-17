@@ -260,7 +260,7 @@ Content-Type: application/json
                 className={cn(
                   "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                   subscribedEvents.includes(ev.value)
-                    ? "border-lime bg-lime-soft text-lime"
+                    ? "border-line-strong bg-surface-raised text-txt"
                     : "border-line text-txt-dim hover:border-line-strong hover:text-txt"
                 )}
               >
@@ -315,14 +315,14 @@ Content-Type: application/json
               <div className="space-y-3 border-t border-line p-4">
                 <p className="text-xs leading-relaxed text-txt-mut">
                   {t("A cada mensagem recebida no WhatsApp, enviamos um")}{" "}
-                  <code className="text-lime">POST</code>{" "}
+                  <code className="text-txt">POST</code>{" "}
                   {t("para a sua URL com este corpo (assinado com HMAC SHA-256 do corpo no header")}{" "}
-                  <code className="text-lime">X-PixelPage-Signature</code>):
+                  <code className="text-txt">X-PixelPage-Signature</code>):
                 </p>
                 <CodeBlock code={payloadExample} label={t("payload recebido")} />
                 <p className="text-xs leading-relaxed text-txt-mut">
                   {t("Para responder ao cliente, seu fluxo chama a API pública da PixelPage Chat usando o")}{" "}
-                  <code className="text-lime">reply_token</code>:
+                  <code className="text-txt">reply_token</code>:
                 </p>
                 <CodeBlock code={replyExample} label={t("como responder")} />
               </div>

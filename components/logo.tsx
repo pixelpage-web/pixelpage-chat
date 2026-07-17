@@ -104,7 +104,7 @@ export function Logo({ className, compact = false, orgLogoUrl, orgName }: LogoPr
       {mark}
       {!compact && (
         <span className="font-display text-lg font-semibold tracking-tight text-txt">
-          PixelPage<span className="text-brand"> Chat</span>
+          <span className="text-brand">PixelPage</span> Chat
         </span>
       )}
     </div>

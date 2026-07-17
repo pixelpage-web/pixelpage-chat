@@ -191,7 +191,7 @@ export function LogsViewer({
             className={cn(
               "focus-ring rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               filter === f.value
-                ? "bg-lime-soft text-lime"
+                ? "bg-surface-raised text-txt"
                 : "text-txt-dim hover:bg-surface-raised hover:text-txt"
             )}
           >

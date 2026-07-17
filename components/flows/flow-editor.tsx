@@ -639,13 +639,13 @@ export function FlowEditor({
     <>
       {/* Aviso em telas pequenas — o editor precisa de espaço */}
       <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center md:hidden">
-        <Monitor className="h-10 w-10 text-lime" aria-hidden />
+        <Monitor className="h-10 w-10 text-txt-mut" aria-hidden />
         <p className="max-w-xs text-sm leading-relaxed text-txt-mut">
           {t("O editor de fluxos funciona melhor no computador. Acesse pelo desktop para criar e editar seus fluxos.")}
         </p>
         <Link
           href="/app/flows"
-          className="focus-ring rounded-lg border border-line px-4 py-2 text-sm font-medium hover:border-lime/50 hover:text-lime"
+          className="focus-ring rounded-lg border border-line px-4 py-2 text-sm font-medium hover:border-line-strong"
         >
           {t("Ver lista de fluxos")}
         </Link>

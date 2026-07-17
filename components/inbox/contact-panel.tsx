@@ -226,10 +226,10 @@ export function ContactPanel({
                 if (e.key === "Enter") saveName();
                 if (e.key === "Escape") setEditingName(false);
               }}
-              className="rounded border border-lime bg-ink px-2 py-0.5 text-sm font-semibold focus:outline-none"
+              className="rounded border border-line-strong bg-ink px-2 py-0.5 text-sm font-semibold focus:outline-none"
               placeholder={t("Nome do contato")}
             />
-            <button onClick={saveName} className="focus-ring rounded p-0.5 text-lime hover:opacity-80" aria-label={t("Salvar nome")}>
+            <button onClick={saveName} className="focus-ring rounded p-0.5 text-txt hover:opacity-80" aria-label={t("Salvar nome")}>
               <Check className="h-3.5 w-3.5" />
             </button>
             <button onClick={() => setEditingName(false)} className="focus-ring rounded p-0.5 text-txt-dim hover:text-txt" aria-label={t("Cancelar")}>
@@ -282,7 +282,7 @@ export function ContactPanel({
             <div className="flex justify-between">
               <dt className="text-txt-dim">{t("Status")}</dt>
               <dd>
-                <Badge tone={conversation.status === "open" ? "lime" : "neutral"}>
+                <Badge tone={conversation.status === "open" ? "ok" : "neutral"}>
                   {conversation.status === "open" ? t("Aberta") : t("Resolvida")}
                 </Badge>
               </dd>
@@ -314,7 +314,7 @@ export function ContactPanel({
             {csatStats && csatStats.count > 0 && (
               <div className="flex justify-between">
                 <dt className="text-txt-dim">{t("Satisfação (CSAT)")}</dt>
-                <dd className="font-medium text-lime">
+                <dd className="font-medium text-txt">
                   {csatStats.average.toFixed(1)} ⭐{" "}
                   <span className="font-normal text-txt-dim">
                     ({csatStats.count}{" "}
@@ -344,7 +344,7 @@ export function ContactPanel({
                     placeholder="email@exemplo.com"
                     className="min-w-0 flex-1 bg-transparent text-xs focus:outline-none"
                   />
-                  <button onClick={saveEmail} className="shrink-0 text-lime"><Check className="h-3 w-3" /></button>
+                  <button onClick={saveEmail} className="shrink-0 text-txt"><Check className="h-3 w-3" /></button>
                   <button onClick={() => setEditingEmail(false)} className="shrink-0 text-txt-dim"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
@@ -376,7 +376,7 @@ export function ContactPanel({
                     }}
                     className="min-w-0 flex-1 bg-transparent text-xs focus:outline-none"
                   />
-                  <button onClick={saveBirth} className="shrink-0 text-lime"><Check className="h-3 w-3" /></button>
+                  <button onClick={saveBirth} className="shrink-0 text-txt"><Check className="h-3 w-3" /></button>
                   <button onClick={() => setEditingBirth(false)} className="shrink-0 text-txt-dim"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
@@ -464,7 +464,7 @@ export function ContactPanel({
                 onClick={addTag}
                 className={cn(
                   "focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line text-txt-mut",
-                  "hover:border-lime/40 hover:text-lime"
+                  "hover:border-line-strong hover:text-txt"
                 )}
                 aria-label={t("Adicionar etiqueta")}
               >
@@ -499,7 +499,7 @@ export function ContactPanel({
               </div>
               <div className="flex justify-between">
                 <dt className="text-txt-dim">{t("Total de mensagens")}</dt>
-                <dd className="font-medium text-lime">
+                <dd className="font-medium text-txt">
                   {stats.total_inbound + stats.total_outbound}
                 </dd>
               </div>
@@ -525,7 +525,7 @@ export function ContactPanel({
                   <div className="my-1 border-t border-line" />
                   <div className="flex justify-between">
                     <dt className="text-txt-dim">{t("CSAT médio")}</dt>
-                    <dd className="font-medium text-lime">
+                    <dd className="font-medium text-txt">
                       {csatStats.average.toFixed(1)} ⭐ ({csatStats.count})
                     </dd>
                   </div>
@@ -556,7 +556,7 @@ export function ContactPanel({
                   href={m.media_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 rounded-md border border-line bg-ink p-2 text-xs hover:border-lime/40 hover:bg-surface-raised"
+                  className="flex items-center gap-2.5 rounded-md border border-line bg-ink p-2 text-xs hover:border-line-strong hover:bg-surface-raised"
                 >
                   {m.message_type === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -607,7 +607,7 @@ export function ContactPanel({
                   href={contact.avatar_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-lime hover:underline"
+                  className="flex items-center gap-1.5 text-xs text-txt hover:underline"
                 >
                   <Download className="h-3 w-3" />
                   {t("Abrir em tamanho original")}

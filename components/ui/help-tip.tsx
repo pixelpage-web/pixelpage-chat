@@ -14,7 +14,7 @@ export function HelpTip({ text, className }: { text: string; className?: string 
         type="button"
         tabIndex={0}
         aria-label={text}
-        className="focus-ring rounded-full text-txt-dim hover:text-lime"
+        className="focus-ring rounded-full text-txt-dim hover:text-txt"
         onClick={(e) => e.preventDefault()}
       >
         <HelpCircle className="h-3.5 w-3.5" aria-hidden />

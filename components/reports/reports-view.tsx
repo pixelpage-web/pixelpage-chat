@@ -262,7 +262,7 @@ export function ReportsView({ orgId }: { orgId: string }) {
                   onClick={() => setPeriod(p)}
                   className={cn(
                     "focus-ring rounded-md px-2.5 py-1 text-xs font-semibold",
-                    period === p ? "bg-lime text-white" : "text-txt-dim hover:text-txt"
+                    period === p ? "bg-txt text-ink" : "text-txt-dim hover:text-txt"
                   )}
                 >
                   {p}d
@@ -290,7 +290,7 @@ export function ReportsView({ orgId }: { orgId: string }) {
               className={cn(
                 "focus-ring flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                 tab === item.value
-                  ? "bg-lime-soft text-lime"
+                  ? "bg-surface-raised text-txt"
                   : "text-txt-dim hover:bg-surface-raised hover:text-txt"
               )}
             >
@@ -320,7 +320,7 @@ export function ReportsView({ orgId }: { orgId: string }) {
                     className="group relative flex-1"
                   >
                     <div
-                      className="w-full rounded-t bg-lime/70 transition-colors group-hover:bg-lime"
+                      className="w-full rounded-t bg-txt-mut/70 transition-colors group-hover:bg-txt-mut"
                       style={{ height: `${Math.max((count / maxDaily) * 130, count > 0 ? 4 : 1)}px` }}
                     />
                   </div>
@@ -353,7 +353,7 @@ export function ReportsView({ orgId }: { orgId: string }) {
                   </div>
                   <ul className="space-y-2 text-xs">
                     <li className="flex items-center gap-2">
-                      <Bot className="h-3.5 w-3.5 text-lime" aria-hidden />
+                      <Bot className="h-3.5 w-3.5 text-txt-mut" aria-hidden />
                       {t("Bot IA")}: <strong>{botCount}</strong> (
                       {Math.round((botCount / outTotal) * 100)}%)
                     </li>
@@ -375,9 +375,9 @@ export function ReportsView({ orgId }: { orgId: string }) {
               <Card>
                 <CardTitle>{t("Tempo médio de resposta")}</CardTitle>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-lime-soft p-3 text-center">
-                    <Bot className="mx-auto h-4 w-4 text-lime" aria-hidden />
-                    <p className="mt-1 font-display text-lg font-semibold text-lime">
+                  <div className="rounded-lg bg-surface-raised p-3 text-center">
+                    <Bot className="mx-auto h-4 w-4 text-txt-mut" aria-hidden />
+                    <p className="mt-1 font-display text-lg font-semibold text-txt">
                       {fmtMinutes(responseTimes.bot)}
                     </p>
                     <p className="text-[11px] text-txt-mut">{t("Bot IA")}</p>
@@ -392,14 +392,14 @@ export function ReportsView({ orgId }: { orgId: string }) {
                 </div>
                 <p className="mt-4 flex items-center justify-between rounded-lg border border-line bg-ink px-3 py-2 text-xs">
                   <span className="text-txt-mut">{t("Custo estimado de IA no período")}</span>
-                  <span className="font-semibold text-lime">US$ {costUsd.toFixed(2)}</span>
+                  <span className="font-semibold text-txt">US$ {costUsd.toFixed(2)}</span>
                 </p>
                 <button
                   onClick={() => setTab("csat")}
                   className="focus-ring mt-2 flex w-full items-center justify-between rounded-lg border border-line bg-ink px-3 py-2 text-xs hover:border-line-strong"
                 >
                   <span className="text-txt-mut">CSAT ({t("satisfação média")})</span>
-                  <span className="font-semibold text-lime">
+                  <span className="font-semibold text-txt">
                     {csatAverage !== null ? `${csatAverage.toFixed(1)} ⭐` : t("sem avaliações")}
                   </span>
                 </button>
@@ -422,7 +422,7 @@ export function ReportsView({ orgId }: { orgId: string }) {
                         </div>
                         <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-surface-raised">
                           <div
-                            className="h-full rounded-full bg-lime/70"
+                            className="h-full rounded-full bg-txt-mut/70"
                             style={{ width: `${(count / maxTop) * 100}%` }}
                           />
                         </div>

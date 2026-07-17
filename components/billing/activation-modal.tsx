@@ -47,7 +47,7 @@ function StepItem({ text, visible }: { text: string; visible: boolean }) {
         visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       )}
     >
-      <CheckCircle2 className="h-4 w-4 shrink-0 text-lime" aria-hidden />
+      <CheckCircle2 className="h-4 w-4 shrink-0 text-txt-mut" aria-hidden />
       <span className="text-sm text-txt">{text}</span>
     </div>
   );
@@ -56,8 +56,8 @@ function StepItem({ text, visible }: { text: string; visible: boolean }) {
 function SuccessStarter({ planName, onClose }: { planName: string; onClose: () => void }) {
   return (
     <div className="text-center">
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-lime/10">
-        <Smartphone className="h-8 w-8 text-lime" aria-hidden />
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-raised">
+        <Smartphone className="h-8 w-8 text-txt-mut" aria-hidden />
       </div>
       <h2 className="font-display text-xl font-semibold">
         Bem-vindo ao {planName}!
@@ -70,7 +70,7 @@ function SuccessStarter({ planName, onClose }: { planName: string; onClose: () =
         <Link
           href="/app/connections"
           onClick={onClose}
-          className="focus-ring inline-flex w-full items-center justify-center rounded-lg bg-lime px-4 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+          className="focus-ring inline-flex w-full items-center justify-center rounded-lg bg-txt px-4 py-2.5 text-sm font-semibold text-ink transition-opacity hover:opacity-90"
         >
           Conectar meu WhatsApp
         </Link>
@@ -89,16 +89,16 @@ function SuccessPro({ planName, onClose }: { planName: string; onClose: () => vo
   return (
     <div className="text-center">
       {/* Badge animado */}
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-lime/10">
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-raised">
         <span className="relative flex items-center justify-center">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime/30" />
-          <ShieldCheck className="relative h-8 w-8 text-lime" aria-hidden />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-txt-mut/30" />
+          <ShieldCheck className="relative h-8 w-8 text-txt-mut" aria-hidden />
         </span>
       </div>
 
-      <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full border border-lime/40 bg-lime/10 px-3 py-1">
-        <Star className="h-3.5 w-3.5 text-lime" aria-hidden />
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-lime">
+      <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface-raised px-3 py-1">
+        <Star className="h-3.5 w-3.5 text-txt-mut" aria-hidden />
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-txt">
           Parceiro Oficial Meta
         </span>
       </div>
@@ -117,7 +117,7 @@ function SuccessPro({ planName, onClose }: { planName: string; onClose: () => vo
         <Link
           href="/app/connections/api-oficial"
           onClick={onClose}
-          className="focus-ring inline-flex w-full items-center justify-center rounded-lg bg-lime px-4 py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+          className="focus-ring inline-flex w-full items-center justify-center rounded-lg bg-txt px-4 py-2.5 text-sm font-semibold text-ink transition-opacity hover:opacity-90"
         >
           Ativar API Oficial
         </Link>
@@ -147,7 +147,7 @@ function TimeoutState({ onClose }: { onClose: () => void }) {
       </p>
       <button
         onClick={onClose}
-        className="mt-6 w-full rounded-lg border border-line py-2.5 text-sm font-medium text-txt transition-colors hover:border-lime/50 hover:text-lime"
+        className="mt-6 w-full rounded-lg border border-line py-2.5 text-sm font-medium text-txt transition-colors hover:border-line-strong"
       >
         Fechar
       </button>
@@ -241,7 +241,7 @@ export function ActivationModal({
         className={cn(
           "relative w-full max-w-sm rounded-2xl border bg-surface p-7 shadow-2xl",
           isPro && state === "success"
-            ? "border-lime/40 bg-gradient-to-b from-lime/5 to-surface"
+            ? "border-line-strong bg-gradient-to-b from-surface-hover to-surface"
             : "border-line"
         )}
         onClick={(e) => e.stopPropagation()}
@@ -260,7 +260,7 @@ export function ActivationModal({
         {state === "activating" && (
           <div>
             <div className="flex justify-center">
-              <Loader2 className="h-10 w-10 animate-spin text-lime" aria-hidden />
+              <Loader2 className="h-10 w-10 animate-spin text-txt-mut" aria-hidden />
             </div>
             <h2 className="mt-5 text-center font-display text-lg font-semibold">
               Ativando seu plano...
