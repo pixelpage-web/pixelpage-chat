@@ -285,7 +285,7 @@ export function ExpensesManager({
             <p className="mt-2 font-display text-xl font-bold text-[#F8F8F8]">
               {formatBRL(revenueMonthlyCents)}
             </p>
-            <p className="mt-0.5 text-[11px] text-[#444]">assinaturas ativas (Stripe + Cakto)</p>
+            <p className="mt-0.5 text-[11px] text-[#444]">assinaturas ativas (Stripe)</p>
           </div>
 
           <div

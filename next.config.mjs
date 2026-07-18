@@ -5,8 +5,7 @@ const supabaseWs = supabaseHost ? `wss://${supabaseHost}` : "";
 
 // CSP construída a partir dos domínios externos que o app realmente injeta:
 // Turnstile (captcha em /register, /login, /forgot-password), SDK JS da Meta
-// (Embedded Signup) e o próprio projeto Supabase (REST + Realtime). A Cakto é
-// só redirect de página inteira (window.location) — não precisa de allowlist.
+// (Embedded Signup) e o próprio projeto Supabase (REST + Realtime).
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",

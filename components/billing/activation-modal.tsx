@@ -200,7 +200,7 @@ export function ActivationModal({
     // Polling a cada 2s
     const poll = setInterval(async () => {
       try {
-        const res = await fetch("/api/payments/cakto/status");
+        const res = await fetch("/api/billing/status");
         if (!res.ok) return;
         const data = (await res.json()) as { status?: string; planName?: string };
         if (data.status === "active") {

@@ -25,24 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { ActivationModal } from "@/components/billing/activation-modal";
 import type { PlanRow, SubscriptionRow } from "@/types/database";
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Monta a URL de checkout com pre-fill de nome e e-mail.
- * A Cakto não documenta esses params, mas é padrão universal —
- * pior caso são ignorados sem efeito colateral.
- */
-function buildCheckoutUrl(baseUrl: string, name: string, email: string): string {
-  try {
-    const url = new URL(baseUrl);
-    if (name.trim()) url.searchParams.set("name", name.trim());
-    if (email.trim()) url.searchParams.set("email", email.trim());
-    return url.toString();
-  } catch {
-    return baseUrl;
-  }
-}
-
 // ─── tipos locais ─────────────────────────────────────────────────────────────
 
 // (SuccessState removido — gerenciado pelo ActivationModal)
@@ -155,7 +137,6 @@ function UsageBar({
 export function BillingView({
   subscription,
   currentPlan,
-  activePaymentProvider,
   plans,
   aiUsed,
   connectionsCount,
@@ -165,14 +146,10 @@ export function BillingView({
   aiCostLimitUsd,
   aiUsageStatus,
   isOwner,
-  userEmail,
-  userName,
   showSuccess,
 }: {
   subscription: SubscriptionRow | null;
   currentPlan: PlanRow | null;
-  /** Provider oferecido pro checkout de assinantes NOVOS (env ACTIVE_PAYMENT_PROVIDER). */
-  activePaymentProvider: "cakto" | "stripe";
   plans: PlanRow[];
   aiUsed: number;
   connectionsCount: number;
@@ -186,8 +163,6 @@ export function BillingView({
   /** org_usage_monthly.status — "ok" | "warning" | "blocked". */
   aiUsageStatus: string;
   isOwner: boolean;
-  userEmail: string;
-  userName: string;
   showSuccess: boolean;
 }) {
   const t = useT();
@@ -299,8 +274,7 @@ export function BillingView({
                   <span className="text-xs font-normal text-txt-dim">/{t("mês")}</span>
                 </p>
               )}
-              {/* Gerenciar assinatura via Stripe — Cakto não tem esse fluxo hoje */}
-              {isOwner && subscription?.payment_provider === "stripe" && (
+              {isOwner && subscription?.stripe_subscription_id && (
                 <button
                   onClick={() => void openStripePortal()}
                   disabled={openingPortal}
@@ -438,10 +412,7 @@ export function BillingView({
               const isFeatured = copy?.featured ?? plan.highlight;
               const trialDays = (plan.features as Record<string, unknown>)
                 ?.trial_days as number | undefined;
-              const hasCheckout =
-                activePaymentProvider === "stripe"
-                  ? !!plan.stripe_price_id
-                  : !!plan.cakto_checkout_url;
+              const hasCheckout = !!plan.stripe_price_id;
 
               return (
                 <div
@@ -512,7 +483,7 @@ export function BillingView({
                   {/* CTA — dono, plano pago, não-atual */}
                   {!isCurrent && isOwner && plan.price_cents > 0 && (
                     <div className="mt-5">
-                      {hasCheckout && activePaymentProvider === "stripe" ? (
+                      {hasCheckout ? (
                         <button
                           onClick={() => void startStripeCheckout(plan.id)}
                           disabled={checkingOutPlanId === plan.id}
@@ -528,22 +499,6 @@ export function BillingView({
                           )}
                           {t("Assinar")} {plan.name}
                         </button>
-                      ) : hasCheckout ? (
-                        <a
-                          href={buildCheckoutUrl(
-                            plan.cakto_checkout_url!,
-                            userName,
-                            userEmail
-                          )}
-                          className={cn(
-                            "focus-ring flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
-                            isFeatured
-                              ? "bg-txt text-ink hover:opacity-90"
-                              : "border border-line-strong text-txt hover:border-txt-mut"
-                          )}
-                        >
-                          {t("Assinar")} {plan.name}
-                        </a>
                       ) : (
                         <p className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line p-2 text-center text-[11px] text-txt-dim">
                           <Clock className="h-3 w-3" aria-hidden />

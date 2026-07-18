@@ -1,7 +1,6 @@
 /**
  * Setup Stripe — cria produtos + preços recorrentes (BRL) pros planos
  * Starter e Pro, e grava o price_id retornado direto em plans.stripe_price_id.
- * Espelha scripts/setup-cakto.mjs, adaptado pro SDK da Stripe.
  *
  * Uso (Node 24+, roda .ts nativo sem precisar de build):
  *   node --env-file=.env.local scripts/create-stripe-products.ts

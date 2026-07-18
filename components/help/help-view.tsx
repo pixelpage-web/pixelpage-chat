@@ -306,8 +306,8 @@ const sections: DocSection[] = [
       {
         term: { pt: "Pagamento", en: "Payment" },
         body: {
-          pt: "Cobrança mensal via Cakto (Pix/boleto/cartão). Ao clicar em Assinar, você é redirecionado para a página de checkout segura da Cakto; o plano ativa automaticamente após a confirmação.",
-          en: "Monthly billing via Cakto (Pix, bank slip or card). Clicking Subscribe redirects you to Cakto's secure checkout page; the plan activates automatically once payment is confirmed.",
+          pt: "Cobrança mensal via Stripe (cartão de crédito). Ao clicar em Assinar, você é redirecionado para a página de checkout segura da Stripe; o plano ativa automaticamente após a confirmação.",
+          en: "Monthly billing via Stripe (credit card). Clicking Subscribe redirects you to Stripe's secure checkout page; the plan activates automatically once payment is confirmed.",
         },
       },
     ],

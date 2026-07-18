@@ -216,7 +216,7 @@ export function FinanceiroView({
         </div>
 
         <p className="text-[10px] leading-relaxed text-[#3A3A3A]">
-          MRR em R$ (preço dos planos via Cakto) · custo de IA em US$ (tabela
+          MRR em R$ (preço dos planos) · custo de IA em US$ (tabela
           ai_model_pricing) · margem estimada = MRR − custo, sem conversão
           cambial.
         </p>

@@ -41,7 +41,7 @@ export interface ModelUsage {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-/** MRR vem de plans.price_cents (Cakto) — valor em reais. */
+/** MRR vem de plans.price_cents — valor em reais. */
 function fmtBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

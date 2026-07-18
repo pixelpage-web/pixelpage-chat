@@ -5,8 +5,6 @@ import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
 /**
  * POST — cria uma sessão do Stripe Customer Portal e devolve a URL.
- * Só faz sentido pra org com payment_provider="stripe" (assinantes Cakto
- * seguem 100% no fluxo atual, sem esse botão).
  *
  * Não guardamos stripe_customer_id à parte — a subscription já tem
  * stripe_subscription_id, e toda subscription Stripe carrega o customer

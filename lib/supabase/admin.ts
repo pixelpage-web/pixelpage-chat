@@ -3,7 +3,7 @@ import type { Database } from "@/types/database";
 
 /**
  * Client com service_role — IGNORA RLS. Uso exclusivo no servidor:
- * webhooks (Meta/Cakto), API pública, rotinas do bot e painel admin.
+ * webhooks (Meta/Stripe), API pública, rotinas do bot e painel admin.
  * Nunca importar em código que vá para o browser.
  */
 export function createAdminClient() {

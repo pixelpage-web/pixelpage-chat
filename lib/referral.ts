@@ -133,7 +133,7 @@ async function checkAndGrantReward(
 
 /**
  * Ativa indicação pendente quando a org referenciada assina um plano pago.
- * Chamado pelo webhook Cakto em subscription_created (fire-and-forget).
+ * Chamado pelo webhook Stripe em subscription_created (fire-and-forget).
  */
 export async function activateReferralsForOrg(orgId: string): Promise<void> {
   const admin = createAdminClient();

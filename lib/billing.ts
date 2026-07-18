@@ -4,8 +4,8 @@ export interface SubscriptionState {
   status: SubscriptionStatus;
   trial_ends_at: string | null;
   /**
-   * Fim do período já pago. Em status="canceled", os webhooks (Cakto e
-   * Stripe) preenchem isso com a data até quando o acesso continua válido
+   * Fim do período já pago. Em status="canceled", o webhook Stripe
+   * preenche isso com a data até quando o acesso continua válido
    * (o cliente já pagou aquele ciclo) — se ausente/passado, sem carência.
    */
   current_period_end?: string | null;

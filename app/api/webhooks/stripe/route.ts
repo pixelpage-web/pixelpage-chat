@@ -6,13 +6,9 @@ import { activateReferralsForOrg } from "@/lib/referral";
 import type { SubscriptionStatus } from "@/types/database";
 
 /**
- * Webhook Stripe — espelha a estrutura de app/api/webhooks/cakto/route.ts
- * (fail-closed sem secret, allowlist de eventos, um bloco por evento,
- * update em subscriptions + insert em audit_logs).
+ * Webhook Stripe — fail-closed sem secret, allowlist de eventos, um bloco
+ * por evento, update em subscriptions + insert em audit_logs.
  *
- * Resolução de org difere da Cakto por necessidade, não por gosto: a Cakto
- * não tem nenhum campo pra carimbar uma referência nossa de antemão, então
- * o webhook dela SÓ pode resolver por email (auth.admin.listUsers). Aqui,
  * checkout.session.completed carrega client_reference_id=org_id (carimbado
  * em app/api/checkout/stripe/route.ts) — resolução direta, sem busca. Os
  * eventos seguintes (invoice.*, customer.subscription.*) trazem o ID da
@@ -68,7 +64,7 @@ function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus
       return "canceled";
     default:
       // incomplete, incomplete_expired, paused — estados transitórios/raros,
-      // sem ação automática (mesmo espírito do "flagged_for_review" da Cakto).
+      // sem ação automática.
       return null;
   }
 }
@@ -238,8 +234,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // Não cancela — mesmo espírito do subscription_renewal_refused da Cakto:
-    // dá chance de a Stripe tentar cobrar de novo antes de revogar acesso.
+    // Não cancela — dá chance de a Stripe tentar cobrar de novo antes de
+    // revogar acesso.
     const { error } = await admin
       .from("subscriptions")
       .update({ status: "past_due" })
@@ -306,8 +302,7 @@ export async function POST(request: Request) {
     }
 
     // current_period_end da própria subscription já reflete até quando o
-    // acesso pago vale — mesmo papel do accessUntil calculado manualmente
-    // no webhook da Cakto, aqui a Stripe já entrega pronto.
+    // acesso pago vale — a Stripe entrega pronto, sem cálculo manual.
     const { error } = await admin
       .from("subscriptions")
       .update({

@@ -7,11 +7,9 @@ import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
  * POST — cria uma Stripe Checkout Session (mode: subscription) pro plano
  * pedido e devolve a URL pro client redirecionar.
  *
- * Diferente do link estático da Cakto (cakto_checkout_url, pré-criado no
- * painel): aqui a sessão nasce dinâmica a cada clique, então dá pra
- * carimbar client_reference_id=org_id — o webhook resolve a org direto por
- * isso, sem precisar caçar por email como o webhook da Cakto precisa fazer
- * (lá não existe esse campo pra carimbar de antemão).
+ * A sessão nasce dinâmica a cada clique, então dá pra carimbar
+ * client_reference_id=org_id — o webhook resolve a org direto por isso,
+ * sem precisar caçar por email.
  */
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
@@ -61,7 +59,7 @@ export async function POST(request: Request) {
     "https://www.pixelpagechat.com.br";
 
   // Mesmo campo já usado pelos planos hoje (badge "X dias grátis" no card
-  // da Cakto) — reaproveita, não inventa um número de trial novo.
+  // de planos) — reaproveita, não inventa um número de trial novo.
   const trialDays = (plan.features as Record<string, unknown> | null)
     ?.trial_days as number | undefined;
 

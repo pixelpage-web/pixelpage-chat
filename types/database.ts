@@ -15,7 +15,7 @@ export type Json =
 
 export type Role = "superadmin" | "admin" | "owner" | "manager" | "agent";
 export type SubscriptionStatus = "trial" | "active" | "past_due" | "canceled";
-export type PaymentProvider = "cakto" | "stripe";
+export type PaymentProvider = "stripe";
 export type ConnectionMode = "manual" | "ai_bot" | "external_webhook";
 export type ConnectionStatus = "pending" | "connected" | "disconnected" | "error";
 export type ConnectionType = "meta_api" | "qr_code";
@@ -112,7 +112,6 @@ export type PlanRow = {
   sort_order: number;
   features: Json;
   active: boolean;
-  cakto_checkout_url: string | null;
   created_at: string;
   max_ai_cost_usd_monthly: number | null;
   allow_official_api: boolean;

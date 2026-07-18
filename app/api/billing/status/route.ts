@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 
-/** Verifica o status atual da assinatura do usuário — usado pelo polling do PIX. */
+/** Verifica o status atual da assinatura do usuário — usado pelo polling do ActivationModal enquanto o webhook Stripe confirma o pagamento. */
 export async function GET() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) {

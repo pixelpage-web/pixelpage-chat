@@ -1,10 +1,8 @@
 import Stripe from "stripe";
 
 /**
- * Client Stripe — mesma função no ecossistema de billing que
- * lib/cakto-payments.ts tem pro lado Cakto. Diferença: a Stripe já
- * autentica por API key direto (sem dança de OAuth client_credentials como
- * a Cakto), então o "cache" aqui é só a instância do SDK, não um token.
+ * Client Stripe — autentica por API key direto, então o "cache" aqui é só
+ * a instância do SDK.
  */
 
 export function isStripeConfigured(): boolean {
