@@ -143,34 +143,34 @@ export function TrialsManager({
 
       {/* Cards de métricas */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card className="p-4">
+        <div className="rounded-card border border-panel-border bg-panel-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-txt-mut">Trials ativos</p>
             <Users className="h-4 w-4 text-txt-dim" />
           </div>
           <p className="mt-2 font-display text-2xl font-semibold">{stats.active}</p>
-        </Card>
-        <Card className="p-4">
+        </div>
+        <div className="rounded-card border border-panel-border bg-panel-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-txt-mut">Expiram hoje</p>
             <Clock className="h-4 w-4 text-danger" />
           </div>
           <p className="mt-2 font-display text-2xl font-semibold text-danger">{stats.expiringToday}</p>
-        </Card>
-        <Card className="p-4">
+        </div>
+        <div className="rounded-card border border-panel-border bg-panel-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-txt-mut">Em 3 dias</p>
             <CalendarClock className="h-4 w-4 text-amber" />
           </div>
           <p className="mt-2 font-display text-2xl font-semibold text-amber">{stats.expiringIn3Days}</p>
-        </Card>
-        <Card className="p-4">
+        </div>
+        <div className="rounded-card border border-panel-border bg-panel-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-txt-mut">Convertidos/mês</p>
             <TrendingUp className="h-4 w-4 text-ok" />
           </div>
           <p className="mt-2 font-display text-2xl font-semibold text-ok">{stats.convertedThisMonth}</p>
-        </Card>
+        </div>
       </div>
 
       {/* Ações em lote */}

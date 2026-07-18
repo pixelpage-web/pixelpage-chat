@@ -120,7 +120,19 @@ export function FeatureFlagsManager({
         {flags.map((flag) => {
           const earlyOrgs = (flag.enabled_for_orgs as string[]).filter(Boolean);
           return (
-            <Card key={flag.id}>
+            <div
+              key={flag.id}
+              className="relative overflow-hidden rounded-card border border-panel-border bg-panel-card p-6"
+            >
+              {/* Acento verde discreto (mesmo padrão do item ativo na sidebar
+                  do admin, ver admin-shell.tsx) — não um contorno/glow claro
+                  espalhado pelo card inteiro. */}
+              {flag.enabled_globally && (
+                <span
+                  className="absolute inset-y-0 left-0 w-[3px] bg-forest"
+                  aria-hidden
+                />
+              )}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className={cn(
@@ -162,6 +174,7 @@ export function FeatureFlagsManager({
                   onChange={() => void toggleGlobal(flag)}
                   label="Habilitar globalmente"
                   disabled={saving === flag.id || isPending}
+                  variant="forest"
                 />
               </div>
 
@@ -209,7 +222,7 @@ export function FeatureFlagsManager({
                   </div>
                 </div>
               )}
-            </Card>
+            </div>
           );
         })}
       </div>
