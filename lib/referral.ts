@@ -1,4 +1,6 @@
+import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getStripeClient } from "@/lib/stripe";
 import type { RewardType, ReferralMilestone } from "@/types/database";
 
 // ─── milestone definitions ────────────────────────────────────────────────────
@@ -31,9 +33,9 @@ export const MILESTONES: MilestoneConfig[] = [
   },
   {
     at: 20,
-    type: "free_6months",
-    label: "6 meses grátis",
-    description: "6 meses grátis no seu plano",
+    type: "free_3months",
+    label: "3 meses grátis",
+    description: "3 meses grátis no seu plano",
   },
 ];
 
@@ -67,6 +69,83 @@ export function buildReferralUrl(code: string): string {
   return `${base}/r/${code}`;
 }
 
+// ─── cupom Stripe (aplicação automática) ───────────────────────────────────────
+
+/**
+ * Parâmetros do cupom por tipo de recompensa. ID determinístico
+ * (referral-<reward_type>) — permite reaproveitar via get-or-create sem
+ * cache em memória (não sobrevive a cold start em serverless) nem tabela
+ * nova só pra isso: a Stripe já garante unicidade pelo id.
+ */
+const COUPON_PARAMS: Record<RewardType, Stripe.CouponCreateParams> = {
+  discount_20: { percent_off: 20, duration: "once", name: "Indicação — 20% OFF" },
+  discount_50: { percent_off: 50, duration: "once", name: "Indicação — 50% OFF" },
+  free_month: { percent_off: 100, duration: "once", name: "Indicação — 1 mês grátis" },
+  free_3months: {
+    percent_off: 100,
+    duration: "repeating",
+    duration_in_months: 3,
+    name: "Indicação — 3 meses grátis",
+  },
+};
+
+async function getOrCreateReferralCoupon(
+  stripe: Stripe,
+  rewardType: RewardType
+): Promise<string> {
+  const couponId = `referral-${rewardType}`;
+  try {
+    const existing = await stripe.coupons.retrieve(couponId);
+    if (!existing.deleted) return existing.id;
+  } catch (err) {
+    const isMissing =
+      err instanceof Stripe.errors.StripeError && err.statusCode === 404;
+    if (!isMissing) throw err;
+  }
+  const created = await stripe.coupons.create({
+    id: couponId,
+    ...COUPON_PARAMS[rewardType],
+  });
+  return created.id;
+}
+
+/**
+ * Aplica o cupom Stripe correspondente na subscription do indicador e
+ * marca a recompensa como aplicada. Fire-and-forget: qualquer erro aqui
+ * (Stripe fora do ar, subscription cancelada entre a leitura e o update
+ * etc.) fica só logado — o reward permanece "pending" pro fallback
+ * manual em /admin/referrals (action "apply_reward"), sem derrubar o
+ * webhook que chamou isso.
+ */
+async function applyRewardToStripeSubscription(
+  reward: { id: string; reward_type: RewardType },
+  stripeSubId: string,
+  admin: ReturnType<typeof createAdminClient>
+): Promise<void> {
+  try {
+    const stripe = getStripeClient();
+    const couponId = await getOrCreateReferralCoupon(stripe, reward.reward_type);
+    // Versões recentes da API Stripe substituíram o campo "coupon" (nível
+    // raiz) por "discounts" (array) na subscription.
+    await stripe.subscriptions.update(stripeSubId, {
+      discounts: [{ coupon: couponId }],
+    });
+
+    await admin
+      .from("referral_rewards")
+      .update({ status: "applied", applied_at: new Date().toISOString() })
+      .eq("id", reward.id);
+
+    console.log(
+      `[referral] cupom ${couponId} aplicado — reward=${reward.id} subscription=${stripeSubId}`
+    );
+  } catch (err) {
+    console.error(
+      `[referral] falha ao aplicar cupom na Stripe — reward=${reward.id}: ${err instanceof Error ? err.message : err}`
+    );
+  }
+}
+
 // ─── reward granting ──────────────────────────────────────────────────────────
 
 /**
@@ -96,18 +175,22 @@ async function checkAndGrantReward(
     Date.now() + 60 * 24 * 60 * 60 * 1000
   ).toISOString();
 
-  const { error } = await admin.from("referral_rewards").insert({
-    referral_id: referralId,
-    org_id: referrerOrgId,
-    reward_type: milestone.type,
-    milestone: milestone.at,
-    status: "pending",
-    expires_at: expiresAt,
-  });
+  const { data: reward, error } = await admin
+    .from("referral_rewards")
+    .insert({
+      referral_id: referralId,
+      org_id: referrerOrgId,
+      reward_type: milestone.type,
+      milestone: milestone.at,
+      status: "pending",
+      expires_at: expiresAt,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !reward) {
     // Violação de UNIQUE = marco já concedido (race condition) — silencioso
-    console.warn(`[referral] checkAndGrantReward: ${error.message}`);
+    console.warn(`[referral] checkAndGrantReward: ${error?.message}`);
     return;
   }
 
@@ -127,6 +210,24 @@ async function checkAndGrantReward(
   console.log(
     `[referral] marco ${milestone.at} → org=${referrerOrgId} tipo=${milestone.type}`
   );
+
+  // Aplica automaticamente se o indicador já tem subscription Stripe ativa.
+  // Se estiver no Free (sem stripe_subscription_id), fica "pending" até ele
+  // assinar um plano pago — ver applyPendingRewardsForOrg, chamada pelo
+  // webhook Stripe em checkout.session.completed.
+  const { data: referrerSub } = await admin
+    .from("subscriptions")
+    .select("stripe_subscription_id")
+    .eq("org_id", referrerOrgId)
+    .maybeSingle();
+
+  if (referrerSub?.stripe_subscription_id) {
+    await applyRewardToStripeSubscription(
+      { id: reward.id, reward_type: milestone.type },
+      referrerSub.stripe_subscription_id,
+      admin
+    );
+  }
 }
 
 // ─── webhook hook ─────────────────────────────────────────────────────────────
@@ -162,4 +263,35 @@ export async function activateReferralsForOrg(orgId: string): Promise<void> {
   console.log(
     `[referral] activated referral=${referral.id} referrer=${referral.referrer_org_id}`
   );
+}
+
+/**
+ * Aplica a recompensa pendente mais antiga do indicador quando ele mesmo
+ * assina um plano pago (estava no Free quando o marco foi batido, então
+ * checkAndGrantReward não teve onde aplicar o cupom na hora). Chamada
+ * pelo webhook Stripe em checkout.session.completed.
+ *
+ * Só aplica UMA por vez: setar "discounts" na subscription substitui
+ * (não empilha) o desconto ativo. Se houver mais de uma recompensa
+ * pendente acumulada, as demais continuam "pending" pro fallback manual
+ * em /admin/referrals.
+ */
+export async function applyPendingRewardsForOrg(
+  orgId: string,
+  stripeSubId: string
+): Promise<void> {
+  const admin = createAdminClient();
+
+  const { data: reward } = await admin
+    .from("referral_rewards")
+    .select("id, reward_type")
+    .eq("org_id", orgId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!reward) return;
+
+  await applyRewardToStripeSubscription(reward, stripeSubId, admin);
 }

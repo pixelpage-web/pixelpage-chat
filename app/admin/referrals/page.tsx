@@ -50,7 +50,7 @@ const REWARD_LABEL: Record<string, string> = {
   discount_20: "20% OFF",
   discount_50: "50% OFF",
   free_month: "1 mês grátis",
-  free_6months: "6 meses grátis",
+  free_3months: "3 meses grátis",
 };
 
 function statusBadge(status: string) {

@@ -30,7 +30,7 @@ const REWARD_LABELS: Record<string, string> = {
   discount_20: "20% de desconto no próximo mês",
   discount_50: "50% de desconto no próximo mês",
   free_month: "1 mês grátis",
-  free_6months: "6 meses grátis",
+  free_3months: "3 meses grátis",
 };
 
 // ─── types ────────────────────────────────────────────────────────────────────

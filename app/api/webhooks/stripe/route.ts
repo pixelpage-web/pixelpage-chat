@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripeClient } from "@/lib/stripe";
-import { activateReferralsForOrg } from "@/lib/referral";
+import { activateReferralsForOrg, applyPendingRewardsForOrg } from "@/lib/referral";
 import type { SubscriptionStatus } from "@/types/database";
 
 /**
@@ -165,6 +165,13 @@ export async function POST(request: Request) {
 
     activateReferralsForOrg(orgId).catch((err) =>
       console.error(`[referral] activateReferralsForOrg error: ${err}`)
+    );
+
+    // Se este org é ele mesmo um indicador com recompensa pendente de quando
+    // estava no Free (sem subscription pra aplicar o cupom), aplica agora
+    // que acabou de assinar.
+    applyPendingRewardsForOrg(orgId, stripeSubId).catch((err) =>
+      console.error(`[referral] applyPendingRewardsForOrg error: ${err}`)
     );
 
     console.log(`[stripe-webhook] checkout.session.completed ok — org=${orgId} plan=${planId} sub=${stripeSubId}`);
