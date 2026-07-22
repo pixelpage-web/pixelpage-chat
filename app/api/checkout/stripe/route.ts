@@ -75,6 +75,7 @@ export async function POST(request: Request) {
       success_url: `${appUrl}/app/billing?success=true`,
       cancel_url: `${appUrl}/app/billing`,
       metadata: { org_id: orgId, plan_id: plan.id, plan_name: plan.name },
+      allow_promotion_codes: true,
     });
 
     if (!checkoutSession.url) {
