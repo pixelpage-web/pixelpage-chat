@@ -197,7 +197,7 @@ export async function handleInboundMessage(
     .select("status, trial_ends_at, current_period_end, plan_id")
     .eq("org_id", org.id)
     .maybeSingle();
-  if (isSubscriptionBlocked(subscription ?? null)) return;
+  if (await isSubscriptionBlocked(org.id, subscription ?? null)) return;
 
   // 4.1 CSAT: se a conversa aguarda avaliação e a mensagem é uma nota 1–5,
   //     registra a resposta e NÃO processa como mensagem normal
