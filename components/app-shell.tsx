@@ -24,7 +24,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { differenceInCalendarDays } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -196,7 +195,11 @@ function TrialBanner({ data }: { data: ShellData }) {
   if (!sub) return null;
 
   if (sub.status === "trial" && sub.trialEndsAt) {
-    const daysLeft = differenceInCalendarDays(new Date(sub.trialEndsAt), new Date());
+    // Math.floor sobre epoch ms (não differenceInCalendarDays, que usa
+    // fuso local) — SSR e hidratação sempre calculam o mesmo número.
+    const daysLeft = Math.floor(
+      (new Date(sub.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
     if (daysLeft < 0) {
       return (
         <div className="border-b border-amber/30 bg-amber-soft px-4 py-2 text-center text-xs text-amber">
@@ -247,7 +250,11 @@ function StatusBanners({ data }: { data: ShellData }) {
   // Trial expirando em ≤2 dias (laranja) — separado do TrialBanner informativo
   let trialEnding = false;
   if (sub?.status === "trial" && sub.trialEndsAt) {
-    const daysLeft = differenceInCalendarDays(new Date(sub.trialEndsAt), new Date());
+    // Math.floor sobre epoch ms (não differenceInCalendarDays, que usa
+    // fuso local) — SSR e hidratação sempre calculam o mesmo número.
+    const daysLeft = Math.floor(
+      (new Date(sub.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
     trialEnding = daysLeft >= 0 && daysLeft <= 2;
   }
 

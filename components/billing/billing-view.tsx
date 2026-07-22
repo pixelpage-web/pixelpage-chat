@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { differenceInCalendarDays } from "date-fns";
 import { toast } from "sonner";
 import {
   AlertOctagon,
@@ -19,7 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { cn, formatBRL, formatCompact, formatFullDate } from "@/lib/utils";
+import { cn, formatBRL, formatCompact } from "@/lib/utils";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ActivationModal } from "@/components/billing/activation-modal";
@@ -28,6 +27,21 @@ import type { PlanRow, SubscriptionRow } from "@/types/database";
 // ─── tipos locais ─────────────────────────────────────────────────────────────
 
 // (SuccessState removido — gerenciado pelo ActivationModal)
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Data sem hora, em UTC puro — dd/MM/yyyy é sempre o mesmo texto no
+ * servidor (SSR) e no cliente (hidratação), sem depender do fuso local
+ * de cada ambiente (diferente de formatFullDate/lib/utils.ts, que
+ * formata em hora local e pode divergir e quebrar a hidratação).
+ */
+function formatUtcDate(date: string): string {
+  const d = new Date(date);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${d.getUTCFullYear()}`;
+}
 
 // ─── constantes ───────────────────────────────────────────────────────────────
 
@@ -243,11 +257,14 @@ export function BillingView({
   }
 
   const status = subscription ? statusLabels[subscription.status] : null;
+  // Math.floor sobre epoch ms (não differenceInCalendarDays, que usa
+  // fuso local) — servidor (SSR) e cliente (hidratação) sempre calculam
+  // o mesmo número, evitando hydration mismatch perto da virada do dia.
   const trialDaysLeft =
     subscription?.status === "trial" && subscription.trial_ends_at
-      ? differenceInCalendarDays(
-          new Date(subscription.trial_ends_at),
-          new Date()
+      ? Math.floor(
+          (new Date(subscription.trial_ends_at).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24)
         )
       : null;
 
@@ -287,7 +304,7 @@ export function BillingView({
                     ? `${t("Seu teste termina em")} ${trialDaysLeft === 0 ? t("menos de 1 dia") : `${trialDaysLeft} ${t("dia(s)")}`}.`
                     : t("Seu período de teste terminou — escolha um plano abaixo.")
                   : subscription?.current_period_end
-                    ? `${t("Próxima renovação:")} ${formatFullDate(subscription.current_period_end)}`
+                    ? `${t("Próxima renovação:")} ${formatUtcDate(subscription.current_period_end)}`
                     : currentPlan?.price_cents === 0
                       ? t("Plano gratuito permanente — sem cobrança.")
                       : t("Gerencie seu plano abaixo.")}
