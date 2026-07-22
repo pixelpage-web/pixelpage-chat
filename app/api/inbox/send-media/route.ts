@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     .eq("org_id", orgId)
     .maybeSingle();
   // Super Admin não é bloqueado (acesso de demonstração a todos os planos)
-  if (!isSuperAdmin(session.user.email) && isSubscriptionBlocked(subscription ?? null)) {
+  if (!isSuperAdmin(session.user.email) && (await isSubscriptionBlocked(orgId, subscription ?? null))) {
     return NextResponse.json(
       { error: "Seu plano expirou — faça upgrade para voltar a responder." },
       { status: 403 }

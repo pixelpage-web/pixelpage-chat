@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     .select("status, trial_ends_at, current_period_end")
     .eq("org_id", orgId)
     .maybeSingle();
-  if (!isSuperAdmin(session.user.email) && isSubscriptionBlocked(subscription ?? null)) {
+  if (!isSuperAdmin(session.user.email) && (await isSubscriptionBlocked(orgId, subscription ?? null))) {
     return NextResponse.json(
       { error: "Seu plano expirou — faça upgrade para voltar a responder." },
       { status: 403 }

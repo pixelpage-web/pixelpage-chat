@@ -45,7 +45,7 @@ export async function POST(
     .select("status, trial_ends_at, current_period_end")
     .eq("org_id", auth.orgId)
     .maybeSingle();
-  if (isSubscriptionBlocked(subscription ?? null)) {
+  if (await isSubscriptionBlocked(auth.orgId, subscription ?? null)) {
     return apiError("Plano expirado — regularize a assinatura.", {
       status: 403,
       headers,

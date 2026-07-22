@@ -170,6 +170,7 @@ export function BillingView({
   const [modalOpen, setModalOpen] = useState(showSuccess);
   const [checkingOutPlanId, setCheckingOutPlanId] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
+  const [downgrading, setDowngrading] = useState(false);
 
   function handleModalClose() {
     setModalOpen(false);
@@ -213,6 +214,31 @@ export function BillingView({
       toast.error(t("Erro de conexão."));
     } finally {
       setOpeningPortal(false);
+    }
+  }
+
+  async function handleDowngradeToFree() {
+    if (
+      !window.confirm(
+        t("Isso encerra seu teste antes do prazo. Você pode assinar de novo quando quiser.")
+      )
+    ) {
+      return;
+    }
+    setDowngrading(true);
+    try {
+      const res = await fetch("/api/billing/downgrade", { method: "POST" });
+      const json = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        toast.error(json.error ?? t("Não foi possível mudar para o plano Free."));
+        return;
+      }
+      toast.success(t("Plano alterado para Free."));
+      router.refresh();
+    } catch {
+      toast.error(t("Erro de conexão."));
+    } finally {
+      setDowngrading(false);
     }
   }
 
@@ -510,10 +536,23 @@ export function BillingView({
 
                   {!isCurrent && plan.price_cents === 0 && (
                     <div className="mt-5">
-                      <p className="flex items-center justify-center gap-1.5 rounded-lg bg-surface-hover p-2 text-center text-[11px] text-txt-dim">
-                        <Shield className="h-3 w-3 text-txt-mut" aria-hidden />
-                        {t("Sempre gratuito — sem cartão")}
-                      </p>
+                      {isOwner && !subscription?.stripe_subscription_id ? (
+                        <button
+                          onClick={() => void handleDowngradeToFree()}
+                          disabled={downgrading}
+                          className="focus-ring flex w-full items-center justify-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-sm font-semibold text-txt transition-colors hover:border-txt-mut disabled:opacity-60"
+                        >
+                          {downgrading && (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                          )}
+                          {t("Usar plano Free")}
+                        </button>
+                      ) : (
+                        <p className="flex items-center justify-center gap-1.5 rounded-lg bg-surface-hover p-2 text-center text-[11px] text-txt-dim">
+                          <Shield className="h-3 w-3 text-txt-mut" aria-hidden />
+                          {t("Sempre gratuito — sem cartão")}
+                        </p>
+                      )}
                     </div>
                   )}
 

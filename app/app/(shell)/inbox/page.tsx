@@ -25,7 +25,7 @@ export default async function InboxPage() {
     .maybeSingle();
 
   // Assinatura expirada → somente leitura. Super Admin segue respondendo.
-  const blocked = isSubscriptionBlocked(subscription ?? null);
+  const blocked = await isSubscriptionBlocked(session.profile.org_id, subscription ?? null);
   const access = hasFeatureAccess({
     userEmail: session.user.email,
     hasNormalAccess: !blocked,

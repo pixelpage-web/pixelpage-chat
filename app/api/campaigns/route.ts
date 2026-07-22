@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     .select("status, trial_ends_at, current_period_end, plan_id")
     .eq("org_id", orgId)
     .maybeSingle();
-  if (isSubscriptionBlocked(subscription ?? null)) {
+  if (await isSubscriptionBlocked(orgId, subscription ?? null)) {
     return NextResponse.json(
       { error: "Seu plano expirou — regularize para criar campanhas." },
       { status: 403 }
