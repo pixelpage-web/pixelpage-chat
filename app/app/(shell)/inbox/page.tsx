@@ -18,11 +18,11 @@ export default async function InboxPage() {
   if (!session?.profile?.org_id) redirect("/app/onboarding");
 
   const supabase = await createServerSupabase();
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("status, trial_ends_at, current_period_end")
-    .eq("org_id", session.profile.org_id)
-    .maybeSingle();
+  // subscriptions restrita a owner/admin (0045) — resumo via RPC segura.
+  const { data: subscriptionRows } = await supabase.rpc("get_org_subscription_summary", {
+    p_org_id: session.profile.org_id,
+  });
+  const subscription = subscriptionRows?.[0] ?? null;
 
   // Assinatura expirada → somente leitura. Super Admin segue respondendo.
   const blocked = await isSubscriptionBlocked(session.profile.org_id, subscription ?? null);

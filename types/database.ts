@@ -975,6 +975,17 @@ export type Database = {
         Args: { p_org_id: string };
         Returns: { has_ai_key: boolean; has_n8n_key: boolean }[];
       };
+      // 0045 — resumo seguro de assinatura (sem IDs de billing); qualquer
+      // membro da org pode chamar, mesmo com subscriptions restrita a owner/admin.
+      get_org_subscription_summary: {
+        Args: { p_org_id: string };
+        Returns: {
+          plan_id: string;
+          status: SubscriptionStatus;
+          trial_ends_at: string | null;
+          current_period_end: string | null;
+        }[];
+      };
       // 0029 — dashboard financeiro do Super Admin (leitura; guarda is_admin() interna)
       get_admin_financial_dashboard: {
         Args: { p_month: string };

@@ -45,18 +45,16 @@ export default async function ShellLayout({
 
   const [
     { data: org },
-    { data: subscription },
+    { data: subscriptionRows },
     { count: downCount },
     { data: usage },
     { data: notifications },
     { count: unreadConvCount },
   ] = await Promise.all([
     supabase.from("organizations").select("name, suspended, logo_url").eq("id", orgId).maybeSingle(),
-    supabase
-      .from("subscriptions")
-      .select("status, trial_ends_at, plan_id")
-      .eq("org_id", orgId)
-      .maybeSingle(),
+    // subscriptions foi restrita a owner/admin (0045) — resumo seguro via RPC
+    // (sem IDs de billing), chamável por qualquer membro da org.
+    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
     // Conexões QR Code que caíram (banner de reconexão)
     supabase
       .from("whatsapp_connections")
@@ -86,6 +84,7 @@ export default async function ShellLayout({
       .eq("archived", false)
       .gt("unread_count", 0),
   ]);
+  const subscription = subscriptionRows?.[0] ?? null;
 
   let planName = "—";
   let aiLimit = 0;

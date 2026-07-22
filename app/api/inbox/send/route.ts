@@ -40,11 +40,14 @@ export async function POST(request: Request) {
 
   // Bloqueio por assinatura (trial expirado / cancelada → somente leitura).
   // Super Admin não é bloqueado (acesso de demonstração a todos os planos).
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("status, trial_ends_at, current_period_end")
-    .eq("org_id", orgId)
-    .maybeSingle();
+  // subscriptions restrita a owner/admin (0045) — resumo via RPC segura
+  // (importante: se essa leitura vier null pra um agent, isSubscriptionBlocked
+  // trata null como "não bloqueado" — fail-open — daí a RPC ser obrigatória
+  // aqui, não opcional).
+  const { data: subscriptionRows } = await supabase.rpc("get_org_subscription_summary", {
+    p_org_id: orgId,
+  });
+  const subscription = subscriptionRows?.[0] ?? null;
   if (!isSuperAdmin(session.user.email) && (await isSubscriptionBlocked(orgId, subscription ?? null))) {
     return NextResponse.json(
       { error: "Seu plano expirou — faça upgrade para voltar a responder." },

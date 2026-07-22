@@ -78,17 +78,27 @@ export function TeamCard({
       setStatsLoading(true);
       const supabase = createClient();
 
+      // Agent só vê a própria linha (page.tsx já filtra `members` pra
+      // conter só o próprio perfil) — restringe a query em si, não só o
+      // que é renderizado, pra não trafegar dado de colega pro client.
+      let convQuery = supabase
+        .from("conversations")
+        .select("assigned_to, status")
+        .eq("org_id", orgId)
+        .not("assigned_to", "is", null);
+      let csatQuery = supabase
+        .from("csat_responses")
+        .select("agent_id, score")
+        .eq("org_id", orgId)
+        .not("agent_id", "is", null);
+      if (!isOwner) {
+        convQuery = convQuery.eq("assigned_to", userId);
+        csatQuery = csatQuery.eq("agent_id", userId);
+      }
+
       const [convRes, csatRes, lastMsgRes] = await Promise.all([
-        supabase
-          .from("conversations")
-          .select("assigned_to, status")
-          .eq("org_id", orgId)
-          .not("assigned_to", "is", null),
-        supabase
-          .from("csat_responses")
-          .select("agent_id, score")
-          .eq("org_id", orgId)
-          .not("agent_id", "is", null),
+        convQuery,
+        csatQuery,
         Promise.all(
           ids.map((id) =>
             supabase
@@ -126,7 +136,7 @@ export function TeamCard({
     return () => {
       cancelled = true;
     };
-  }, [orgId, memberIds]);
+  }, [orgId, memberIds, isOwner, userId]);
 
   async function invite() {
     if (!inviteEmail.trim()) return;
@@ -206,9 +216,11 @@ export function TeamCard({
       <div className="flex items-start gap-3">
         <Users className="mt-0.5 h-5 w-5 text-txt-dim" aria-hidden />
         <div>
-          <CardTitle>{t("Equipe")}</CardTitle>
+          <CardTitle>{isOwner ? t("Equipe") : t("Meu desempenho")}</CardTitle>
           <CardDescription>
-            {t("Membros respondem pelo inbox. Donos também gerenciam plano, bot e integrações.")}
+            {isOwner
+              ? t("Membros respondem pelo inbox. Donos também gerenciam plano, bot e integrações.")
+              : t("Suas métricas de atendimento.")}
           </CardDescription>
         </div>
       </div>

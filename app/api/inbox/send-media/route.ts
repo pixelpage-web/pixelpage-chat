@@ -44,11 +44,12 @@ export async function POST(request: Request) {
 
   const supabase = await createServerSupabase();
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("status, trial_ends_at, current_period_end")
-    .eq("org_id", orgId)
-    .maybeSingle();
+  // subscriptions restrita a owner/admin (0045) — resumo via RPC segura
+  // (fail-open se vier null: ver mesmo comentário em api/inbox/send).
+  const { data: subscriptionRows } = await supabase.rpc("get_org_subscription_summary", {
+    p_org_id: orgId,
+  });
+  const subscription = subscriptionRows?.[0] ?? null;
   // Super Admin não é bloqueado (acesso de demonstração a todos os planos)
   if (!isSuperAdmin(session.user.email) && (await isSubscriptionBlocked(orgId, subscription ?? null))) {
     return NextResponse.json(

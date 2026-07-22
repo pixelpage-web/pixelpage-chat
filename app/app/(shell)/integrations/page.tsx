@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { hasFeatureAccess } from "@/lib/access";
+import { isOwnerRole } from "@/lib/permissions";
 import { WebhookCard } from "@/components/integrations/webhook-card";
 import { ApiKeysCard } from "@/components/integrations/api-keys-card";
 import { AiModeCard } from "@/components/integrations/ai-mode-card";
@@ -14,6 +15,10 @@ export const metadata = { title: "Integrações" };
 export default async function IntegrationsPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  // Webhook (secret HMAC), API keys e modo de IA são configuração de dono —
+  // agent não vê nem via URL direta (RLS de external_webhooks/api_keys já
+  // bloqueia a leitura; isso evita a tela quebrada e deixa a intenção explícita).
+  if (!isOwnerRole(session.profile.role)) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

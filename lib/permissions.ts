@@ -1,4 +1,23 @@
-import type { TeamMemberPermissionsRow, TeamRoleTemplate } from "@/types/database";
+import type { Role, TeamMemberPermissionsRow, TeamRoleTemplate } from "@/types/database";
+
+/**
+ * Fonte única pra "essa rota/UI é só pra dono da org": usada tanto no filtro
+ * de nav (components/app-shell.tsx) quanto no guard de rota (redirect) das
+ * páginas de billing/integrations/equipe/webhook por conexão. Substitui os
+ * `role === "owner" || role === "admin"` soltos e inconsistentes que cada
+ * página fazia por conta própria (alguns esqueciam 'superadmin').
+ *
+ * Nota de escopo: NÃO reconecta o sistema granular ROLE_DEFAULTS/
+ * NAV_PERMISSION_MAP abaixo (que viria de `team_members`, legado e
+ * desligado — ver comentário em app/app/(shell)/layout.tsx). Ligar aquele
+ * mapa completo esconderia Relatórios/Conexões/Campanhas/Configurações/
+ * Automações/Agente IA/Fluxos do agent — nenhuma dessas rotas foi
+ * identificada como vazamento; seria uma mudança de produto bem maior que
+ * o escopo desta correção (billing/integrations/equipe).
+ */
+export function isOwnerRole(role: Role): boolean {
+  return role === "owner" || role === "admin" || role === "superadmin";
+}
 
 type PermissionDefaults = Omit<TeamMemberPermissionsRow, 'team_member_id'>;
 

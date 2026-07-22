@@ -17,20 +17,18 @@ export default async function ConnectionsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: connections }, { data: subscription }, hasMetaApi] =
+  const [{ data: connections }, { data: subscriptionRows }, hasMetaApi] =
     await Promise.all([
       supabase
         .from("whatsapp_connections")
         .select("*")
         .eq("org_id", orgId)
         .order("created_at", { ascending: true }),
-      supabase
-        .from("subscriptions")
-        .select("plan_id")
-        .eq("org_id", orgId)
-        .maybeSingle(),
+      // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
+      supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
       orgHasMetaApi(orgId),
     ]);
+  const subscription = subscriptionRows?.[0] ?? null;
 
   let connectionsLimit: number | null = 1;
   let planName = "Free";

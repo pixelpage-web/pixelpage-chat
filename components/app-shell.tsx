@@ -34,7 +34,7 @@ import { InboxNotifications } from "@/components/inbox-notifications";
 import { GlobalSearch } from "@/components/global-search";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { WelcomeModal } from "@/components/onboarding/welcome-modal";
-import { NAV_PERMISSION_MAP } from "@/lib/permissions";
+import { isOwnerRole, NAV_PERMISSION_MAP } from "@/lib/permissions";
 import type { Role, SubscriptionStatus, SystemNotificationRow, TeamMemberPermissionsRow } from "@/types/database";
 
 export interface ShellData {
@@ -154,14 +154,14 @@ const navGroups: NavGroup[] = [
     label: "Canais",
     items: [
       { href: "/app/connections", label: "Conexões", icon: Smartphone },
-      { href: "/app/integrations", label: "Integrações", icon: Plug2 },
+      { href: "/app/integrations", label: "Integrações", icon: Plug2, ownerOnly: true },
     ],
   },
   {
     label: "Gestão",
     items: [
       { href: "/app/reports", label: "Relatórios", icon: BarChart3 },
-      { href: "/app/billing", label: "Assinatura", icon: CreditCard },
+      { href: "/app/billing", label: "Assinatura", icon: CreditCard, ownerOnly: true },
       { href: "/app/indicacoes", label: "Indicações", icon: Gift },
     ],
   },
@@ -385,7 +385,7 @@ export function AppShell({
     };
   }, [data.orgId, refetchUnread]);
 
-  const isOwnerOrAdmin = data.role === "owner" || data.role === "admin" || data.role === "superadmin";
+  const isOwnerOrAdmin = isOwnerRole(data.role);
 
   // Para members com permissões granulares, filtra o nav; owner/admin vêem tudo menos equipe
   function isItemVisible(item: (typeof navItems)[number]) {

@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { PLATFORM_WORKFLOW_URL } from "@/lib/external-webhook";
+import { isOwnerRole } from "@/lib/permissions";
 import { WebhookConfig } from "@/components/connections/webhook-config";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ export default async function ConnectionWebhookPage({
   const { id } = await params;
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  // Mesma configuração sensível de /app/integrations (secret HMAC do
+  // webhook), só que por conexão — mesmo guard (ver 0045_restrict_agent_sensitive_rls.sql).
+  if (!isOwnerRole(session.profile.role)) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

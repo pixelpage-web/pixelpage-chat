@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { isOwnerRole } from "@/lib/permissions";
 import { BillingView } from "@/components/billing/billing-view";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,10 @@ export default async function BillingPage({
 }) {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  // Assinatura/billing é dado de dono — agent não vê nem via URL direta
+  // (RLS de `subscriptions` já bloqueia a leitura; isso evita a tela
+  // quebrada e deixa a intenção explícita).
+  if (!isOwnerRole(session.profile.role)) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const params = await searchParams;

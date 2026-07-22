@@ -12,11 +12,11 @@ export async function GET() {
 
   const supabase = await createServerSupabase();
 
-  const { data: sub } = await supabase
-    .from("subscriptions")
-    .select("status, plan_id")
-    .eq("org_id", orgId)
-    .maybeSingle();
+  // subscriptions restrita a owner/admin (0045) — resumo via RPC segura.
+  const { data: subRows } = await supabase.rpc("get_org_subscription_summary", {
+    p_org_id: orgId,
+  });
+  const sub = subRows?.[0] ?? null;
 
   if (!sub) {
     return NextResponse.json({ status: null, planName: null });

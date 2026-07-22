@@ -15,15 +15,17 @@ export default async function SettingsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: org }, { data: members }, { data: subscription }] = await Promise.all([
+  const [{ data: org }, { data: members }, { data: subscriptionRows }] = await Promise.all([
     supabase.from("organizations").select("id, name, logo_url").eq("id", orgId).maybeSingle(),
     supabase
       .from("profiles")
       .select("id, name, role, created_at")
       .eq("org_id", orgId)
       .order("created_at", { ascending: true }),
-    supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle(),
+    // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
+    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
   ]);
+  const subscription = subscriptionRows?.[0] ?? null;
 
   // Simplificação de UI pro plano básico: Unidades e White-label (Aparência)
   // só aparecem a partir do Pro. Super Admin sempre enxerga tudo.

@@ -17,11 +17,11 @@ export default async function FlowsPage() {
 
   // Fluxos é recurso Pro — mesmo padrão de gate usado em BYOK/Webhook/Units.
   // Super Admin sempre libera (hasFeatureAccess).
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan_id")
-    .eq("org_id", orgId)
-    .maybeSingle();
+  // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
+  const { data: subscriptionRows } = await supabase.rpc("get_org_subscription_summary", {
+    p_org_id: orgId,
+  });
+  const subscription = subscriptionRows?.[0] ?? null;
   let planName = "Free";
   if (subscription?.plan_id) {
     const { data: plan } = await supabase

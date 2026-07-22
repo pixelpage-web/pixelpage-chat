@@ -61,10 +61,12 @@ export async function POST(request: Request) {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: sub }, { count: connectionCount }] = await Promise.all([
-    supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle(),
+  // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
+  const [{ data: subRows }, { count: connectionCount }] = await Promise.all([
+    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
     supabase.from("whatsapp_connections").select("id", { count: "exact", head: true }).eq("org_id", orgId),
   ]);
+  const sub = subRows?.[0] ?? null;
 
   let limit: number | null = 1; // null = ilimitado
   if (sub?.plan_id) {

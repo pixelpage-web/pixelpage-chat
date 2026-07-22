@@ -16,13 +16,15 @@ export default async function CampaignsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: subscription }, { data: connections }] = await Promise.all([
-    supabase.from("subscriptions").select("plan_id").eq("org_id", orgId).maybeSingle(),
+  const [{ data: subscriptionRows }, { data: connections }] = await Promise.all([
+    // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
+    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
     supabase
       .from("whatsapp_connections")
       .select("id, label, phone_display, status")
       .eq("org_id", orgId),
   ]);
+  const subscription = subscriptionRows?.[0] ?? null;
 
   let campaignsLimit: number | null = 0;
   if (subscription?.plan_id) {
