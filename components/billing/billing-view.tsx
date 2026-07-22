@@ -362,7 +362,15 @@ export function BillingView({
             <UsageBar
               label="Mensagens IA no mês"
               used={aiUsed}
-              limit={currentPlan?.ai_messages_limit ?? 0}
+              // Durante o trial, o teto real aplicado pelo gatekeeper
+              // (routeToAiBot em lib/pipeline.ts) é fixo em 100 — sobrepõe
+              // o limite do plano sendo testado. Precisa bater com o
+              // mesmo número lá; ver TRIAL_AI_MESSAGE_LIMIT.
+              limit={
+                subscription?.status === "trial"
+                  ? 100
+                  : (currentPlan?.ai_messages_limit ?? 0)
+              }
             />
             <UsageBar
               label="Conexões WhatsApp"

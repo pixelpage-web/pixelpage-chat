@@ -27,7 +27,7 @@ import { runFlowForMessage } from "@/lib/flow-runner";
 import { processDueJobs, shouldCheckDueJobs } from "@/lib/scheduled-jobs";
 import { getAgentKnowledge } from "@/lib/knowledge";
 import { generateConversationSummary } from "@/lib/summary";
-import type { MessageType, WhatsappConnectionRow } from "@/types/database";
+import type { MessageType, SubscriptionStatus, WhatsappConnectionRow } from "@/types/database";
 
 /**
  * Pipeline de mensagens recebidas — comum aos DOIS canais:
@@ -243,6 +243,7 @@ export async function handleInboundMessage(
       orgId: org.id,
       orgName: org.name,
       planId: subscription?.plan_id ?? null,
+      subscriptionStatus: subscription?.status ?? null,
       connection,
       conversation,
       contactPhone: contact.phone,
@@ -629,6 +630,7 @@ async function routeToAiBot(params: {
   orgId: string;
   orgName: string;
   planId: string | null;
+  subscriptionStatus: SubscriptionStatus | null;
   connection: WhatsappConnectionRow;
   conversation: { id: string; bot_paused: boolean };
   contactPhone: string;
@@ -640,6 +642,7 @@ async function routeToAiBot(params: {
     orgId,
     orgName,
     planId,
+    subscriptionStatus,
     connection,
     conversation,
     contactPhone,
@@ -718,9 +721,16 @@ async function routeToAiBot(params: {
     return;
   }
 
-  // Saldo de mensagens IA do plano
+  // Saldo de mensagens IA do plano — durante o trial, teto fixo de 100
+  // mensagens independente do limite do plano sendo testado (sobrepõe,
+  // não soma). Ao virar "active" (pagamento real), volta a valer o
+  // limite do plano contratado normalmente, sem alteração no caminho
+  // abaixo.
+  const TRIAL_AI_MESSAGE_LIMIT = 100;
   let limit = 0;
-  if (planId) {
+  if (subscriptionStatus === "trial") {
+    limit = TRIAL_AI_MESSAGE_LIMIT;
+  } else if (planId) {
     const { data: plan } = await admin
       .from("plans")
       .select("ai_messages_limit")
