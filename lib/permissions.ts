@@ -21,6 +21,25 @@ export function isOwnerRole(role: Role): boolean {
 
 export type PermissionDefaults = Omit<TeamMemberPermissionsRow, 'team_member_id'>;
 
+/** Todas as flags booleanas de PermissionDefaults (tudo exceto inbox_scope, que é enum) */
+export const PERMISSION_BOOLEAN_KEYS = [
+  "can_view_inbox", "can_view_contacts", "can_view_campaigns", "can_view_agent_ai",
+  "can_view_flows", "can_view_automations", "can_view_connections", "can_view_integrations",
+  "can_view_reports", "can_view_settings", "can_view_billing",
+  "can_reply_messages", "can_pause_bot", "can_assign_conversation", "can_resolve_conversation",
+  "can_archive_conversation", "can_add_remove_labels", "can_add_internal_notes",
+  "can_view_others_notes", "can_export_conversation", "can_block_contact",
+  "can_edit_contacts", "can_delete_contacts", "can_import_contacts", "can_export_contacts",
+] as const satisfies readonly (keyof Omit<PermissionDefaults, "inbox_scope">)[];
+
+/** Valida o shape completo antes de gravar em profiles.permissions (API de equipe). */
+export function isValidPermissions(input: unknown): input is PermissionDefaults {
+  if (!input || typeof input !== "object") return false;
+  const obj = input as Record<string, unknown>;
+  if (obj.inbox_scope !== "all" && obj.inbox_scope !== "assigned_only") return false;
+  return PERMISSION_BOOLEAN_KEYS.every((key) => typeof obj[key] === "boolean");
+}
+
 export const ROLE_DEFAULTS: Record<TeamRoleTemplate, PermissionDefaults> = {
   admin: {
     can_view_inbox: true, can_view_contacts: true, can_view_campaigns: true,

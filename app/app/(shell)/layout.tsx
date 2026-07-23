@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { processDueJobs, shouldCheckDueJobs } from "@/lib/scheduled-jobs";
 import { hasFeatureAccess } from "@/lib/access";
 import { type PermissionDefaults } from "@/lib/permissions";
+import { getOrgSubscriptionSummary } from "@/lib/billing";
 import { AppShell, type ShellData } from "@/components/app-shell";
 
 // Sessão e assinatura mudam a cada request — sem cache estático
@@ -45,7 +46,7 @@ export default async function ShellLayout({
 
   const [
     { data: org },
-    { data: subscriptionRows },
+    subscription,
     { count: downCount },
     { data: usage },
     { data: notifications },
@@ -53,8 +54,10 @@ export default async function ShellLayout({
   ] = await Promise.all([
     supabase.from("organizations").select("name, suspended, logo_url").eq("id", orgId).maybeSingle(),
     // subscriptions foi restrita a owner/admin (0045) — resumo seguro via RPC
-    // (sem IDs de billing), chamável por qualquer membro da org.
-    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
+    // (sem IDs de billing), chamável por qualquer membro da org. cache() do
+    // React: connections/page.tsx chama esse mesmo helper — sem duplicar a
+    // ida à rede pro mesmo org_id no mesmo request (ver lib/billing.ts).
+    getOrgSubscriptionSummary(orgId),
     // Conexões QR Code que caíram (banner de reconexão)
     supabase
       .from("whatsapp_connections")
@@ -84,7 +87,6 @@ export default async function ShellLayout({
       .eq("archived", false)
       .gt("unread_count", 0),
   ]);
-  const subscription = subscriptionRows?.[0] ?? null;
 
   let planName = "—";
   let aiLimit = 0;

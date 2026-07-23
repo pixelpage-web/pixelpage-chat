@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Bot } from "lucide-react";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isSubscriptionBlocked } from "@/lib/billing";
+import { getOrgSubscriptionSummary, isSubscriptionBlocked } from "@/lib/billing";
 import { hasFeatureAccess } from "@/lib/access";
 import { FeatureBadge } from "@/components/ui/feature-badge";
 import { ClientTips } from "@/components/client-tips";
@@ -18,14 +18,13 @@ export default async function InboxPage() {
   if (!session?.profile?.org_id) redirect("/app/onboarding");
 
   const supabase = await createServerSupabase();
-  // subscriptions restrita a owner/admin (0045) — resumo via RPC segura.
-  const { data: subscriptionRows } = await supabase.rpc("get_org_subscription_summary", {
-    p_org_id: session.profile.org_id,
-  });
-  const subscription = subscriptionRows?.[0] ?? null;
+  // getOrgSubscriptionSummary tem cache() do React — reaproveita a mesma
+  // assinatura que layout.tsx já buscou no request, em vez de chamar a RPC
+  // de novo.
+  const subscription = await getOrgSubscriptionSummary(session.profile.org_id);
 
   // Assinatura expirada → somente leitura. Super Admin segue respondendo.
-  const blocked = await isSubscriptionBlocked(session.profile.org_id, subscription ?? null);
+  const blocked = await isSubscriptionBlocked(session.profile.org_id, subscription);
   const access = hasFeatureAccess({
     userEmail: session.user.email,
     hasNormalAccess: !blocked,

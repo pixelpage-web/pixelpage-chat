@@ -13,5 +13,16 @@ export default async function OnboardingPage() {
   // Quem já tem organização vai direto para o inbox
   if (session.profile?.org_id) redirect("/app/inbox");
 
-  return <OnboardingWizard />;
+  // getSessionProfile() já chamou auth.getUser() nesta mesma request — o
+  // client repetia essa chamada (mais um round-trip) só pra ler esses 2
+  // campos de user_metadata, que a gente já tem aqui.
+  const metadata = session.user.user_metadata ?? {};
+  const establishmentName =
+    typeof metadata.establishment_name === "string" ? metadata.establishment_name.trim() : "";
+  const referralCode =
+    typeof metadata.referral_code === "string" ? metadata.referral_code.trim() : undefined;
+
+  return (
+    <OnboardingWizard establishmentName={establishmentName} referralCode={referralCode} />
+  );
 }

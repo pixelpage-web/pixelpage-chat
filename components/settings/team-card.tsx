@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Star, Trash2, UserPlus, Users } from "lucide-react";
+import { AlertTriangle, SlidersHorizontal, Star, Trash2, UserPlus, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useT } from "@/lib/i18n";
 import { timeAgo } from "@/lib/utils";
@@ -13,6 +13,8 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
+import { isOwnerRole, type PermissionDefaults } from "@/lib/permissions";
+import { PermissionsPanel } from "@/components/equipe/permissions-panel";
 import type { Role, TeamRoleTemplate } from "@/types/database";
 
 export interface TeamMember {
@@ -20,6 +22,8 @@ export interface TeamMember {
   name: string;
   role: Role;
   created_at: string;
+  /** granular (0046); ausente nas telas que não precisam (ex.: Configurações/Unidades) */
+  permissions?: PermissionDefaults | null;
 }
 
 interface MemberStats {
@@ -61,6 +65,7 @@ export function TeamCard({
     useState<TeamRoleTemplate>("agent");
   const [saving, setSaving] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
+  const [permissionsTarget, setPermissionsTarget] = useState<TeamMember | null>(null);
   const [stats, setStats] = useState<Record<string, MemberStats>>({});
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -237,6 +242,9 @@ export function TeamCard({
           const canManage = isOwner && member.id !== userId && member.role !== "admin";
           const canEditRole =
             canManage && (member.role === "agent" || member.role === "owner");
+          // Permissões granulares só fazem sentido pra quem não é owner/admin
+          // (owner/admin já têm acesso total via isOwnerRole).
+          const canEditPermissions = canManage && !isOwnerRole(member.role);
 
           return (
             <li
@@ -298,6 +306,16 @@ export function TeamCard({
                         ? "admin"
                         : t("agente")}
                   </Badge>
+                )}
+                {canEditPermissions && (
+                  <button
+                    onClick={() => setPermissionsTarget(member)}
+                    className="focus-ring rounded-md p-1.5 text-txt-dim hover:bg-surface-hover hover:text-txt"
+                    aria-label={`${t("Permissões de")} ${member.name}`}
+                    title={t("Permissões")}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </button>
                 )}
                 {canManage && (
                   <button
@@ -389,6 +407,23 @@ export function TeamCard({
           </Button>
         </div>
       </Modal>
+
+      {permissionsTarget && (
+        <PermissionsPanel
+          key={permissionsTarget.id}
+          open
+          onClose={() => setPermissionsTarget(null)}
+          memberId={permissionsTarget.id}
+          memberName={permissionsTarget.name || t("Sem nome")}
+          initialPermissions={permissionsTarget.permissions ?? null}
+          onSaved={(permissions) => {
+            setMembers((prev) =>
+              prev.map((m) => (m.id === permissionsTarget.id ? { ...m, permissions } : m))
+            );
+            setPermissionsTarget(null);
+          }}
+        />
+      )}
     </Card>
   );
 }

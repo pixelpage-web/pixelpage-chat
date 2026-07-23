@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { campaignUsageThisMonth } from "@/lib/campaigns";
 import { hasFeatureAccess } from "@/lib/access";
 import { canViewNavRoute } from "@/lib/permissions";
+import { getPlanFeatures } from "@/lib/plan-features";
 import { CampaignsView } from "@/components/campaigns/campaigns-view";
 
 export const dynamic = "force-dynamic";
@@ -18,25 +19,19 @@ export default async function CampaignsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: subscriptionRows }, { data: connections }] = await Promise.all([
-    // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
-    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
+  // planFeatures reaproveita a mesma assinatura que layout.tsx já buscou
+  // (getOrgSubscriptionSummary tem cache() do React) — antes esta página
+  // buscava a assinatura de novo via RPC e mais uma query de plans só pra
+  // pegar campaigns_limit.
+  const [planFeatures, { data: connections }] = await Promise.all([
+    getPlanFeatures(orgId),
     supabase
       .from("whatsapp_connections")
       .select("id, label, phone_display, status")
       .eq("org_id", orgId),
   ]);
-  const subscription = subscriptionRows?.[0] ?? null;
 
-  let campaignsLimit: number | null = 0;
-  if (subscription?.plan_id) {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("campaigns_limit")
-      .eq("id", subscription.plan_id)
-      .maybeSingle();
-    campaignsLimit = plan?.campaigns_limit ?? 0;
-  }
+  let campaignsLimit: number | null = planFeatures?.campaigns_limit ?? 0;
 
   // Gate de plano: campaigns_limit 0 = sem acesso. Super Admin enxerga tudo.
   const access = hasFeatureAccess({

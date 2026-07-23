@@ -1,5 +1,36 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createServerSupabase } from "@/lib/supabase/server";
 import type { SubscriptionStatus } from "@/types/database";
+
+export interface OrgSubscriptionSummary {
+  plan_id: string;
+  status: SubscriptionStatus;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+}
+
+/**
+ * Resumo de assinatura via RPC get_org_subscription_summary (0045 —
+ * subscriptions é restrita a owner/admin no RLS direto). cache() do React:
+ * layout.tsx (app/app/(shell)/layout.tsx) e cada page.tsx que precisa de
+ * plano (connections, campaigns, flows, flows/[id]/edit, settings, inbox)
+ * chamavam essa mesma RPC de forma independente — 1 round-trip a mais por
+ * página, sempre pro mesmo org_id no mesmo request. Todos migrados pra esse
+ * helper (direto ou via getPlanFeatures). Rotas de API (whatsapp/qr,
+ * billing/status, embedded-signup, inbox/send*) continuam com a RPC direta
+ * — cada uma é seu próprio request, sem layout compartilhado, então o
+ * cache() não traria dedup ali.
+ */
+export const getOrgSubscriptionSummary = cache(
+  async (orgId: string): Promise<OrgSubscriptionSummary | null> => {
+    const supabase = await createServerSupabase();
+    const { data } = await supabase.rpc("get_org_subscription_summary", {
+      p_org_id: orgId,
+    });
+    return data?.[0] ?? null;
+  }
+);
 
 export interface SubscriptionState {
   status: SubscriptionStatus;

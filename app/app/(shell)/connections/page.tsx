@@ -3,7 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getEvolutionConfig, isEvolutionConfigured } from "@/lib/evolution";
 import { hasFeatureAccess, isSuperAdmin } from "@/lib/access";
-import { orgHasMetaApi } from "@/lib/plan-features";
+import { getPlanFeatures } from "@/lib/plan-features";
 import { canViewNavRoute } from "@/lib/permissions";
 import { ConnectionsView } from "@/components/connections/connections-view";
 
@@ -19,32 +19,33 @@ export default async function ConnectionsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: connections }, { data: subscriptionRows }, hasMetaApi] =
+  // planFeatures reaproveita a mesma assinatura que layout.tsx já buscou
+  // (getOrgSubscriptionSummary tem cache() do React) e traz connections_limit
+  // + name + meta_api_enabled numa única query de `plans` — antes essa
+  // página buscava a assinatura de novo via RPC, mais uma query de plans
+  // dentro de orgHasMetaApi, e mais uma terceira query de plans explícita
+  // aqui embaixo (3 idas ao banco pra basicamente a mesma linha).
+  // external_webhooks entrou pro mesmo Promise.all — não depende de plano.
+  const [{ data: connections }, planFeatures, { data: webhooks }, evolutionCfg] =
     await Promise.all([
       supabase
         .from("whatsapp_connections")
         .select("*")
         .eq("org_id", orgId)
         .order("created_at", { ascending: true }),
-      // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
-      supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
-      orgHasMetaApi(orgId),
+      getPlanFeatures(orgId),
+      // Status do webhook externo por conexão (Tarefa 4): verde/âmbar/vermelho
+      supabase
+        .from("external_webhooks")
+        .select("id, connection_id, active, last_status, failures_count")
+        .eq("org_id", orgId),
+      getEvolutionConfig(),
     ]);
-  const subscription = subscriptionRows?.[0] ?? null;
 
-  let connectionsLimit: number | null = 1;
-  let planName = "Free";
-  if (subscription?.plan_id) {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("connections_limit, name")
-      .eq("id", subscription.plan_id)
-      .maybeSingle();
-    // null em connections_limit = plano sem limite; só cai pro default 1 se o
-    // plano em si não foi encontrado (não confundir "sem limite" com "sem plano").
-    connectionsLimit = plan ? plan.connections_limit : 1;
-    planName = plan?.name ?? "Free";
-  }
+  // null em connections_limit = plano sem limite; sem assinatura (org nova/
+  // sem plano) cai pro default 1, mesmo comportamento de antes.
+  const connectionsLimit = planFeatures ? planFeatures.connections_limit : 1;
+  const planName = planFeatures?.name ?? "Free";
 
   // Simplificação de UI pro plano básico: opção "Webhook" só aparece no
   // seletor a partir do Pro. Super Admin sempre enxerga tudo.
@@ -54,14 +55,6 @@ export default async function ConnectionsPage() {
     hasNormalAccess: !isBasicPlan,
     requiredPlan: "Pro",
   });
-
-  const evolutionCfg = await getEvolutionConfig();
-
-  // Status do webhook externo por conexão (Tarefa 4): verde/âmbar/vermelho
-  const { data: webhooks } = await supabase
-    .from("external_webhooks")
-    .select("id, connection_id, active, last_status, failures_count")
-    .eq("org_id", orgId);
 
   const webhookInfo: Record<
     string,
@@ -89,7 +82,7 @@ export default async function ConnectionsPage() {
       orgId={orgId}
       initialConnections={connections ?? []}
       connectionsLimit={connectionsLimit}
-      hasMetaApi={hasMetaApi}
+      hasMetaApi={planFeatures?.meta_api_enabled === true}
       qrEnabled={isEvolutionConfigured(evolutionCfg)}
       limitOverride={isSuperAdmin(session.user.email)}
       webhookInfo={webhookInfo}

@@ -21,8 +21,19 @@ import { Input, Label } from "@/components/ui/input";
  * cadastrou por email/senha — cria a organização direto com esse nome, sem
  * perguntar de novo. Login social (Google) nunca passa por aquele campo,
  * então o formulário abaixo só aparece pra esse caso.
+ *
+ * establishmentName/referralCode vêm do Server Component (onboarding/page.tsx),
+ * que já leu user_metadata via getSessionProfile() — evita repetir aqui um
+ * auth.getUser() no client (mais um round-trip antes de sequer decidir se
+ * mostra o form ou já cria a org direto).
  */
-export function OnboardingWizard() {
+export function OnboardingWizard({
+  establishmentName,
+  referralCode,
+}: {
+  establishmentName: string;
+  referralCode?: string;
+}) {
   const router = useRouter();
   const t = useT();
   const [needsName, setNeedsName] = useState(false);
@@ -31,23 +42,13 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     (async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase.auth.getUser();
-        const metadata = data.user?.user_metadata ?? {};
-        const establishmentName =
-          typeof metadata.establishment_name === "string"
-            ? metadata.establishment_name.trim()
-            : "";
-        const referralCode =
-          typeof metadata.referral_code === "string" ? metadata.referral_code.trim() : undefined;
-
-        if (establishmentName) {
+      if (establishmentName) {
+        try {
           await createOrg(establishmentName, referralCode);
-        } else {
+        } catch {
           setNeedsName(true);
         }
-      } catch {
+      } else {
         setNeedsName(true);
       }
     })();

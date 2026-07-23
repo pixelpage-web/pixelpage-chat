@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
-import type { AgentKnowledgeRow } from "@/types/database";
+import type { AgentKnowledgeRow, AgentKnowledgeListRow } from "@/types/database";
 
 /**
  * "Ensine sua IA com seus conteúdos" — upload de PDF/TXT/DOCX e URL do site.
@@ -26,7 +26,7 @@ import type { AgentKnowledgeRow } from "@/types/database";
  */
 
 const statusMeta: Record<
-  AgentKnowledgeRow["status"],
+  AgentKnowledgeListRow["status"],
   { label: string; icon: LucideIcon; tone: string }
 > = {
   processing: { label: "Processando", icon: RefreshCw, tone: "text-amber" },
@@ -46,10 +46,10 @@ export function KnowledgeManager({
   initialKnowledge,
 }: {
   agentId: string;
-  initialKnowledge: AgentKnowledgeRow[];
+  initialKnowledge: AgentKnowledgeListRow[];
 }) {
   const t = useT();
-  const [sources, setSources] = useState<AgentKnowledgeRow[]>(initialKnowledge);
+  const [sources, setSources] = useState<AgentKnowledgeListRow[]>(initialKnowledge);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [url, setUrl] = useState("");
@@ -147,7 +147,7 @@ export function KnowledgeManager({
     }
   }
 
-  async function handleDelete(source: AgentKnowledgeRow) {
+  async function handleDelete(source: AgentKnowledgeListRow) {
     try {
       const res = await fetch(`/api/agent/knowledge?id=${source.id}`, {
         method: "DELETE",

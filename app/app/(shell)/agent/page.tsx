@@ -50,9 +50,11 @@ export default async function AgentPage() {
       .eq("agent_id", agent.id)
       .order("position", { ascending: true }),
     supabase.from("organizations").select("name").eq("id", orgId).maybeSingle(),
+    // Sem `content` (texto completo de cada PDF/URL importado) — a lista
+    // inicial (KnowledgeManager) só usa source_name/status/error_message/meta.
     supabase
       .from("agent_knowledge")
-      .select("*")
+      .select("id, agent_id, source_type, source_name, status, error_message, storage_path, meta, created_at")
       .eq("agent_id", agent.id)
       .order("created_at", { ascending: true }),
   ]);

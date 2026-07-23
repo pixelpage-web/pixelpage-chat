@@ -350,6 +350,14 @@ export type AgentKnowledgeRow = {
   created_at: string;
 };
 
+/**
+ * Shape da listagem de /app/agent (aba "Ensine sua IA"): tudo de
+ * AgentKnowledgeRow exceto `content` — o texto completo de cada PDF/URL
+ * importado, que a lista nunca exibe (só nome/status/erro). Buscar isso a
+ * mais em todo carregamento da página inflava o payload sem necessidade.
+ */
+export type AgentKnowledgeListRow = Omit<AgentKnowledgeRow, "content">;
+
 export type CsatResponseRow = {
   id: string;
   org_id: string;

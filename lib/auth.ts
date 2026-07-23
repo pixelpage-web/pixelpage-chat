@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,8 +19,16 @@ export interface SessionInfo {
  * Sessão + perfil do usuário logado (server-side).
  * Faz o bootstrap do admin global: o primeiro login do email definido em
  * ADMIN_EMAIL recebe a role 'admin' automaticamente.
+ *
+ * cache() do React: dedupe por request — layout.tsx e cada page.tsx do
+ * grupo (shell) chamam isso de forma independente (cada um precisa do
+ * org_id/role na hora), o que sem isso batia 2x em auth.getUser() (rede,
+ * valida o JWT no servidor de Auth) + 2x em profiles.select toda vez que
+ * uma página carregava. Não cobre a chamada de auth.getUser() feita em
+ * middleware.ts — middleware roda numa fase separada do Next.js, fora do
+ * render de Server Components onde o cache() do React tem efeito.
  */
-export async function getSessionProfile(): Promise<SessionInfo | null> {
+export const getSessionProfile = cache(async (): Promise<SessionInfo | null> => {
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -87,4 +96,4 @@ export async function getSessionProfile(): Promise<SessionInfo | null> {
   }
 
   return { user, profile, impersonating };
-}
+});

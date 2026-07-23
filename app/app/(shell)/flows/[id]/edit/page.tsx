@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { hasFeatureAccess } from "@/lib/access";
 import { canViewNavRoute } from "@/lib/permissions";
+import { getPlanFeatures } from "@/lib/plan-features";
 import { FlowEditor } from "@/components/flows/flow-editor";
 
 export const dynamic = "force-dynamic";
@@ -26,21 +27,12 @@ export default async function FlowEditPage({
 
   // Fluxos é recurso Pro — bloqueia o editor também (não só a listagem),
   // cobre o caso de a org ter fluxos antigos de quando era Pro e ter caído
-  // pra Free/Starter depois. Super Admin sempre libera.
-  // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
-  const { data: subscriptionRows } = await supabase.rpc("get_org_subscription_summary", {
-    p_org_id: orgId,
-  });
-  const subscription = subscriptionRows?.[0] ?? null;
-  let planName = "Free";
-  if (subscription?.plan_id) {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("name")
-      .eq("id", subscription.plan_id)
-      .maybeSingle();
-    planName = plan?.name ?? "Free";
-  }
+  // pra Free/Starter depois. Super Admin sempre libera. planFeatures
+  // reaproveita a mesma assinatura que layout.tsx já buscou
+  // (getOrgSubscriptionSummary tem cache() do React) — antes buscava de
+  // novo via RPC + query de plans.
+  const planFeatures = await getPlanFeatures(orgId);
+  const planName = planFeatures?.name ?? "Free";
   const isBasicPlan = planName === "Free" || planName === "Starter";
   const flowsAccess = hasFeatureAccess({
     userEmail: session.user.email,

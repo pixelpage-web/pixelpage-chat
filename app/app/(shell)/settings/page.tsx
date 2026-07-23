@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { hasFeatureAccess } from "@/lib/access";
 import { canViewNavRoute } from "@/lib/permissions";
+import { getPlanFeatures } from "@/lib/plan-features";
 import { SettingsView } from "@/components/settings/settings-view";
 
 export const dynamic = "force-dynamic";
@@ -17,29 +18,23 @@ export default async function SettingsPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: org }, { data: members }, { data: subscriptionRows }] = await Promise.all([
+  // planFeatures reaproveita a mesma assinatura que layout.tsx já buscou
+  // (getOrgSubscriptionSummary tem cache() do React) — antes esta página
+  // buscava a assinatura de novo via RPC e mais uma query de plans só pra
+  // pegar o nome.
+  const [{ data: org }, { data: members }, planFeatures] = await Promise.all([
     supabase.from("organizations").select("id, name, logo_url").eq("id", orgId).maybeSingle(),
     supabase
       .from("profiles")
       .select("id, name, role, created_at")
       .eq("org_id", orgId)
       .order("created_at", { ascending: true }),
-    // subscriptions restrita a owner/admin (0045) — plan_id via RPC segura.
-    supabase.rpc("get_org_subscription_summary", { p_org_id: orgId }),
+    getPlanFeatures(orgId),
   ]);
-  const subscription = subscriptionRows?.[0] ?? null;
 
   // Simplificação de UI pro plano básico: Unidades e White-label (Aparência)
   // só aparecem a partir do Pro. Super Admin sempre enxerga tudo.
-  let planName = "Free";
-  if (subscription?.plan_id) {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("name")
-      .eq("id", subscription.plan_id)
-      .maybeSingle();
-    planName = plan?.name ?? "Free";
-  }
+  const planName = planFeatures?.name ?? "Free";
   const isBasicPlan = planName === "Free" || planName === "Starter";
   const proAccess = hasFeatureAccess({
     userEmail: session.user.email,

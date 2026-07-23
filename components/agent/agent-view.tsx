@@ -8,7 +8,7 @@ import { AgentForm } from "./agent-form";
 import { FaqEditor } from "./faq-editor";
 import { KnowledgeManager } from "./knowledge-manager";
 import { Simulator } from "./simulator";
-import type { AgentFaqRow, AgentKnowledgeRow, AgentRow } from "@/types/database";
+import type { AgentFaqRow, AgentKnowledgeListRow, AgentRow } from "@/types/database";
 
 type Tab = "config" | "faq" | "knowledge" | "simulator";
 
@@ -27,7 +27,7 @@ export function AgentView({
 }: {
   initialAgent: AgentRow;
   initialFaqs: AgentFaqRow[];
-  initialKnowledge: AgentKnowledgeRow[];
+  initialKnowledge: AgentKnowledgeListRow[];
   orgName: string;
 }) {
   const t = useT();
