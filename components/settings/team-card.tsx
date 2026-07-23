@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
-import type { Role } from "@/types/database";
+import type { Role, TeamRoleTemplate } from "@/types/database";
 
 export interface TeamMember {
   id: string;
@@ -57,6 +57,8 @@ export function TeamCard({
   const t = useT();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"agent" | "owner">("agent");
+  const [inviteRoleTemplate, setInviteRoleTemplate] =
+    useState<TeamRoleTemplate>("agent");
   const [saving, setSaving] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
   const [stats, setStats] = useState<Record<string, MemberStats>>({});
@@ -145,7 +147,11 @@ export function TeamCard({
       const res = await fetch("/api/team/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          role: inviteRole,
+          roleTemplate: inviteRole === "agent" ? inviteRoleTemplate : undefined,
+        }),
       });
       const json = (await res.json()) as {
         ok?: boolean;
@@ -325,6 +331,19 @@ export function TeamCard({
             <option value="agent">{t("Agente")}</option>
             <option value="owner">{t("Dono")}</option>
           </Select>
+          {inviteRole === "agent" && (
+            <Select
+              value={inviteRoleTemplate}
+              onChange={(e) => setInviteRoleTemplate(e.target.value as TeamRoleTemplate)}
+              className="sm:w-44"
+              aria-label={t("Modelo de permissões")}
+            >
+              <option value="agent">{t("Agente (padrão)")}</option>
+              <option value="admin">{t("Admin (acesso total)")}</option>
+              <option value="viewer">{t("Visualizador (só leitura)")}</option>
+              <option value="custom">{t("Customizado")}</option>
+            </Select>
+          )}
           <Button
             onClick={() => void invite()}
             loading={saving}

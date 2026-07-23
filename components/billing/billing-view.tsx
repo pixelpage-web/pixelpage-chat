@@ -461,8 +461,6 @@ export function BillingView({
               const copy = PLAN_COPY[plan.name];
               const isCurrent = plan.id === currentPlan?.id;
               const isFeatured = copy?.featured ?? plan.highlight;
-              const trialDays = (plan.features as Record<string, unknown>)
-                ?.trial_days as number | undefined;
               const hasCheckout = !!plan.stripe_price_id;
 
               return (
@@ -491,12 +489,6 @@ export function BillingView({
                       </Badge>
                     )}
                   </div>
-
-                  {trialDays && !isCurrent && (
-                    <span className="mt-1.5 self-start rounded-full border border-amber/40 bg-amber/10 px-2 py-0.5 text-[10px] font-medium text-amber">
-                      {trialDays} {t("dias grátis")}
-                    </span>
-                  )}
 
                   <div className="mt-3">
                     <p className="font-display text-2xl font-bold leading-none">

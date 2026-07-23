@@ -117,7 +117,6 @@ export function OnboardingWizard() {
               required
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Mercado Bom Preço"
               autoFocus
             />
           </div>

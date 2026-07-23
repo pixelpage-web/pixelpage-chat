@@ -97,7 +97,7 @@ export function ReferralLandingPage() {
         <div className="grid grid-cols-3 gap-3 text-center text-xs">
           <div className="rounded-lg border border-line bg-surface p-3">
             <CheckCircle2 className="mx-auto mb-1.5 h-4 w-4 text-txt-mut" />
-            <p className="font-medium text-txt">7 dias grátis</p>
+            <p className="font-medium text-txt">Plano Free</p>
             <p className="text-txt-dim">sem cartão</p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-3">

@@ -420,7 +420,7 @@ export default function RegisterPage() {
         <div className="animate-fade-up rounded-card border border-line bg-surface p-6 sm:p-8">
           <h1 className="font-display text-2xl font-semibold text-txt">{t("Criar conta")}</h1>
           <p className="mt-1.5 text-sm text-txt-mut">
-            {t("7 dias grátis. Sem cartão de crédito.")}
+            {t("Comece grátis no plano Free. Sem cartão de crédito.")}
           </p>
 
           <form onSubmit={handleSubmitStep0} className="mt-6 space-y-4">

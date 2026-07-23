@@ -58,8 +58,10 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
     "https://www.pixelpagechat.com.br";
 
-  // Mesmo campo já usado pelos planos hoje (badge "X dias grátis" no card
-  // de planos) — reaproveita, não inventa um número de trial novo.
+  // plans.features.trial_days — Starter e Pro não têm mais esse campo
+  // (removido do banco): cobrança acontece na hora, sem carência. Se
+  // algum plano futuro precisar de trial, basta gravar trial_days de
+  // novo; o código já lida com ausente/0 sem alteração.
   const trialDays = (plan.features as Record<string, unknown> | null)
     ?.trial_days as number | undefined;
 

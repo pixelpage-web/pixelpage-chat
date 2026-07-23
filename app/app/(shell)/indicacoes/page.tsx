@@ -284,7 +284,7 @@ export default function IndicacoesPage() {
     if (navigator.share) {
       await navigator.share({
         title: "PixelPage Chat",
-        text: "Automatize seu WhatsApp com IA. 7 dias grátis!",
+        text: "Automatize seu WhatsApp com IA. Comece grátis no plano Free!",
         url: data.link.url,
       });
     } else {

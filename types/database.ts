@@ -98,6 +98,8 @@ export type ProfileRow = {
   cpf: string | null;
   phone: string | null;
   terms_accepted_at: string | null;
+  // 0046 — permissões granulares por funcionário (jsonb, formato ROLE_DEFAULTS)
+  permissions: Json | null;
 };
 
 export type PlanRow = {

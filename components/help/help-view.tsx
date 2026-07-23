@@ -55,8 +55,8 @@ const sections: DocSection[] = [
       {
         term: { pt: "1. Crie sua conta e empresa", en: "1. Create your account and company" },
         body: {
-          pt: "Ao se registrar, você preenche seus dados e os da empresa — sua conta já nasce pronta, com 7 dias de teste grátis do plano Trial. Um modal de boas-vindas mostra os primeiros passos: conectar o WhatsApp, configurar o bot e testar no simulador.",
-          en: "When you sign up, you fill in your details and your company's — your account starts ready, with a free 7-day Trial. A welcome modal shows the first steps: connect WhatsApp, set up the bot and test it in the simulator.",
+          pt: "Ao se registrar, você preenche seus dados e os da empresa — sua conta já nasce pronta, direto no plano Free (sem cartão, sem prazo). Quando quiser mais recursos, assine o Starter ou o Pro quando quiser. Um modal de boas-vindas mostra os primeiros passos: conectar o WhatsApp, configurar o bot e testar no simulador.",
+          en: "When you sign up, you fill in your details and your company's — your account starts ready, straight on the Free plan (no card, no time limit). When you want more features, subscribe to Starter or Pro whenever you like. A welcome modal shows the first steps: connect WhatsApp, set up the bot and test it in the simulator.",
         },
       },
       {
@@ -278,8 +278,8 @@ const sections: DocSection[] = [
     icon: CreditCard,
     title: { pt: "Assinatura e limites", en: "Subscription and limits" },
     intro: {
-      pt: "Como funcionam os planos, o saldo de IA e o período de teste.",
-      en: "How plans, AI quota and the trial period work.",
+      pt: "Como funcionam os planos, o saldo de IA e o upgrade quando precisar de mais.",
+      en: "How plans, AI quota and upgrading when you need more work.",
     },
     items: [
       {
@@ -297,10 +297,10 @@ const sections: DocSection[] = [
         },
       },
       {
-        term: { pt: "Quando o trial acaba", en: "When the trial ends" },
+        term: { pt: "Ao atingir o limite de mensagens IA", en: "When the AI message limit is reached" },
         body: {
-          pt: "Após os 7 dias: o inbox fica somente leitura, o bot e os webhooks pausam, e um aviso de upgrade aparece. Nada é apagado — assinando um plano, tudo volta na hora.",
-          en: "After 7 days: the inbox becomes read-only, the bot and webhooks pause, and an upgrade notice appears. Nothing is deleted — subscribe to a plan and everything resumes instantly.",
+          pt: "Todo cadastro começa no plano Free, sem cartão e sem prazo pra expirar. Se o saldo de mensagens IA do mês acabar, o bot avisa automaticamente que em breve um atendente responde — o inbox continua funcionando normalmente, nada é bloqueado ou apagado. Assinar o Starter ou o Pro aumenta os limites na hora.",
+          en: "Every account starts on the Free plan, with no card and no expiration date. If the month's AI message quota runs out, the bot automatically lets the contact know a teammate will reply soon — the inbox keeps working normally, nothing is blocked or deleted. Subscribing to Starter or Pro raises the limits right away.",
         },
       },
       {

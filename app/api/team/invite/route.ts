@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ROLE_DEFAULTS } from "@/lib/permissions";
+import type { TeamRoleTemplate } from "@/types/database";
 
 /**
  * Convida um membro por email (roles: dono ou agente).
@@ -20,9 +22,13 @@ export async function POST(request: Request) {
   }
   const orgId = session.profile.org_id;
 
-  let body: { email?: string; role?: string };
+  let body: { email?: string; role?: string; roleTemplate?: string };
   try {
-    body = (await request.json()) as { email?: string; role?: string };
+    body = (await request.json()) as {
+      email?: string;
+      role?: string;
+      roleTemplate?: string;
+    };
   } catch {
     return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
   }
@@ -32,6 +38,14 @@ export async function POST(request: Request) {
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return NextResponse.json({ error: "Email inválido" }, { status: 400 });
   }
+
+  // roleTemplate só se aplica a convites de agent — dono já tem acesso total
+  // (isOwnerRole), não precisa do bundle de permissions granulares.
+  const roleTemplate: TeamRoleTemplate =
+    role === "agent" && body.roleTemplate && body.roleTemplate in ROLE_DEFAULTS
+      ? (body.roleTemplate as TeamRoleTemplate)
+      : "agent";
+  const permissions = role === "agent" ? ROLE_DEFAULTS[roleTemplate] : null;
 
   const admin = createAdminClient();
 
@@ -81,6 +95,7 @@ export async function POST(request: Request) {
     org_id: orgId,
     role,
     name: email.split("@")[0],
+    permissions,
   });
   if (profileError) {
     return NextResponse.json(
@@ -93,7 +108,7 @@ export async function POST(request: Request) {
     org_id: orgId,
     actor_id: session.user.id,
     action: "team.member_invited",
-    metadata: { email, role },
+    metadata: { email, role, roleTemplate: role === "agent" ? roleTemplate : null },
   });
 
   return NextResponse.json({
