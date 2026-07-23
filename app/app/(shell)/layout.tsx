@@ -5,8 +5,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { processDueJobs, shouldCheckDueJobs } from "@/lib/scheduled-jobs";
 import { hasFeatureAccess } from "@/lib/access";
+import { type PermissionDefaults } from "@/lib/permissions";
 import { AppShell, type ShellData } from "@/components/app-shell";
-import type { TeamMemberPermissionsRow } from "@/types/database";
 
 // Sessão e assinatura mudam a cada request — sem cache estático
 export const dynamic = "force-dynamic";
@@ -107,13 +107,12 @@ export default async function ShellLayout({
     requiredPlan: "Pro",
   });
 
-  // Permissões granulares por membro dependiam de `team_members`, sistema
-  // legado sem RLS e sem dado real em produção — /app/equipe e Configurações
-  // agora rodam 100% sobre `profiles` (sem granularidade de permissão por
-  // enquanto). Mantido como `null` (= acesso total) pra não quebrar o filtro
-  // de nav em components/app-shell.tsx, e pra evitar uma query morta em todo
-  // page load.
-  const teamPermissions: TeamMemberPermissionsRow | null = null;
+  // Permissões granulares (0046): jsonb em profiles.permissions, gravado no
+  // convite (ROLE_DEFAULTS[roleTemplate] — ver app/api/team/invite/route.ts).
+  // null = sem granularidade definida (owner/admin/superadmin, ou membro
+  // legado convidado antes da Fase 2) = acesso total, mesmo fallback de
+  // sempre em components/app-shell.tsx.
+  const teamPermissions = (session.profile.permissions as PermissionDefaults | null) ?? null;
 
   const data: ShellData = {
     userId: session.user.id,

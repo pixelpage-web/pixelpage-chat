@@ -34,8 +34,8 @@ import { InboxNotifications } from "@/components/inbox-notifications";
 import { GlobalSearch } from "@/components/global-search";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { WelcomeModal } from "@/components/onboarding/welcome-modal";
-import { isOwnerRole, NAV_PERMISSION_MAP } from "@/lib/permissions";
-import type { Role, SubscriptionStatus, SystemNotificationRow, TeamMemberPermissionsRow } from "@/types/database";
+import { isOwnerRole, NAV_PERMISSION_MAP, type PermissionDefaults } from "@/lib/permissions";
+import type { Role, SubscriptionStatus, SystemNotificationRow } from "@/types/database";
 
 export interface ShellData {
   userId: string;
@@ -55,7 +55,7 @@ export interface ShellData {
   /** notificações globais ativas (admin → clientes) */
   notifications: SystemNotificationRow[];
   /** permissões granulares para membros da equipe; null = acesso total (owner/admin) */
-  teamPermissions: TeamMemberPermissionsRow | null;
+  teamPermissions: PermissionDefaults | null;
   /** conversas abertas com mensagens não lidas (badge no nav) */
   unreadInboxCount: number;
   /** Fluxos (builder visual) é recurso Pro — false esconde o nav e a rota redireciona */
@@ -394,7 +394,7 @@ export function AppShell({
     if (!data.teamPermissions) return true; // acesso total
     const permKey = NAV_PERMISSION_MAP[item.href];
     if (!permKey) return true; // docs, ajuda — sempre visível
-    return data.teamPermissions[permKey as keyof TeamMemberPermissionsRow] === true;
+    return data.teamPermissions[permKey] === true;
   }
   const visibleNavItems = navItems.filter(isItemVisible);
   const visibleNavGroups = navGroups

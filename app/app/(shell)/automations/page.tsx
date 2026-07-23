@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { canViewNavRoute } from "@/lib/permissions";
 import { AutomationsView } from "@/components/automations/automations-view";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ export const metadata = { title: "Automações" };
 export default async function AutomationsPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  if (!canViewNavRoute(session.profile.permissions, "/app/automations")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

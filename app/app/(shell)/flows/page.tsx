@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { hasFeatureAccess } from "@/lib/access";
+import { canViewNavRoute } from "@/lib/permissions";
 import { FlowsView } from "@/components/flows/flows-view";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export const metadata = { title: "Fluxos" };
 export default async function FlowsPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  if (!canViewNavRoute(session.profile.permissions, "/app/flows")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

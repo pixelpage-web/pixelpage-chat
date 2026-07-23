@@ -1,4 +1,4 @@
-import type { Role, TeamMemberPermissionsRow, TeamRoleTemplate } from "@/types/database";
+import type { Json, Role, TeamMemberPermissionsRow, TeamRoleTemplate } from "@/types/database";
 
 /**
  * Fonte única pra "essa rota/UI é só pra dono da org": usada tanto no filtro
@@ -19,7 +19,7 @@ export function isOwnerRole(role: Role): boolean {
   return role === "owner" || role === "admin" || role === "superadmin";
 }
 
-type PermissionDefaults = Omit<TeamMemberPermissionsRow, 'team_member_id'>;
+export type PermissionDefaults = Omit<TeamMemberPermissionsRow, 'team_member_id'>;
 
 export const ROLE_DEFAULTS: Record<TeamRoleTemplate, PermissionDefaults> = {
   admin: {
@@ -87,3 +87,17 @@ export const NAV_PERMISSION_MAP: Partial<Record<string, keyof PermissionDefaults
   "/app/billing": "can_view_billing",
   "/app/settings": "can_view_settings",
 };
+
+/**
+ * Guard de rota (servidor) equivalente ao isItemVisible do nav
+ * (components/app-shell.tsx) — mesma fonte de verdade, pra que uma rota
+ * escondida do menu também não seja acessível via URL direta. `permissions`
+ * é o jsonb cru de `profiles.permissions`; `null` = sem granularidade
+ * definida (legado ou owner/admin) = acesso total, mesmo fallback do nav.
+ */
+export function canViewNavRoute(permissions: Json | null, href: string): boolean {
+  if (!permissions) return true;
+  const permKey = NAV_PERMISSION_MAP[href];
+  if (!permKey) return true;
+  return (permissions as Record<string, unknown>)[permKey] === true;
+}

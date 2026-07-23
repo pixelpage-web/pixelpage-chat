@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { canViewNavRoute } from "@/lib/permissions";
 import { AgentView } from "@/components/agent/agent-view";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ export const metadata = { title: "Agente IA" };
 export default async function AgentPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  if (!canViewNavRoute(session.profile.permissions, "/app/agent")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

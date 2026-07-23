@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { hasFeatureAccess } from "@/lib/access";
+import { canViewNavRoute } from "@/lib/permissions";
 import { FlowEditor } from "@/components/flows/flow-editor";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,9 @@ export default async function FlowEditPage({
 }) {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  // Mesmo permissionamento da listagem (/app/flows) — sem isso, um agent sem
+  // can_view_flows abriria o editor direto pela URL.
+  if (!canViewNavRoute(session.profile.permissions, "/app/flows")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const { id } = await params;

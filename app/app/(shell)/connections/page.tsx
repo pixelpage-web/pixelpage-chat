@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { getEvolutionConfig, isEvolutionConfigured } from "@/lib/evolution";
 import { hasFeatureAccess, isSuperAdmin } from "@/lib/access";
 import { orgHasMetaApi } from "@/lib/plan-features";
+import { canViewNavRoute } from "@/lib/permissions";
 import { ConnectionsView } from "@/components/connections/connections-view";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export const metadata = { title: "Conexões" };
 export default async function ConnectionsPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  if (!canViewNavRoute(session.profile.permissions, "/app/connections")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

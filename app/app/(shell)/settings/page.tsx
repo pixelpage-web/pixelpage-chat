@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { hasFeatureAccess } from "@/lib/access";
+import { canViewNavRoute } from "@/lib/permissions";
 import { SettingsView } from "@/components/settings/settings-view";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export const metadata = { title: "Configurações" };
 export default async function SettingsPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  if (!canViewNavRoute(session.profile.permissions, "/app/settings")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();

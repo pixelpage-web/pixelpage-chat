@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { campaignUsageThisMonth } from "@/lib/campaigns";
 import { hasFeatureAccess } from "@/lib/access";
+import { canViewNavRoute } from "@/lib/permissions";
 import { CampaignsView } from "@/components/campaigns/campaigns-view";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export const metadata = { title: "Campanhas" };
 export default async function CampaignsPage() {
   const session = await getSessionProfile();
   if (!session?.profile?.org_id) redirect("/app/onboarding");
+  if (!canViewNavRoute(session.profile.permissions, "/app/campaigns")) redirect("/app/inbox");
   const orgId = session.profile.org_id;
 
   const supabase = await createServerSupabase();
